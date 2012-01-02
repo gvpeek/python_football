@@ -5,8 +5,7 @@ import sqlite3
 
 nextID = 0
 year = 1
-positionTypes = ["QB","QB","QB","RB","RB","RB","RB","RB","WR","WR","WR","WR","WR","TE","TE","TE","OG","OG","OG","OG","OT","OT","OT","OT","C","C","C","DT","DT","DT","DT","DE","DE","DE","DE","LB","LB","LB","LB","LB","LB","S","S","S","S","CB","CB","CB","CB","CB","CB","K","P"]
-
+positionTypes = ['QB']*3+['RB']*5+['WR']*5+['TE']*3+['OG']*4+['OT']*4+['C']*3+['DT']*4+['DE']*4+['LB']*6+['S']*4+['CB']*6+['K']+['P']
 
 class Player():
     "Basic Player"
