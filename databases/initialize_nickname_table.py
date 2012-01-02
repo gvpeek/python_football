@@ -9,7 +9,7 @@ WARNING: DROPS and reloads existing Nickname table
 import sqlite3
 import csv
 
-conn = sqlite3.connect('teams.sql')
+conn = sqlite3.connect('python_football_2012.sql')
 
 c = conn.cursor()
 
