@@ -492,7 +492,7 @@ def playerCounts():
 
 players = []
 
-conn = sqlite3.connect('../tests/djangotest1/players.db')
+conn = sqlite3.connect('../python_football_2012.sql')
 
 c = conn.cursor()
 
