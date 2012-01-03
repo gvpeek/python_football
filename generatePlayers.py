@@ -23,7 +23,7 @@ class Player():
         self.intelligence = random.randint(20,45)
         self.discipline = random.randint(20,45)        
         self.retirementAge = (self.constitution - self.age) + 10
-        self.retired = ' '
+        self.retired = 0
         self.apexAge = (math.floor(((32 * 100) * math.pow(random.randint(5,100),-.5)) / 100) + 18)
         # self.apexAge = random.randint(20,32)
         self.growthRate = random.randint(1,4)
@@ -492,26 +492,100 @@ def playerCounts():
 
 players = []
 
-conn = sqlite3.connect('../python_football_2012.sql')
+conn = sqlite3.connect('databases/python_football_2012.sql')
 
 c = conn.cursor()
 
 ## Delete table
-c.execute('''drop table players''')
+c.execute('''
+DROP TABLE players
+''')
+
 conn.commit()
+c.close()
 
 ## Create table
-c.execute('''create table players
-(id , age , firstName , lastName ,  position , speed , strength , stamina , constitution ,
-    agility , intelligence , discipline , retirementAge , retired , apexAge , growthRate ,
-    declinationRate , rating , passing , rushing , catching , blocking , rundefense , passdefense , kicking)''')
+c.execute('''
+CREATE TABLE players (
+    id                   TEXT    PRIMARY KEY, 
+    age                  INT, 
+    firstName            TEXT, 
+    lastName             TEXT,
+    position             TEXT,
+    speed                FLOAT, 
+    strength             FLOAT,
+    stamina              FLOAT,
+    constitution         FLOAT,
+    agility              FLOAT,
+    intelligence         FLOAT,
+    discipline           FLOAT,
+    retirementAge        INT,
+    retired              BOOLEAN,
+    apexAge              INT,
+    growthRate           INT,
+    declinationRate      INT,
+    rating               FLOAT,
+    passing              FLOAT,
+    rushing              FLOAT,
+    catching             FLOAT,
+    blocking             FLOAT,
+    rundefense           FLOAT,
+    passdefense          FLOAT,
+    kicking              FLOAT
+)
+''')
+
 conn.commit()
+c.close()
 
 for x in range(2500):
     holdPlayer = Player()
-    print holdPlayer.id
-    c.execute('insert into players values (holdPlayer.id, holdPlayer.age, holdPlayer.firstName , holdPlayer.lastName ,  holdPlayer.position , holdPlayer.speed , holdPlayer.strength , holdPlayer.stamina , holdPlayer.constitution , holdPlayer.agility , holdPlayer.intelligence , holdPlayer.discipline , holdPlayer.retirementAge , holdPlayer.retired , holdPlayer.apexAge , holdPlayer.growthRate , holdPlayer.declinationRate , holdPlayer.rating , holdPlayer.passing , holdPlayer.rushing , holdPlayer.catching , holdPlayer.blocking , holdPlayer.rundefense , holdPlayer.passdefense , holdPlayer.kicking)')
+    c.execute('insert into players values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+    [
+    holdPlayer.id , 
+    holdPlayer.age , 
+    holdPlayer.firstName , 
+    holdPlayer.lastName ,  
+    holdPlayer.position , 
+    holdPlayer.speed , 
+    holdPlayer.strength , 
+    holdPlayer.stamina , 
+    holdPlayer.constitution , 
+    holdPlayer.agility , 
+    holdPlayer.intelligence , 
+    holdPlayer.discipline , 
+    holdPlayer.retirementAge , 
+    holdPlayer.retired , 
+    holdPlayer.apexAge , 
+    holdPlayer.growthRate , 
+    holdPlayer.declinationRate , 
+    holdPlayer.rating , 
+    holdPlayer.passing , 
+    holdPlayer.rushing , 
+    holdPlayer.catching , 
+    holdPlayer.blocking , 
+    holdPlayer.rundefense , 
+    holdPlayer.passdefense , 
+    holdPlayer.kicking
+    ])
     nextID = nextID + 1
+
+conn.commit()
+c.close()
+conn.close()
+
+## retrieve
+conn = sqlite3.connect('databases/python_football_2012.sql')
+c = conn.cursor()
+c.execute('''select * from players where not retired''')
+
+for player in c:
+    print player
+#    advanceYear(player)
+    
+conn.commit()
+c.close()
+conn.close()
 
 #for years in range(40):
 #    print year
