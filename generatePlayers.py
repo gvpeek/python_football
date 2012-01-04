@@ -574,15 +574,37 @@ conn.commit()
 c.close()
 conn.close()
 
+## Advance Year tests
+for i in range(20):
+    conn = sqlite3.connect('databases/python_football_2012.sql')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    c.execute('''
+        UPDATE players
+        SET retired=1
+        WHERE age=retirementAge
+    ''')
+    
+    c.execute('''
+        UPDATE players
+        SET age=age+1
+        WHERE not retired
+    ''')
+    conn.commit()
+    c.close()
+    conn.close()
+
 
 ## retrieve
 conn = sqlite3.connect('databases/python_football_2012.sql')
 conn.row_factory = sqlite3.Row
 c = conn.cursor()
-c.execute('''select * from players where not retired''')
+c.execute('''select * from players''')
 
 for player in c:
-    print player['age']
+    print player
+#    print player['age']
 #    advanceYear(player)
     
 conn.commit()
