@@ -574,13 +574,15 @@ conn.commit()
 c.close()
 conn.close()
 
+
 ## retrieve
 conn = sqlite3.connect('databases/python_football_2012.sql')
+conn.row_factory = sqlite3.Row
 c = conn.cursor()
 c.execute('''select * from players where not retired''')
 
 for player in c:
-    print player
+    print player['age']
 #    advanceYear(player)
     
 conn.commit()
