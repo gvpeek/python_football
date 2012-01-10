@@ -25,6 +25,7 @@ ratingSP2 = dfc
 
 success = 0
 fail = 0
+netYardsOnPlay = 0
 #play = raw_input('Select Play:')
 plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','RC','K','OK','PUNT','FG','XP']
 
@@ -81,14 +82,47 @@ def determineTurnover(play,playRating):
             changeOfPossession = True
     return changeOfPossession
 
-#def determineFieldGoalResult(playRating):
+def determineFieldGoalResult(play,playRating,distance):
+    if play == 'FG':
+        fgRnd = randint(1,110)
+    elif play == 'XP':
+        fgRnd = randint(1,100)
+    
+    fgRating = ((80 - playRating) / 2)
+    
+    if fgRnd < ((100 - distance) - fgRating):
+        return True
+    else:
+        return False
 
+def determineKickoffYardage(play,playRating):
+    if play == 'K':
+        kickRnd = randint(1,20) + 55
+    elif play == 'OK':
+        kickRnd = randint(1,15) + 10
+    kickRating = (80 - playRating) / 2
+    kickYardage = ceil(kickRnd - kickRating)
+    return kickYardage
+
+def determineReturnYardage(returnType,returnerRating):
+    returnRnd = randint(1,100)
+    if returnType == 'K':
+        returnYards = floor((returnerRating*125)*pow(returnRnd,-.4))
+    elif returnType == 'OK':
+        returnYards = floor((returnerRating*100)*pow(returnRnd,-1))
+    elif returnType == 'PUNT':
+        returnYards = floor((returnerRating*100)*pow(returnRnd,-.6))
+    elif returnType == 'INT':
+        returnYards = floor((returnerRating*100)*pow(returnRnd,-.7))
+    elif returnType == 'FUM':
+        returnYards = floor((returnerRating*100)*pow(returnRnd,-1))
+    return returnYards
 
 for i in range(100):
     play = choice(plays)
     print play
     rnd = randint(1,100)
-    if play in ['RI','2PRI']:
+    if play in ['RI','2PRI','RC']:
         offRating = ceil(((ratingQB + ratingRB*4 + ratingOL*5) / 10))
         defRating = ceil((((ratingDL*6 + ratingLB*3 + ratingS) / 10) - 60) / 4)
         playPenalty = 0
@@ -108,20 +142,39 @@ for i in range(100):
         offRating = ceil(((ratingQB*4 + ratingWR*3 + ratingOL*3) / 10))
         defRating = ceil((((ratingDL*3 + ratingLB + ratingCB*3 + ratingS*3) / 10) - 60) / 4)
         playPenalty = 0
-    elif play in ['K','OK','PUNT','FG','XP']:
-        print 'specTeamPlay'
+    elif play in ['FG','XP','K','OK','PUNT']:
         offRating = ratingSP1
         defRating = ceil((ratingSP2 - 60) / 4)
         playPenalty = 0
     
+        
+    
     playRating = ((offRating - defRating) - playPenalty)
     if play == 'RC':
         netYardsOnPlay = -2
+    elif play in ['K','OK']:
+        kickoffYardage = determineKickoffYardage(play,playRating)
+        returnYardage = determineReturnYardage(play,ratingSP1)
+        netYardsOnPlay = kickoffYardage - returnYardage
+#    elif play == 'PUNT':
+#        punt block & return Yardage if blocked
+#        puntYardage = determinePuntYardage(play,playRating)
+#        returnYardage = determineReturnYardage(play,ratingSP1)
+#        netYardsOnPlay = puntYardage - returnYardage
+    elif play in ['FG','XP']:
+        ## Testing
+        if play == 'FG':
+            convertedYardline = randint(1,70)
+        elif play == 'XP':
+            convertedYardline = 2
+        print convertedYardline
+        ## Testing
+        playSuccess = determineFieldGoalResult(play,playRating,convertedYardline)
+        print playSuccess
     elif rnd <= playRating:
         success += 1
         playSuccess=True
         netYardsOnPlay=determineYardageGain(play,playRating)
-        print 'Yards Gained', netYardsOnPlay
     else:
         fail += 1
         playSuccess=False
@@ -130,7 +183,8 @@ for i in range(100):
             print 'Turnover!'
         else:
             netYardsOnPlay=determineYardageLoss(play,playRating)
-            print 'Yards Lost', netYardsOnPlay
+
+    print 'Yards On Play', netYardsOnPlay
     
 #    if playRating < 60:
 #        playRating = 60
