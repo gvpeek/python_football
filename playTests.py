@@ -107,15 +107,15 @@ def determineKickoffYardage(play,playRating):
 def determineReturnYardage(returnType,returnerRating):
     returnRnd = randint(1,100)
     if returnType == 'K':
-        returnYards = floor((returnerRating*125)*pow(returnRnd,-.4))
+        returnYards = floor(((returnerRating*125)*pow(returnRnd,-.4)) / 100)
     elif returnType == 'OK':
-        returnYards = floor((returnerRating*100)*pow(returnRnd,-1))
+        returnYards = floor(((returnerRating*100)*pow(returnRnd,-1)) / 100)
     elif returnType == 'PUNT':
-        returnYards = floor((returnerRating*100)*pow(returnRnd,-.6))
+        returnYards = floor(((returnerRating*100)*pow(returnRnd,-.6)) / 100)
     elif returnType == 'INT':
-        returnYards = floor((returnerRating*100)*pow(returnRnd,-.7))
+        returnYards = floor(((returnerRating*100)*pow(returnRnd,-.7)) / 100)
     elif returnType == 'FUM':
-        returnYards = floor((returnerRating*100)*pow(returnRnd,-1))
+        returnYards = floor(((returnerRating*100)*pow(returnRnd,-1)) / 100)
     return returnYards
 
 for i in range(100):
