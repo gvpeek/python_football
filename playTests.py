@@ -26,7 +26,7 @@ ratingSP2 = dfc
 success = 0
 fail = 0
 #play = raw_input('Select Play:')
-plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','K','OK','PUNT','FG','XP']
+plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','RC','K','OK','PUNT','FG','XP']
 
 print ratingQB, ratingRB, ratingWR, ratingOL
 print ratingDL, ratingLB, ratingCB, ratingS
@@ -40,7 +40,8 @@ def determineYardageGain(play,playRating):
     elif play == 'PL':
         gain = floor(((playRating*100)*pow(rnd,-.4)) / 100)
     else:
-        gain =  'Invalid play type!'
+        print 'Delay of game!'
+        gain = -5
     return gain
 
 def determineYardageLoss(play,playRating):
@@ -59,20 +60,34 @@ def determineYardageLoss(play,playRating):
         if loss > 12:
             loss= 12
     else:
-        loss =  'Invalid play type!'
+        print 'Delay of game!'
+        loss = 5
     return loss 
 
 def determineTurnover(play,playRating):
     changeOfPossession = False
     rnd = randint(1,100)
-    if rnd <= ((100 - playRating) / 3.5):
-        changeOfPossession = True
+    if play in ['RI','2PRI','RO','2PRO']:
+        if rnd <= ((100 - playRating) / 3.5):
+            changeOfPossession = True
+    elif play in ['PS','2PPS']:
+        if rnd <= ((100 - playRating) / 10):
+            changeOfPossession = True
+    elif play == 'PM':
+        if rnd <= (((100 - playRating) / 10) * 2):
+            changeOfPossession = True
+    elif play == 'PL':
+        if rnd <= (((100 - playRating) / 10) * 2):
+            changeOfPossession = True
     return changeOfPossession
+
+#def determineFieldGoalResult(playRating):
+
 
 for i in range(100):
     play = choice(plays)
     print play
-    rnd = randint(1,101)
+    rnd = randint(1,100)
     if play in ['RI','2PRI']:
         offRating = ceil(((ratingQB + ratingRB*4 + ratingOL*5) / 10))
         defRating = ceil((((ratingDL*6 + ratingLB*3 + ratingS) / 10) - 60) / 4)
@@ -100,7 +115,9 @@ for i in range(100):
         playPenalty = 0
     
     playRating = ((offRating - defRating) - playPenalty)
-    if rnd <= playRating:
+    if play == 'RC':
+        netYardsOnPlay = -2
+    elif rnd <= playRating:
         success += 1
         playSuccess=True
         netYardsOnPlay=determineYardageGain(play,playRating)
