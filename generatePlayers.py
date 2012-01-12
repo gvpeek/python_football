@@ -225,7 +225,7 @@ def advanceYear(player):
     if player.retired != 'X':
         primegrowth = random.randint(1,player.growthRate)
         decl = random.randint(3,player.declinationRate)
-        player.age = player.age + 1
+        player.age += 1
 
         if player.age <= player.apexAge:
             increasePositionRatings(player,primegrowth)
@@ -443,7 +443,7 @@ def playerCounts():
             
             total = total + 1
             if q.age >= 19 and q.age <= 22:
-                totalCollegeAge = totalCollegeAge + 1
+                totalCollegeAge += 1
                 if q.rating >= 45 and q.rating < 55:
                     lowCollege = lowCollege +1
                     totalCollege = totalCollege + 1
