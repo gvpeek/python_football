@@ -50,11 +50,11 @@ def determinePlayResult(play):
         returnYardage = determineReturnYardage(play)
         print 'kick', kickoffYardage, 'return', returnYardage
         netYardsOnPlay = kickoffYardage - returnYardage
-#    elif play == 'PUNT':
-#        punt block & return Yardage if blocked
-#        puntYardage = determinePuntYardage(play,playRating)
-#        returnYardage = determineReturnYardage(play)
-#        netYardsOnPlay = puntYardage - returnYardage
+    elif play == 'PUNT':
+        puntYardage, puntBlocked = determinePuntYardage(playRating)
+        returnYardage = determineReturnYardage(play)
+        print 'punt', puntYardage, 'return', returnYardage
+        netYardsOnPlay = puntYardage - returnYardage
     elif play in ['FG','XP']:
         fieldGoalAttempt = True
         ## Testing
@@ -146,6 +146,31 @@ def determineKickoffYardage(play,playRating):
     kickYardage = ceil(kickRnd - kickRating)
     return kickYardage
 
+def determinePuntYardage(playRating):
+    puntBlocked = False
+    puntRnd = randint(1,100)
+    puntBlockRnd = randint(1,100)
+    puntBlockChance = randint(0,1)
+    yardageApex = ceil(playRating / 1.7)
+    aboveApex = randint(0,1)
+    
+    if puntBlockRnd == playRating and puntBlockChance:
+        puntBlocked = True
+        puntYards = 0.0
+    else:
+        if aboveApex:
+            print 'Above'
+            puntYards = (yardageApex + floor(((playRating*100) * pow(puntRnd,-.8309)) / 100))
+        else:
+            print 'Below'
+            puntYards = (yardageApex - floor(((playRating*100) * pow(puntRnd,-.8309)) / 100))
+        
+        if puntYards < 20.0:
+            puntYards = 20.0
+        elif puntYards > 70.0:
+            puntYards = 70.0      
+    return puntYards, puntBlocked
+
 def determineReturnYardage(play):
     returnRnd = randint(1,100)
     if play in ['RI','2PRI','RC']:
@@ -203,6 +228,7 @@ def determinePlayRating(play):
     
 for i in range(1000):
     play = choice(plays)
+    play = 'PUNT'
     print ' '
     print play
     yards, fgAtt, fgGood = determinePlayResult(play)
