@@ -32,38 +32,81 @@ plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','RC','K','OK','PUNT','FG'
 print ratingQB, ratingRB, ratingWR, ratingOL
 print ratingDL, ratingLB, ratingCB, ratingS
 
-def determineYardageGain(play,playRating):
-    rnd = randint(1,100)
-    if play in ['RI','RO','PS','2PRI','2PRO','2PPS']:
-        gain = floor(((playRating*100)*pow(rnd,-.7)) / 100)
-    elif play == 'PM':
-        gain = floor(((playRating*100)*pow(rnd,-.5)) / 100)
-    elif play == 'PL':
-        gain = floor(((playRating*100)*pow(rnd,-.4)) / 100)
-    else:
-        print 'Delay of game!'
-        gain = -5
-    return gain
 
-def determineYardageLoss(play,playRating):
+def determinePlayResult(play):
+    turnover = False
+    netYardsOnPlay = 0 
+    fieldGoalSuccess = False
+    fieldGoalAttempt = False
+    playRnd = randint(1,100)
+    playRating = determinePlayRating(play)
+    if play == 'RC':
+        netYardsOnPlay = -2
+    elif play in ['K','OK']:
+        kickoffYardage = determineKickoffYardage(play,playRating)
+        ##TODO: determine position
+        ##TODO: if not touchback
+        returnYardage = determineReturnYardage(play)
+        print 'kick', kickoffYardage, 'return', returnYardage
+        netYardsOnPlay = kickoffYardage - returnYardage
+#    elif play == 'PUNT':
+#        punt block & return Yardage if blocked
+#        puntYardage = determinePuntYardage(play,playRating)
+#        returnYardage = determineReturnYardage(play)
+#        netYardsOnPlay = puntYardage - returnYardage
+    elif play in ['FG','XP']:
+        fieldGoalAttempt = True
+        ## Testing
+        if play == 'FG':
+            convertedYardline = randint(1,70)
+        elif play == 'XP':
+            convertedYardline = 2
+        print convertedYardline, 'yardline'
+        ## Testing
+        fieldGoalSuccess = determineFieldGoalResult(play,playRating,convertedYardline)
+    else: 
+        if playRnd <= playRating:
+            playSuccess=True
+        else:
+            playSuccess=False
+            turnover = determineTurnover(play,playRating)
+            
+        if not turnover:
+            netYardsOnPlay=determinePlayYardage(play,playRating,playSuccess)
+        else:
+            netYardsOnPlay = (determinePlayYardage(play,playRating,playSuccess) - determineReturnYardage(play))
+    return netYardsOnPlay, fieldGoalAttempt, fieldGoalSuccess
+
+
+def determinePlayYardage(play,playRating,playSuccess):
     rnd = randint(1,100)
     lossRating = ((90 - playRating) + 60)
     if play in ['RI','RO','PS','2PRI','2PRO','2PPS']:
-        loss = floor(((lossRating*100)*pow(rnd,-1)) / 100)
-        if loss > 5:
-            loss= 5
+        if playSuccess:
+            yardage = floor(((playRating*100)*pow(rnd,-.7)) / 100)
+        else:
+            yardage = (floor(((lossRating*100)*pow(rnd,-1)) / 100)) * -1
+            if yardage < -5:
+                yardage= -5
     elif play == 'PM':
-        loss = floor(((lossRating*100)*pow(rnd,-.8309)) / 100)
-        if loss > 8:
-            loss= 8
+        if playSuccess:
+            yardage = floor(((playRating*100)*pow(rnd,-.5)) / 100)
+        else:
+            yardage = (floor(((lossRating*100)*pow(rnd,-.8309)) / 100)) * -1
+            if yardage < -8:
+                yardage= -8
     elif play == 'PL':
-        loss = floor(((lossRating*100)*pow(rnd,-.5)) / 100)
-        if loss > 12:
-            loss= 12
+        if playSuccess:
+            yardage = floor(((playRating*100)*pow(rnd,-.4)) / 100)
+        else:
+            yardage = (floor(((lossRating*100)*pow(rnd,-.5)) / 100)) * -1
+            if yardage < -12:
+                yardage= -12
     else:
         print 'Delay of game!'
-        loss = 5
-    return loss 
+        yardage = -5
+    return yardage
+
 
 def determineTurnover(play,playRating):
     changeOfPossession = False
@@ -82,6 +125,7 @@ def determineTurnover(play,playRating):
             changeOfPossession = True
     return changeOfPossession
 
+
 def determineFieldGoalResult(play,playRating,distance):
     if play == 'FG':
         fgRnd = randint(1,110)
@@ -95,6 +139,7 @@ def determineFieldGoalResult(play,playRating,distance):
     else:
         return False
 
+
 def determineKickoffYardage(play,playRating):
     if play == 'K':
         kickRnd = randint(1,20) + 55
@@ -104,24 +149,29 @@ def determineKickoffYardage(play,playRating):
     kickYardage = ceil(kickRnd - kickRating)
     return kickYardage
 
-def determineReturnYardage(returnType,returnerRating):
+
+def determineReturnYardage(play):
     returnRnd = randint(1,100)
-    if returnType == 'K':
-        returnYards = floor(((returnerRating*125)*pow(returnRnd,-.4)) / 100)
-    elif returnType == 'OK':
-        returnYards = floor(((returnerRating*100)*pow(returnRnd,-1)) / 100)
-    elif returnType == 'PUNT':
-        returnYards = floor(((returnerRating*100)*pow(returnRnd,-.6)) / 100)
-    elif returnType == 'INT':
-        returnYards = floor(((returnerRating*100)*pow(returnRnd,-.7)) / 100)
-    elif returnType == 'FUM':
-        returnYards = floor(((returnerRating*100)*pow(returnRnd,-1)) / 100)
+    if play in ['RI','2PRI','RC']:
+        returnYards = floor(((ratingDL*100)*pow(returnRnd,-1)) / 100)
+    elif play in ['RO','2PRO']:
+        returnYards = floor(((ratingLB*100)*pow(returnRnd,-1)) / 100)
+    elif play in ['PS','2PPS']:
+        returnYards = floor(((ratingLB*100)*pow(returnRnd,-.8)) / 100)
+    elif play in ['PM']:
+        returnYards = floor(((ratingCB*100)*pow(returnRnd,-.7)) / 100)
+    elif play in ['PL']:
+        returnYards = floor(((ratingS*100)*pow(returnRnd,-.6)) / 100)
+    elif play == 'K':
+        returnYards = floor(((ratingSP2*125)*pow(returnRnd,-.4)) / 100)
+    elif play == 'OK':
+        returnYards = floor(((ratingSP2*100)*pow(returnRnd,-1)) / 100)
+    elif play == 'PUNT':
+        returnYards = floor(((ratingSP2*100)*pow(returnRnd,-.6)) / 100)
     return returnYards
 
-for i in range(100):
-    play = choice(plays)
-    print play
-    rnd = randint(1,100)
+
+def determinePlayRating(play):
     if play in ['RI','2PRI','RC']:
         offRating = ceil(((ratingQB + ratingRB*4 + ratingOL*5) / 10))
         defRating = ceil((((ratingDL*6 + ratingLB*3 + ratingS) / 10) - 60) / 4)
@@ -146,50 +196,27 @@ for i in range(100):
         offRating = ratingSP1
         defRating = ceil((ratingSP2 - 60) / 4)
         playPenalty = 0
-    
-        
-    
     playRating = ((offRating - defRating) - playPenalty)
-    if play == 'RC':
-        netYardsOnPlay = -2
-    elif play in ['K','OK']:
-        kickoffYardage = determineKickoffYardage(play,playRating)
-        returnYardage = determineReturnYardage(play,ratingSP1)
-        netYardsOnPlay = kickoffYardage - returnYardage
-#    elif play == 'PUNT':
-#        punt block & return Yardage if blocked
-#        puntYardage = determinePuntYardage(play,playRating)
-#        returnYardage = determineReturnYardage(play,ratingSP1)
-#        netYardsOnPlay = puntYardage - returnYardage
-    elif play in ['FG','XP']:
-        ## Testing
-        if play == 'FG':
-            convertedYardline = randint(1,70)
-        elif play == 'XP':
-            convertedYardline = 2
-        print convertedYardline
-        ## Testing
-        playSuccess = determineFieldGoalResult(play,playRating,convertedYardline)
-        print playSuccess
-    elif rnd <= playRating:
-        success += 1
-        playSuccess=True
-        netYardsOnPlay=determineYardageGain(play,playRating)
-    else:
-        fail += 1
-        playSuccess=False
-        changeOfPossession = determineTurnover(play,playRating)
-        if changeOfPossession:
-            print 'Turnover!'
-        else:
-            netYardsOnPlay=determineYardageLoss(play,playRating)
-
-    print 'Yards On Play', netYardsOnPlay
-    
 #    if playRating < 60:
 #        playRating = 60
+    ##Testing
+    print offRating
+    print defRating    
+    print playRating
+    ##Testing
+    return playRating
+    
+for i in range(1000):
+    play = choice(plays)
+    print ' '
+    print play
+    yards, fgAtt, fgGood = determinePlayResult(play)
+    if fgAtt:
+        if fgGood:
+            print 'Kick Is Good'
+        else:
+            print 'Kick No Good' 
+    print 'Yards On Play', yards
+    
 print 'Success', success
 print 'Fail', fail
-print offRating
-print defRating    
-print playRating
