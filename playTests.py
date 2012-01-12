@@ -7,7 +7,8 @@ Created on Jan 7, 2012
 from math import ceil, floor, pow
 from random import randint, choice
 
-off = 90
+#off = 90
+off = randint(60,90)
 
 ratingQB = off
 ratingRB = off
@@ -15,7 +16,8 @@ ratingWR = off
 ratingOL = off
 ratingSP1 = off
 
-dfc = 75
+#dfc = 75
+dfc = randint(60,90)
 
 ratingDL = dfc
 ratingLB = dfc
@@ -31,7 +33,6 @@ plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','RC','K','OK','PUNT','FG'
 
 print ratingQB, ratingRB, ratingWR, ratingOL
 print ratingDL, ratingLB, ratingCB, ratingS
-
 
 def determinePlayResult(play):
     turnover = False
@@ -77,7 +78,6 @@ def determinePlayResult(play):
             netYardsOnPlay = (determinePlayYardage(play,playRating,playSuccess) - determineReturnYardage(play))
     return netYardsOnPlay, fieldGoalAttempt, fieldGoalSuccess
 
-
 def determinePlayYardage(play,playRating,playSuccess):
     rnd = randint(1,100)
     lossRating = ((90 - playRating) + 60)
@@ -85,21 +85,21 @@ def determinePlayYardage(play,playRating,playSuccess):
         if playSuccess:
             yardage = floor(((playRating*100)*pow(rnd,-.7)) / 100)
         else:
-            yardage = (floor(((lossRating*100)*pow(rnd,-1)) / 100)) * -1
+            yardage = -(floor(((lossRating*100)*pow(rnd,-1)) / 100))
             if yardage < -5:
                 yardage= -5
     elif play == 'PM':
         if playSuccess:
             yardage = floor(((playRating*100)*pow(rnd,-.5)) / 100)
         else:
-            yardage = (floor(((lossRating*100)*pow(rnd,-.8309)) / 100)) * -1
+            yardage = -(floor(((lossRating*100)*pow(rnd,-.8309)) / 100))
             if yardage < -8:
                 yardage= -8
     elif play == 'PL':
         if playSuccess:
             yardage = floor(((playRating*100)*pow(rnd,-.4)) / 100)
         else:
-            yardage = (floor(((lossRating*100)*pow(rnd,-.5)) / 100)) * -1
+            yardage = -(floor(((lossRating*100)*pow(rnd,-.5)) / 100))
             if yardage < -12:
                 yardage= -12
     else:
@@ -107,24 +107,22 @@ def determinePlayYardage(play,playRating,playSuccess):
         yardage = -5
     return yardage
 
-
 def determineTurnover(play,playRating):
     changeOfPossession = False
-    rnd = randint(1,100)
+    turnoverRnd = randint(1,100)
     if play in ['RI','2PRI','RO','2PRO']:
-        if rnd <= ((100 - playRating) / 3.5):
+        if turnoverRnd <= ((100 - playRating) / 3.5):
             changeOfPossession = True
     elif play in ['PS','2PPS']:
-        if rnd <= ((100 - playRating) / 10):
+        if turnoverRnd <= ((100 - playRating) / 10):
             changeOfPossession = True
     elif play == 'PM':
-        if rnd <= (((100 - playRating) / 10) * 2):
+        if turnoverRnd <= (((100 - playRating) / 10) * 2):
             changeOfPossession = True
     elif play == 'PL':
-        if rnd <= (((100 - playRating) / 10) * 2):
+        if turnoverRnd <= (((100 - playRating) / 10) * 2):
             changeOfPossession = True
     return changeOfPossession
-
 
 def determineFieldGoalResult(play,playRating,distance):
     if play == 'FG':
@@ -139,7 +137,6 @@ def determineFieldGoalResult(play,playRating,distance):
     else:
         return False
 
-
 def determineKickoffYardage(play,playRating):
     if play == 'K':
         kickRnd = randint(1,20) + 55
@@ -148,7 +145,6 @@ def determineKickoffYardage(play,playRating):
     kickRating = (80 - playRating) / 2
     kickYardage = ceil(kickRnd - kickRating)
     return kickYardage
-
 
 def determineReturnYardage(play):
     returnRnd = randint(1,100)
@@ -169,7 +165,6 @@ def determineReturnYardage(play):
     elif play == 'PUNT':
         returnYards = floor(((ratingSP2*100)*pow(returnRnd,-.6)) / 100)
     return returnYards
-
 
 def determinePlayRating(play):
     if play in ['RI','2PRI','RC']:
