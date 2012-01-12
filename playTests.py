@@ -165,10 +165,10 @@ def determinePuntYardage(playRating):
             print 'Below'
             puntYards = (yardageApex - floor(((playRating*100) * pow(puntRnd,-.8309)) / 100))
         
-        if puntYards < 20.0:
-            puntYards = 20.0
-        elif puntYards > 70.0:
-            puntYards = 70.0      
+        if puntYards < (yardageApex - floor(((playRating*100) * pow(5.0,-.8309)) / 100)):
+            puntYards = (yardageApex - floor(((playRating*100) * pow(5.0,-.8309)) / 100))
+        elif puntYards > (yardageApex + floor(((playRating*100) * pow(7.0,-.8309)) / 100)):
+            puntYards = (yardageApex + floor(((playRating*100) * pow(7.0,-.8309)) / 100))      
     return puntYards, puntBlocked
 
 def determineReturnYardage(play):
@@ -228,7 +228,6 @@ def determinePlayRating(play):
     
 for i in range(1000):
     play = choice(plays)
-    play = 'PUNT'
     print ' '
     print play
     yards, fgAtt, fgGood = determinePlayResult(play)
