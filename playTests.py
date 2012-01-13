@@ -46,17 +46,20 @@ def determinePlayResult(play):
     elif play in ['K','OK']:
         kickoffYardage = determineKickoffYardage(play,playRating)
         ##TODO: determine position
-        ##TODO: if not touchback
+        ##TODO: if not touchback or out of bounds
         returnYardage = determineReturnYardage(play)
         print 'kick', kickoffYardage, 'return', returnYardage
         netYardsOnPlay = kickoffYardage - returnYardage
     elif play == 'PUNT':
         puntYardage, puntBlocked = determinePuntYardage(playRating)
+        ##TODO: determine position
+        ##TODO: if not touchback or out of bounds or fair catch
         returnYardage = determineReturnYardage(play)
         print 'punt', puntYardage, 'return', returnYardage
         netYardsOnPlay = puntYardage - returnYardage
     elif play in ['FG','XP']:
         fieldGoalAttempt = True
+        fieldGoalSuccess = False
         ## Testing
         if play == 'FG':
             convertedYardline = randint(1,70)
@@ -237,6 +240,3 @@ for i in range(1000):
         else:
             print 'Kick No Good' 
     print 'Yards On Play', yards
-    
-print 'Success', success
-print 'Fail', fail
