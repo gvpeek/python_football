@@ -9,16 +9,46 @@ from random import choice
 import playTests
 from teamTests import team1,team2
 
+## @QUESTION - is this the best way to handle this. If not, how should I increment and utilize
+## id generator outside of scope of game function?
 next_game_id = 0
 scope = vars()
 
 class Game():
     "Basic Game"
-    def __init__(self,home_team,away_team):
+    def __init__(self,home_team,away_team,division_game,conference_game,playoff_game):
         self.game_id = get_next_game_id()
         self.home = home_team
         self.away = away_team
-        possession = {}
+        self.division_game = division_game
+        self.conference_game = conference_game 
+        self.playoff_game = playoff_game  
+        
+        self.time = {'clicks' : 0,
+                     'minutes' : 15,
+                     'seconds' : 00,
+                     'quarter' : 1,
+                     'end_of_half' : False,
+                     'end_of_game' : False,
+                     'overtime' : False,
+                     'end_of_overtime' : False
+                     }
+        
+        self.position = {
+                         'absolute_yardline' : 70,
+                         'converted_yardline' : 30,
+                         'down' : 1,
+                         'yards_to_gain' : 10,
+                         'target_yardline' : 30,
+                         'in_endzone' : False
+                     }
+        
+        self.situation = {'kickoff' : True,
+                          'touchdown' : True
+                          }
+        
+        self.stats ={
+                     }
 
     def coin_flip(self,*side_choice):
         won_toss = False
@@ -49,21 +79,21 @@ print team2.id,team2.city,team2.nickname,'QB', team2.rating_qb,'RB',team2.rating
 home_team = team1
 away_team = team2
 
-game = Game(team1,team2)
+game = Game(team1,team2,False,False,False)
 game.coin_flip()
 
 for i in range(1000):
     play = choice(playTests.plays)
     print ' '
     print play
-    yards, change_possession, fgAtt, fgGood, punt_block = playTests.determinePlayResult(play,game.possession['offense'],game.possession['defense'])
-    if fgAtt:
-        if fgGood:
+    current_play = playTests.determinePlayResult(play,game.possession['offense'],game.possession['defense'])
+    if current_play['field_goal_attempt']:
+        if current_play['field_goal_success']:
             print 'Kick Is Good'
         else:
             print 'Kick No Good'
-    if punt_block:
+    if current_play['punt_blocked']:
         print 'Punt Blocked!'
-    print 'Yards On Play', yards
-    if change_possession:
+    print 'Yards On Play', current_play['net_yards_on_play']
+    if current_play['change_of_possession']:
         change_game_possession(game)
