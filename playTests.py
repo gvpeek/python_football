@@ -5,7 +5,7 @@ Created on Jan 7, 2012
 '''
 
 from math import ceil, floor, pow
-from random import randint, choice
+from random import randint
 
 netYardsOnPlay = 0
 #play = raw_input('Select Play:')
@@ -14,16 +14,19 @@ plays = ['RI','RO','PS','2PRI','2PRO','2PPS','PM','PL','RC','K','OK','PUNT','FG'
 
 
 def determinePlayResult(play,offense,defense):
-    turnover = False
-    change_of_possession = False
-    netYardsOnPlay = 0 
-    fieldGoalSuccess = False
-    fieldGoalAttempt = False
-    puntBlocked = False
+    result = {
+              'play_type' : play,
+              'turnover' : False,
+              'change_of_possession' : False,
+              'net_yards_on_play' : 0,
+              'field_goal_attempt' : False,
+              'field_goal_success' : False,
+              'punt_blocked' : False
+        }
     playRnd = randint(1,100)
     playRating = determinePlayRating(play,offense,defense)
     if play == 'RC':
-        netYardsOnPlay = -2
+        result['net_yards_on_play'] = -2
     elif play in ['K','OK']:
         onside_recover = False
         kickoffYardage = determineKickoffYardage(play,playRating)
@@ -39,20 +42,19 @@ def determinePlayResult(play,offense,defense):
             returnYardage = -(determineReturnYardage(play,offense))
         else:
             returnYardage = determineReturnYardage(play,defense)
-            change_of_possession = True            
+            result['change_of_possession'] = True            
         print 'kick', kickoffYardage, 'return', returnYardage
-        netYardsOnPlay = kickoffYardage - returnYardage
+        result['net_yards_on_play'] = kickoffYardage - returnYardage
     elif play == 'PUNT':
-        puntYardage, puntBlocked = determinePuntYardage(playRating)
+        puntYardage, result['punt_blocked'] = determinePuntYardage(playRating)
         ##TODO: determine position
         ##TODO: if not touchback or out of bounds or fair catch
         returnYardage = determineReturnYardage(play,defense)
         print 'punt', puntYardage, 'return', returnYardage
-        netYardsOnPlay = puntYardage - returnYardage
-        change_of_possession = True
+        result['net_yards_on_play'] = puntYardage - returnYardage
+        result['change_of_possession'] = True
     elif play in ['FG','XP']:
-        fieldGoalAttempt = True
-        fieldGoalSuccess = False
+        result['field_goal_attempt'] = True
         ## Testing
         if play == 'FG':
             convertedYardline = randint(1,70)
@@ -60,22 +62,22 @@ def determinePlayResult(play,offense,defense):
             convertedYardline = 2
         print convertedYardline, 'yardline'
         ## Testing
-        fieldGoalSuccess = determineFieldGoalResult(play,playRating,convertedYardline)
-        if not fieldGoalSuccess:
-            change_of_possession = True
+        result['field_goal_success'] = determineFieldGoalResult(play,playRating,convertedYardline)
+        if not result['field_goal_success']:
+            result['change_of_possession'] = True
     else: 
         if playRnd <= playRating:
             playSuccess=True
         else:
             playSuccess=False
-            turnover = determineTurnover(play,playRating)
+            result['turnover'] = determineTurnover(play,playRating)
             
-        if not turnover:
-            netYardsOnPlay=determinePlayYardage(play,playRating,playSuccess)
+        if not result['turnover']:
+            result['net_yards_on_play']=determinePlayYardage(play,playRating,playSuccess)
         else:
-            netYardsOnPlay = (determinePlayYardage(play,playRating,playSuccess) - determineReturnYardage(play,defense))
-            change_of_possession = True
-    return netYardsOnPlay, change_of_possession, fieldGoalAttempt, fieldGoalSuccess, puntBlocked
+            result['net_yards_on_play'] = (determinePlayYardage(play,playRating,playSuccess) - determineReturnYardage(play,defense))
+            result['change_of_possession'] = True
+    return result
 
 def determinePlayYardage(play,playRating,playSuccess):
     rnd = randint(1,100)

@@ -15,15 +15,15 @@ class Team():
         self.id = get_next_team_id()
         self.city = city
         self.nickname = nickname
-        self.rating_qb = randint(60,90)
-        self.rating_rb = randint(60,90)
-        self.rating_wr = randint(60,90)
-        self.rating_ol = randint(60,90)
-        self.rating_dl = randint(60,90)
-        self.rating_lb = randint(60,90)
-        self.rating_cb = randint(60,90)
-        self.rating_s = randint(60,90)
-        self.rating_sp = randint(60,90)
+        self.rating_qb = float(randint(60,90))
+        self.rating_rb = float(randint(60,90))
+        self.rating_wr = float(randint(60,90))
+        self.rating_ol = float(randint(60,90))
+        self.rating_dl = float(randint(60,90))
+        self.rating_lb = float(randint(60,90))
+        self.rating_cb = float(randint(60,90))
+        self.rating_s = float(randint(60,90))
+        self.rating_sp = float(randint(60,90))
         
 
 def get_next_team_id():
