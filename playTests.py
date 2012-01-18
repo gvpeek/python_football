@@ -14,7 +14,7 @@ plays_sp = ['2PRI','2PRO','2PPS','K','OK','PUNT','FG','XP']
 
 
 
-def determine_play_result(play,away_rating_penalty,position,offense,defense):
+def determine_play_result(play,away_possession,position,offense,defense):
     play_result = {
               'play_type' : play,
               'turnover' : False,
@@ -31,7 +31,7 @@ def determine_play_result(play,away_rating_penalty,position,offense,defense):
               'safety' : False,
               'touchdown' : False      
         }
-    play_rating = determine_play_rating(play, offense, defense, away_rating_penalty)
+    play_rating = determine_play_rating(play, offense, defense, away_possession)
     
     if play == 'RC':
         play_result['offense_yardage'] = -2
@@ -87,7 +87,7 @@ def determine_play_result(play,away_rating_penalty,position,offense,defense):
     
     elif play in ['FG','XP']:
         play_result['field_goal_attempt'] = True
-        play_result['field_goal_success'] = determine_field_goal_result(play,play_rating,position['converted_yardline'])
+        play_result['field_goal_success'] = determine_field_goal_result(play, play_rating, position['absolute_yardline'], away_possession)
         
         if not play_result['field_goal_success']:
             play_result['change_of_possession'] = True
@@ -161,8 +161,13 @@ def determine_turnover(play,play_rating):
             change_of_possession = True
     return change_of_possession
 
-def determine_field_goal_result(play,play_rating,distance):
+def determine_field_goal_result(play, play_rating, absolute_yardline, away_kick_attempt):
+    if away_kick_attempt:
+        distance = absolute_yardline
+    else:
+        distance = 100 - absolute_yardline
     print 'distance', distance
+    
     if play == 'FG':
         fg_rnd = randint(1,110)
     elif play == 'XP':
@@ -281,6 +286,9 @@ def determine_play_penalty(play,offense,away_rating_penalty):
     return penalty
 
 def determine_position(position, yardage, reverse_direction=False):
+    position['in_home_endzone'] = False
+    position['in_away_endzone'] = False
+    
     if reverse_direction:
         direction = position['direction'] * -1
     else:

@@ -199,17 +199,39 @@ def determine_time_remaining(current_time):
 
 def determine_score(play_result,game):
     if game.position['in_home_endzone']:
+        game.situation['away_scored_on_play'] = True
         if (game.possession['offense'] == game.away and not play_result['change_of_possession']) or (game.possession['offense'] == game.home and play_result['change_of_possession']):
-            game.away.stats['score'] += 6
+            if play_result['play_type'][0] == '2':
+                game.away.stats['score'] += 2
+            else:
+                game.away.stats['score'] += 6
+                game.situation['touchdown'] = True
         elif game.possession['offense'] == game.home and not play_result['change_of_possession']:
             game.away.stats['score'] += 2
-    
-    if game.position['in_away_endzone']:
+            game.situation['safety'] = True
+    elif game.position['in_away_endzone']:
+        game.situation['home_scored_on_play'] = True
         if (game.possession['offense'] == game.home and not play_result['change_of_possession']) or (game.possession['offense'] == game.away and play_result['change_of_possession']):
-            game.home.stats['score'] += 6
+            if play_result['play_type'][0] == '2':
+                game.home.stats['score'] += 2
+            else:
+                game.home.stats['score'] += 6
+                game.situation['touchdown'] = True
         elif game.possession['offense'] == game.away and not play_result['change_of_possession']:
             game.home.stats['score'] += 2
-
+            game.situation['safety'] = True
+    elif play_result['field_goal_success']:
+        if play_result['play_type'] == 'FG':
+            points = 3
+        elif play_result['play_type'] == 'XP':
+            points = 1
+        if game.possession['offense'] == game.away:
+            game.situation['away_scored_on_play'] = True
+            game.away.stats['score'] += points
+        elif game.possession['offense'] == game.home:
+            game.situation['home_scored_on_play'] = True
+            game.home.stats['score'] += points
+        
     print game.away.city, game.away.nickname, game.away.stats['score']    
     print game.home.city, game.home.nickname, game.home.stats['score']
 #        
