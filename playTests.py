@@ -295,9 +295,6 @@ def determine_position(position, yardage, reverse_direction=False):
         direction = position['direction']
     position['absolute_yardline'] += (yardage * direction)
     
- 
-        
-    
     if position['absolute_yardline'] > 50:
         position['converted_yardline'] = 100 - position['absolute_yardline']
         if position['absolute_yardline'] >= 100:

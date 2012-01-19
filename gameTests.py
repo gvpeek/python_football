@@ -16,7 +16,7 @@ from teamTests import team1,team2
 ## @QUESTION - is this the best way to handle this. If not, how should I increment and utilize
 ## id generator outside of scope of game function?
 next_game_id = 0
-scope = vars()
+#scope = vars()
 
 class Game():
     "Basic Game"
@@ -145,10 +145,50 @@ class Game():
         print won_toss
         return won_toss
     
+    def tick_clock(self):
+    ## @QUESTION - better to have this as a "WHILE" of the main logic 
+        if (self.time['end_of_game'] and not self.time['overtime']) or self.time['end_of_overtime']:
+            return False
+        
+        self.time['clicks'] += 1
+        
+        if (self.time['clicks'] % 2) > 0:
+            self.time['minutes'] -= 1
+            self.time['seconds'] = 30
+        else:
+            self.time['seconds'] = 0
+            
+        if self.time['minutes'] == 0 and self.time['seconds'] == 0:
+            if self.time['quarter'] == 4:
+                self.time['end_of_game'] = True
+            else:
+                if self.time['quarter'] == 2:
+                    self.time['end_of_half'] = True
+                elif self.time['quarter'] == 5 and not self.time['definitive_overtime']:
+                    self.time['end_of_overtime'] = True
+    
+            self.time['quarter'] += 1
+            self.time['minutes'] = 15
+            self.time['seconds'] = 00
+    
+    
+        print self.time['clicks']
+        print self.time['minutes']
+        print self.time['seconds']
+        print self.time['quarter']
+        print self.time['end_of_half']
+        print self.time['end_of_game']
+        print self.time['overtime']
+        print self.time['end_of_overtime']
+        print self.time['definitive_overtime']                        
+#                     'overtime' : False,
+    
 
 def get_next_game_id():
-    team_id = scope['next_game_id']
-    scope['next_game_id'] += 1
+    global next_game_id
+    team_id = next_game_id
+    next_game_id += 1
+    print team_id
     return team_id
 
 def change_game_possession(game):
@@ -159,43 +199,7 @@ def change_game_possession(game):
         game.possession = {'offense':game.away,'defense':game.home}
         game.position['direction'] = -1
 
-def determine_time_remaining(current_time):
-    ## @QUESTION - better to have this as a "WHILE" of the main logic 
-    if (current_time['end_of_game'] and not current_time['overtime']) or current_time['end_of_overtime']:
-        return False
-    
-    current_time['clicks'] += 1
-    
-    if (current_time['clicks'] % 2) > 0:
-        current_time['minutes'] -= 1
-        current_time['seconds'] = 30
-    else:
-        current_time['seconds'] = 0
-        
-    if current_time['minutes'] == 0 and current_time['seconds'] == 0:
-        if current_time['quarter'] == 4:
-            current_time['end_of_game'] = True
-        else:
-            if current_time['quarter'] == 2:
-                current_time['end_of_half'] = True
-            elif current_time['quarter'] == 5 and not current_time['definitive_overtime']:
-                current_time['end_of_overtime'] = True
 
-        current_time['quarter'] += 1
-        current_time['minutes'] = 15
-        current_time['seconds'] = 00
-
-
-    print current_time['clicks']
-    print current_time['minutes']
-    print current_time['seconds']
-    print current_time['quarter']
-    print current_time['end_of_half']
-    print current_time['end_of_game']
-    print current_time['overtime']
-    print current_time['end_of_overtime']
-    print current_time['definitive_overtime']                        
-#                     'overtime' : False,
 
 def determine_score(play_result,game):
     if game.position['in_home_endzone']:
@@ -281,4 +285,4 @@ for i in range(130):
     determine_score(current_play,game)
     if current_play['change_of_possession']:
         change_game_possession(game)
-    determine_time_remaining(game.time)
+    game.tick_clock()
