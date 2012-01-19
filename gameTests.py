@@ -69,7 +69,12 @@ class Game():
         
         ## @QUESTION - is this the best way to populate the initial stats and best place for dict?
         initial_stats = {
-                        'score' : 0,
+                        'points' : 0,
+                        'points_q1' : 0,
+                        'points_q2' : 0,
+                        'points_q3' : 0,
+                        'points_q4' : 0,
+                        'points_ot' : 0,
                         'total_offense' : 0,
                         'home_pass_att' : 0, 
                         'pass_comp' : 0,
@@ -100,12 +105,7 @@ class Game():
                         'third_down_att' : 0,
                         'third_down_conv' : 0,
                         'fourth_down_att' : 0,
-                        'fourth_down_conv': 0,
-                        'score_q1' : 0,
-                        'score_q2' : 0,
-                        'score_q3' : 0,
-                        'score_q4' : 0,
-                        'score_ot' : 0
+                        'fourth_down_conv': 0
                         }
         
         initial_play_call_counts = {
@@ -206,23 +206,23 @@ def determine_score(play_result,game):
         game.situation['away_scored_on_play'] = True
         if (game.possession['offense'] == game.away and not play_result['change_of_possession']) or (game.possession['offense'] == game.home and play_result['change_of_possession']):
             if play_result['play_type'][0] == '2':
-                game.away.stats['score'] += 2
+                game.away.stats['points'] += 2
             else:
-                game.away.stats['score'] += 6
+                game.away.stats['points'] += 6
                 game.situation['touchdown'] = True
         elif game.possession['offense'] == game.home and not play_result['change_of_possession']:
-            game.away.stats['score'] += 2
+            game.away.stats['points'] += 2
             game.situation['safety'] = True
     elif game.position['in_away_endzone']:
         game.situation['home_scored_on_play'] = True
         if (game.possession['offense'] == game.home and not play_result['change_of_possession']) or (game.possession['offense'] == game.away and play_result['change_of_possession']):
             if play_result['play_type'][0] == '2':
-                game.home.stats['score'] += 2
+                game.home.stats['points'] += 2
             else:
-                game.home.stats['score'] += 6
+                game.home.stats['points'] += 6
                 game.situation['touchdown'] = True
         elif game.possession['offense'] == game.away and not play_result['change_of_possession']:
-            game.home.stats['score'] += 2
+            game.home.stats['points'] += 2
             game.situation['safety'] = True
     elif play_result['field_goal_success']:
         if play_result['play_type'] == 'FG':
@@ -231,13 +231,13 @@ def determine_score(play_result,game):
             points = 1
         if game.possession['offense'] == game.away:
             game.situation['away_scored_on_play'] = True
-            game.away.stats['score'] += points
+            game.away.stats['points'] += points
         elif game.possession['offense'] == game.home:
             game.situation['home_scored_on_play'] = True
-            game.home.stats['score'] += points
+            game.home.stats['points'] += points
         
-    print game.away.city, game.away.nickname, game.away.stats['score']    
-    print game.home.city, game.home.nickname, game.home.stats['score']
+    print game.away.city, game.away.nickname, game.away.stats['points']    
+    print game.home.city, game.home.nickname, game.home.stats['points']
 #        
 #        
 #        
