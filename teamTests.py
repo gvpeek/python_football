@@ -27,7 +27,12 @@ class Team():
         
             ## @QUESTION - is this the best way to populate the initial stats and best place for dict?
         self.stats = {
-                        'score' : 0,
+                        'points' : 0,
+                        'points_q1' : 0,
+                        'points_q2' : 0,
+                        'points_q3' : 0,
+                        'points_q4' : 0,
+                        'points_ot' : 0,
                         'total_offense' : 0,
                         'home_pass_att' : 0, 
                         'pass_comp' : 0,
@@ -58,12 +63,7 @@ class Team():
                         'third_down_att' : 0,
                         'third_down_conv' : 0,
                         'fourth_down_att' : 0,
-                        'fourth_down_conv': 0,
-                        'score_q1' : 0,
-                        'score_q2' : 0,
-                        'score_q3' : 0,
-                        'score_q4' : 0,
-                        'score_ot' : 0
+                        'fourth_down_conv': 0
                         }
         
 
