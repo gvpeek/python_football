@@ -5,9 +5,9 @@ Created on Jan 15, 2012
 '''
 
 from random import randint
+from math import ceil
 
 next_team_id = 0
-scope = vars()
 
 class Team():
     "Team"
@@ -24,6 +24,27 @@ class Team():
         self.rating_cb = float(randint(60,90))
         self.rating_s = float(randint(60,90))
         self.rating_sp = float(randint(60,90))
+       
+        def calculate_play_type_rating(self):
+            self.rating_ri_off = ceil(((self.rating_qb + self.rating_rb*4 + self.rating_ol*5) / 10))
+            self.rating_ri_def = ceil((((self.rating_dl*6 + self.rating_lb*3 + self.rating_s) / 10) - 60) / 4)
+            self.rating_ro_off = ceil(((self.rating_qb + self.rating_rb*5 + self.rating_wr + self.rating_ol*3) / 10))
+            self.rating_ro_def = ceil((((self.rating_dl*3 + self.rating_lb*5 + self.rating_cb + self.rating_s) / 10) - 60) / 4)
+            self.rating_ps_off = ceil(((self.rating_qb*4 + self.rating_rb*2 + self.rating_wr*3 + self.rating_ol) / 10))
+            self.rating_ps_def = ceil((((self.rating_dl + self.rating_lb*5 + self.rating_cb*3 + self.rating_s) / 10) - 60) / 4)
+            self.rating_pm_off = ceil(((self.rating_qb*4 + self.rating_wr*4 + self.rating_ol*2) / 10))
+            self.rating_pm_def = ceil((((self.rating_dl*2 + self.rating_lb*2 + self.rating_cb*4 + self.rating_s*2) / 10) - 60) / 4)
+            self.rating_pl_off = ceil(((self.rating_qb*4 + self.rating_wr*3 + self.rating_ol*3) / 10))
+            self.rating_pl_def = ceil((((self.rating_dl*3 + self.rating_lb + self.rating_cb*3 + self.rating_s*3) / 10) - 60) / 4)
+            self.rating_sp_off = self.rating_sp
+            self.rating_sp_def = ceil((self.rating_sp - 60) / 4)
+
+            ##Testing
+            print self.city, self.nickname, self.rating_ri_off,self.rating_ri_def,self.rating_ro_off,self.rating_ro_def,self.rating_ps_off,self.rating_ps_def,self.rating_pm_off,self.rating_pm_def,self.rating_pl_off,self.rating_pl_def,self.rating_sp_off,self.rating_sp_def
+            ##Testing
+            return True
+
+        calculate_play_type_rating(self)
         
             ## @QUESTION - is this the best way to populate the initial stats and best place for dict?
         self.stats = {
@@ -68,8 +89,9 @@ class Team():
         
 
 def get_next_team_id():
-    team_id = scope['next_team_id']
-    scope['next_team_id'] += 1
+    global next_team_id
+    team_id = next_team_id
+    next_team_id += 1
     return team_id
 
 team1 = Team("Austin","Easy")
