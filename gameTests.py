@@ -16,7 +16,6 @@ from teamTests import team1,team2
 ## @QUESTION - is this the best way to handle this. If not, how should I increment and utilize
 ## id generator outside of scope of game function?
 next_game_id = 0
-#scope = vars()
 
 class Game():
     "Basic Game"
@@ -28,6 +27,8 @@ class Game():
         self.division_game = division_game
         self.conference_game = conference_game 
         self.playoff_game = playoff_game  
+
+## @TODO - raise exception if div, conf or playoff True and league False
         
         self.possession = {
                            'offense':self.home,
@@ -46,6 +47,8 @@ class Game():
                      'definitive_overtime' : False
                      }
         
+        ## @QUESTION - better to define as false and then define as true
+        ## or to not define at all and check for existence  
         if self.playoff_game:
             self.time['definitive_overtime'] = True
         
