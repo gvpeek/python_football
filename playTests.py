@@ -16,20 +16,7 @@ plays_sp = ['2PRI','2PRO','2PPS','K','OK','PUNT','FG','XP']
 
 def determine_play_result(play,away_possession,position,offense,defense):
     play_result = {
-              'play_type' : play,
-              'turnover' : False,
-              'change_of_possession' : False,
-              'touchback' : False,
-              'net_yards_on_play' : 0,
-              'offense_yardage' : 0,
-              'kickoff_yardage' : 0,
-              'punt_yardage' : 0,
-              'punt_blocked' : False,
-              'return_yardage' : 0,
-              'field_goal_attempt' : False,
-              'field_goal_success' : False,
-              'safety' : False,
-              'touchdown' : False      
+    
         }
     play_rating = determine_play_rating(play, offense, defense, away_possession)
     

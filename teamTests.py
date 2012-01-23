@@ -43,47 +43,6 @@ class Team():
         print self.city, self.nickname, self.rating_ri_off,self.rating_ri_def,self.rating_ro_off,self.rating_ro_def,self.rating_ps_off,self.rating_ps_def,self.rating_pm_off,self.rating_pm_def,self.rating_pl_off,self.rating_pl_def,self.rating_sp_off,self.rating_sp_def
         ##Testing
         
-            ## @QUESTION - is this the best way to populate the initial stats and best place for dict?
-        self.stats = {
-                        'points' : 0,
-                        'points_q1' : 0,
-                        'points_q2' : 0,
-                        'points_q3' : 0,
-                        'points_q4' : 0,
-                        'points_ot' : 0,
-                        'total_offense' : 0,
-                        'home_pass_att' : 0, 
-                        'pass_comp' : 0,
-                        'pass_int' : 0,
-                        'pass_yards' : 0,
-                        'pass_td' : 0,
-                        'passer_rating' : 0,
-                        'sacked' : 0,
-                        'sack_yards' : 0,
-                        'rush_att' : 0,
-                        'rush_yards' : 0,
-                        'rush_td' : 0,
-                        'rush_fumbles' : 0,
-                        'first_downs' : 0,
-                        'field_goals_att' : 0,
-                        'field_goals' : 0,
-                        'punts' : 0,
-                        'punt_yards' : 0,
-                        'punt_returns' : 0,
-                        'punt_return_yards' : 0,
-                        'kick_returns' : 0,
-                        'kick_return_yards' : 0,
-                        'return_yards' : 0,
-                        'extra_points_att' : 0,
-                        'extra_points' : 0,
-                        'two_point_att' : 0,
-                        'two_point_conv' : 0,
-                        'third_down_att' : 0,
-                        'third_down_conv' : 0,
-                        'fourth_down_att' : 0,
-                        'fourth_down_conv': 0
-                        }
-        
 
 def get_next_team_id():
     global next_team_id
