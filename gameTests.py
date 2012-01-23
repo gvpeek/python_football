@@ -29,101 +29,98 @@ class Game():
         self.playoff_game = playoff_game  
 
 ## @TODO - raise exception if div, conf or playoff True and league False
+        class Game_State():
+            "Initial Game State"
+            def __init__(self,game):
+                self.offense = game.home
+                self.defense = game.away
+                self.clicks = 0.0
+                self.minutes = 15
+                self.seconds = 0
+                self.quarter = 1
+                self.end_of_half = False
+                self.end_of_game = False
+                self.overtime = False
+                self.end_of_overtime = False
+                self.definitive_overtime = playoff_game
         
-        self.possession = {
-                           'offense':self.home,
-                           'defense':self.away
-                           }
+                self.direction = 1 ## 1=home, -1=away
+                self.absolute_yardline = 30
+                self.converted_yardline = 30
+                self.down = 1
+                self.yards_to_gain = 10
+                self.target_yardline = 30
+                self.in_home_endzone = False
+                self.in_away_endzone = False
+             
+                self.kickoff = True
+                self.turnover = False
+                self.change_of_possession = False
+                self.touchback = False
+                self.net_yards_on_play = 0
+                self.offense_yardage = 0
+                self.kickoff_yardage = 0
+                self.punt_yardage = 0
+                self.punt_blocked = False
+                self.return_yardage = 0
+                self.field_goal_attempt = False
+                self.field_goal_success = False
+                self.safety = False
+                self.touchdown = False  
+                self.home_scored_on_play = False
+                self.away_scored_on_play = False
         
-        self.time = {
-                     'clicks' : 0.0,
-                     'minutes' : 15,
-                     'seconds' : 0,
-                     'quarter' : 1,
-                     'end_of_half' : False,
-                     'end_of_game' : False,
-                     'overtime' : False,
-                     'end_of_overtime' : False,
-                     'definitive_overtime' : False
-                     }
-        
-        ## @QUESTION - better to define as false and then define as true
-        ## or to not define at all and check for existence  
-        if self.playoff_game:
-            self.time['definitive_overtime'] = True
-        
-        self.position = {
-                         'direction' : 1, ## 1=home, -1=away
-                         'absolute_yardline' : 30,
-                         'converted_yardline' : 30,
-                         'down' : 1,
-                         'yards_to_gain' : 10,
-                         'target_yardline' : 30,
-                         'in_home_endzone' : False,
-                         'in_away_endzone' : False
-                     }
-        
-        self.situation = {
-                          'kickoff' : True,
-                          'touchdown' : False,
-                          'home_scored_on_play' : False,
-                          'away_scored_on_play' : False
-                          }
         
         ## @QUESTION - is this the best way to populate the initial stats and best place for dict?
-        initial_stats = {
-                        'points' : 0,
-                        'points_q1' : 0,
-                        'points_q2' : 0,
-                        'points_q3' : 0,
-                        'points_q4' : 0,
-                        'points_ot' : 0,
-                        'total_offense' : 0,
-                        'home_pass_att' : 0, 
-                        'pass_comp' : 0,
-                        'pass_int' : 0,
-                        'pass_yards' : 0,
-                        'pass_td' : 0,
-                        'passer_rating' : 0,
-                        'sacked' : 0,
-                        'sack_yards' : 0,
-                        'rush_att' : 0,
-                        'rush_yards' : 0,
-                        'rush_td' : 0,
-                        'rush_fumbles' : 0,
-                        'first_downs' : 0,
-                        'field_goals_att' : 0,
-                        'field_goals' : 0,
-                        'punts' : 0,
-                        'punt_yards' : 0,
-                        'punt_returns' : 0,
-                        'punt_return_yards' : 0,
-                        'kick_returns' : 0,
-                        'kick_return_yards' : 0,
-                        'return_yards' : 0,
-                        'extra_points_att' : 0,
-                        'extra_points' : 0,
-                        'two_point_att' : 0,
-                        'two_point_conv' : 0,
-                        'third_down_att' : 0,
-                        'third_down_conv' : 0,
-                        'fourth_down_att' : 0,
-                        'fourth_down_conv': 0
-                        }
+        def initial_stats(team):
+            team.points = 0
+            team.points_q1 = 0
+            team.points_q2 = 0
+            team.points_q3 = 0
+            team.points_q4 = 0
+            team.points_ot = 0
+            team.total_offense = 0
+            team.home_pass_att = 0 
+            team.pass_comp = 0
+            team.pass_int = 0
+            team.pass_yards = 0
+            team.pass_td = 0
+            team.passer_rating = 0
+            team.sacked = 0
+            team.sack_yards = 0
+            team.rush_att = 0
+            team.rush_yards = 0
+            team.rush_td = 0
+            team.rush_fumbles = 0
+            team.first_downs = 0
+            team.field_goals_att = 0
+            team.field_goals = 0
+            team.punts = 0
+            team.punt_yards = 0
+            team.punt_returns = 0
+            team.punt_return_yards = 0
+            team.kick_returns = 0
+            team.kick_return_yards = 0
+            team.return_yards = 0
+            team.extra_points_att = 0
+            team.extra_points = 0
+            team.two_point_att = 0
+            team.two_point_conv = 0
+            team.third_down_att = 0
+            team.third_down_conv = 0
+            team.fourth_down_att = 0
+            team.fourth_down_conv = 0
+            
+            team.count_ri = 0.0
+            team.count_ro = 0.0
+            team.count_ps = 0.0
+            team.count_pm = 0.0
+            team.count_pl = 0.0
+            team.count_total_plays = 0.0
         
-        initial_play_call_counts = {
-                                    'RI' : 0.0,
-                                    'RO' : 0.0,
-                                    'PS' : 0.0,
-                                    'PM' : 0.0,
-                                    'PL' : 0.0,
-                                    'total_plays' : 0.0
-                                    }
-        
-        self.home.stats = deepcopy(initial_stats)
-        self.away.stats = deepcopy(initial_stats)
-        self.home.play_calls = deepcopy(initial_play_call_counts)
-        self.away.play_calls = deepcopy(initial_play_call_counts)
+        self.game_state = Game_State(self)
+        initial_stats(self.home)
+        initial_stats(self.away)
 
     def coin_flip(self,*side_choice):
         #=======================================================================
@@ -135,7 +132,7 @@ class Game():
         # Will need to refactor if option to defer the choice is added.
         #=======================================================================
         won_toss = False
-        side_options = ['Heads','Tails']
+        side_options = ('Heads','Tails')
         if not side_choice:
             side_choice = choice(side_options)
         flip_result = choice(side_options)
@@ -143,47 +140,47 @@ class Game():
             won_toss = True
         else:
             change_game_possession(self)
-            self.position['absolute_yardline'] = 70
-            self.position['side_of_field'] = 'H'
+            self.game_state.absolute_yardline = 70
+            self.game_state.side_of_field = 'H'
         print won_toss
         return won_toss
     
     def tick_clock(self):
     ## @QUESTION - better to have this as a "WHILE" of the main logic 
-        if (self.time['end_of_game'] and not self.time['overtime']) or self.time['end_of_overtime']:
+        if (self.game_state.end_of_game and not self.game_state.overtime) or self.game_state.end_of_overtime:
             return False
         
-        self.time['clicks'] += 1
+        self.game_state.clicks += 1
         
-        if (self.time['clicks'] % 2) > 0:
-            self.time['minutes'] -= 1
-            self.time['seconds'] = 30
+        if (self.game_state.clicks % 2) > 0:
+            self.game_state.minutes -= 1
+            self.game_state.seconds = 30
         else:
-            self.time['seconds'] = 0
+            self.game_state.seconds = 0
             
-        if self.time['minutes'] == 0 and self.time['seconds'] == 0:
-            if self.time['quarter'] == 4:
-                self.time['end_of_game'] = True
+        if self.game_state.minutes == 0 and self.game_state.seconds == 0:
+            if self.game_state.quarter == 4:
+                self.game_state.end_of_game = True
             else:
-                if self.time['quarter'] == 2:
-                    self.time['end_of_half'] = True
-                elif self.time['quarter'] == 5 and not self.time['definitive_overtime']:
-                    self.time['end_of_overtime'] = True
+                if self.game_state.quarter == 2:
+                    self.game_state.end_of_half = True
+                elif self.game_state.quarter == 5 and not self.game_state.definitive_overtime:
+                    self.game_state.end_of_overtime = True
     
-            self.time['quarter'] += 1
-            self.time['minutes'] = 15
-            self.time['seconds'] = 00
+            self.game_state.quarter += 1
+            self.game_state.minutes = 15
+            self.game_state.seconds = 00
     
     
-        print self.time['clicks']
-        print self.time['minutes']
-        print self.time['seconds']
-        print self.time['quarter']
-        print self.time['end_of_half']
-        print self.time['end_of_game']
-        print self.time['overtime']
-        print self.time['end_of_overtime']
-        print self.time['definitive_overtime']                        
+        print self.game_state.clicks
+        print self.game_state.minutes
+        print self.game_state.seconds
+        print self.game_state.quarter
+        print self.game_state.end_of_half
+        print self.game_state.end_of_game
+        print self.game_state.overtime
+        print self.game_state.end_of_overtime
+        print self.game_state.definitive_overtime                        
 #                     'overtime' : False,
     
 
@@ -195,63 +192,52 @@ def get_next_game_id():
     return team_id
 
 def change_game_possession(game):
-    if game.away.id == game.possession['offense'].id:
+    if game.away.id == game.game_state.offense.id:
         game.possession = {'offense':game.home,'defense':game.away}
-        game.position['direction'] = 1
+        game.game_state.direction = 1
     else:
         game.possession = {'offense':game.away,'defense':game.home}
-        game.position['direction'] = -1
+        game.game_state.direction = -1
 
 
 
 def determine_score(play_result,game):
-    if game.position['in_home_endzone']:
-        game.situation['away_scored_on_play'] = True
-        if (game.possession['offense'] == game.away and not play_result['change_of_possession']) or (game.possession['offense'] == game.home and play_result['change_of_possession']):
+    if game.game_state.in_home_endzone:
+        game.game_state.away_scored_on_play = True
+        if (game.game_state.offense == game.away and not play_result['change_of_possession']) or (game.game_state.offense == game.home and play_result['change_of_possession']):
             if play_result['play_type'][0] == '2':
-                game.away.stats['points'] += 2
+                game.away.points += 2
             else:
-                game.away.stats['points'] += 6
-                game.situation['touchdown'] = True
-        elif game.possession['offense'] == game.home and not play_result['change_of_possession']:
-            game.away.stats['points'] += 2
-            game.situation['safety'] = True
-    elif game.position['in_away_endzone']:
-        game.situation['home_scored_on_play'] = True
-        if (game.possession['offense'] == game.home and not play_result['change_of_possession']) or (game.possession['offense'] == game.away and play_result['change_of_possession']):
+                game.away.points += 6
+                game.game_state.touchdown = True
+        elif game.game_state.offense == game.home and not play_result['change_of_possession']:
+            game.away.points += 2
+            game.game_state.safety = True
+    elif game.game_state.in_away_endzone:
+        game.game_state.home_scored_on_play = True
+        if (game.game_state.offense == game.home and not play_result['change_of_possession']) or (game.game_state.offense == game.away and play_result['change_of_possession']):
             if play_result['play_type'][0] == '2':
-                game.home.stats['points'] += 2
+                game.home.points += 2
             else:
-                game.home.stats['points'] += 6
-                game.situation['touchdown'] = True
-        elif game.possession['offense'] == game.away and not play_result['change_of_possession']:
-            game.home.stats['points'] += 2
-            game.situation['safety'] = True
+                game.home.points += 6
+                game.game_state.touchdown = True
+        elif game.game_state.offense == game.away and not play_result['change_of_possession']:
+            game.home.points += 2
+            game.game_state.safety = True
     elif play_result['field_goal_success']:
         if play_result['play_type'] == 'FG':
             points = 3
         elif play_result['play_type'] == 'XP':
             points = 1
-        if game.possession['offense'] == game.away:
-            game.situation['away_scored_on_play'] = True
-            game.away.stats['points'] += points
-        elif game.possession['offense'] == game.home:
-            game.situation['home_scored_on_play'] = True
-            game.home.stats['points'] += points
+        if game.game_state.offense == game.away:
+            game.game_state.away_scored_on_play = True
+            game.away.points += points
+        elif game.game_state.offense == game.home:
+            game.game_state.home_scored_on_play = True
+            game.home.points += points
         
-    print game.away.city, game.away.nickname, game.away.stats['points']    
-    print game.home.city, game.home.nickname, game.home.stats['points']
-#        
-#        
-#        
-#         
-#            'play_type' : play,
-#            'turnover' : False,
-#            'change_of_possession' : False,
-#            'field_goal_success' : False,
-#            'safety' : False,
-#            'touchdown' : False     
-
+    print game.away.city, game.away.nickname, game.away.points    
+    print game.home.city, game.home.nickname, game.home.points
 
 #------------------------------------------------------------------------------ 
 
@@ -272,10 +258,10 @@ for i in range(130):
     print ' '
     print play
     current_play = playTests.determine_play_result(play,
-                                                   (game.away == game.possession['offense']),
+                                                   (game.away == game.game_state.offense),
                                                    game.position,
-                                                   game.possession['offense'],
-                                                   game.possession['defense'])
+                                                   game.game_state.offense,
+                                                   game.game_state.defense)
     
     if current_play['field_goal_attempt']:
         if current_play['field_goal_success']:
