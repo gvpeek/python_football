@@ -13,6 +13,67 @@ from teamTests import team1,team2
 # @TODO: add logging
 #log = open('logfile.txt', 'w')
 
+class Clock(object):
+    "Basic Clock"
+    def __init__(self, quarter_length=15, playoff_game = False):
+        self.quarter_length = quarter_length
+        self.minutes = deepcopy(quarter_length)
+        self.seconds = 00
+        self.clicks = 0
+        self.quarter = 1
+        self.end_of_half = False
+        self.end_of_regulation = False
+        self.definitive_overtime = playoff_game
+
+    def end_of_quarter(self):
+        if self.minutes == 0 and self.seconds == 0:
+            if self.quarter == 2:
+                    self.end_of_half = True
+                    
+            if self.quarter == 4:
+                self.end_of_regulation = True
+                return False
+            
+            self.quarter += 1
+            self.minutes = self.quarter_length
+            self.seconds = 00        
+        
+    def run_clock(self):
+        if self.end_of_regulation:
+            return False
+    
+        self.clicks += 1
+    
+        if (self.clicks % 2) > 0:
+            self.minutes -= 1
+            self.seconds = 30
+        else:
+            self.seconds = 0
+            
+        self.end_of_quarter()
+        
+        return self.quarter, self.minutes, self.seconds
+        
+class overtimeClock(Clock):
+    "Overtime Clock"
+    def __init__(self):
+        self.definitive_overtime = Clock.definitive_overtime
+        self.end_of_ovetime= False
+        
+    def end_of_quarter(self):        
+        if self.minutes == 0 and self.seconds == 0:
+            if not self.definitive_overtime:
+                self.end_of_overtime = True
+                return False
+        else:
+            self.quarter += 1
+            self.minutes = self.quarter_length
+            self.seconds = 00
+            
+        self.end_of_quarter()
+            
+        return self.quarter, self.minutes, self.seconds
+
 ## @QUESTION - is this the best way to handle this. If not, how should I increment and utilize
 ## id generator outside of scope of game function?
 next_game_id = 0
