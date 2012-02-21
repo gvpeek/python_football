@@ -27,18 +27,20 @@ class Clock(object):
         self.minutes = deepcopy(quarter_length)
         self.seconds = 00
         self.clicks = 0
+        self.active = True
 
     def run_clock(self):
 
-        if self.minutes == 0 and self.seconds == 0:
-            return False
-          
-        self.clicks += 1
+        if self.active:
+            self.clicks += 1
     
-        if (self.clicks % 2) > 0:
-            self.minutes -= 1
-            self.seconds = 30
-        else:
-            self.seconds = 0
+            if (self.clicks % 2) > 0:
+                self.minutes -= 1
+                self.seconds = 30
+            else:
+                self.seconds = 0
+        
+        if self.minutes == 0 and self.seconds == 0:
+            self.active = False
 
-        return self.minutes, self.seconds
+        return self.minutes, self.seconds, self.active
