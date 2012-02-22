@@ -5,11 +5,19 @@ Created on Feb 21, 2012
 '''
 
 #===============================================================================
-# >>> number_of_quarters = 4
+# >>> number_of_quarters = 4 (future option)?
+#
 # >>> from collections import deque
 # >>> d = deque()
-# >>> for i in range(number_of_quarters):
-#    d.append(Clock())
+# >>> d.extend([Clock(),Clock(),'half',Clock(),Clock(),'end'])
+# >>> while d:
+#     ct = d.popleft()
+#     try:
+#         while ct.time_remaining:
+#             t = ct.run_clock()
+#             str(t)[2:7]
+#     except:
+#         print 'end of half processing'
 # 
 # Example:
 # >>> c = Clock()
