@@ -26,21 +26,25 @@ class Team():
         self.rating_sp = float(randint(60,90))
        
         ## @TODO create function to create tuple key
-        self.rating_ri_off = ceil(((self.rating_qb + self.rating_rb*4 + self.rating_ol*5) / 10))
-        self.rating_ri_def = ceil((((self.rating_dl*6 + self.rating_lb*3 + self.rating_s) / 10) - 60) / 4)
-        self.rating_ro_off = ceil(((self.rating_qb + self.rating_rb*5 + self.rating_wr + self.rating_ol*3) / 10))
-        self.rating_ro_def = ceil((((self.rating_dl*3 + self.rating_lb*5 + self.rating_cb + self.rating_s) / 10) - 60) / 4)
-        self.rating_ps_off = ceil(((self.rating_qb*4 + self.rating_rb*2 + self.rating_wr*3 + self.rating_ol) / 10))
-        self.rating_ps_def = ceil((((self.rating_dl + self.rating_lb*5 + self.rating_cb*3 + self.rating_s) / 10) - 60) / 4)
-        self.rating_pm_off = ceil(((self.rating_qb*4 + self.rating_wr*4 + self.rating_ol*2) / 10))
-        self.rating_pm_def = ceil((((self.rating_dl*2 + self.rating_lb*2 + self.rating_cb*4 + self.rating_s*2) / 10) - 60) / 4)
-        self.rating_pl_off = ceil(((self.rating_qb*4 + self.rating_wr*3 + self.rating_ol*3) / 10))
-        self.rating_pl_def = ceil((((self.rating_dl*3 + self.rating_lb + self.rating_cb*3 + self.rating_s*3) / 10) - 60) / 4)
-        self.rating_sp_off = self.rating_sp
-        self.rating_sp_def = ceil((self.rating_sp - 60) / 4)
+        self.rating.run_inside_off = ceil(((self.rating_qb + self.rating_rb*4 + self.rating_ol*5) / 10))
+        self.rating.run_inside_def = ceil((((self.rating_dl*6 + self.rating_lb*3 + self.rating_s) / 10) - 60) / 4)
+        self.rating.run_outside_off = ceil(((self.rating_qb + self.rating_rb*5 + self.rating_wr + self.rating_ol*3) / 10))
+        self.rating.run_outside_def = ceil((((self.rating_dl*3 + self.rating_lb*5 + self.rating_cb + self.rating_s) / 10) - 60) / 4)
+        self.rating.pass_short_off = ceil(((self.rating_qb*4 + self.rating_rb*2 + self.rating_wr*3 + self.rating_ol) / 10))
+        self.rating.pass_short_def = ceil((((self.rating_dl + self.rating_lb*5 + self.rating_cb*3 + self.rating_s) / 10) - 60) / 4)
+        self.rating.pass_medium_off = ceil(((self.rating_qb*4 + self.rating_wr*4 + self.rating_ol*2) / 10))
+        self.rating.pass_medium_def = ceil((((self.rating_dl*2 + self.rating_lb*2 + self.rating_cb*4 + self.rating_s*2) / 10) - 60) / 4)
+        self.rating.pass_long_off = ceil(((self.rating_qb*4 + self.rating_wr*3 + self.rating_ol*3) / 10))
+        self.rating.pass_long_def = ceil((((self.rating_dl*3 + self.rating_lb + self.rating_cb*3 + self.rating_s*3) / 10) - 60) / 4)
+        self.rating.special_teams_off = self.rating_sp
+        self.rating.special_teams_def = ceil((self.rating_sp - 60) / 4)
 
+        for r in self.rating:
+            if r < 60:
+                r = 60
+        
         ##Testing
-        print self.city, self.nickname, self.rating_ri_off,self.rating_ri_def,self.rating_ro_off,self.rating_ro_def,self.rating_ps_off,self.rating_ps_def,self.rating_pm_off,self.rating_pm_def,self.rating_pl_off,self.rating_pl_def,self.rating_sp_off,self.rating_sp_def
+        print self.city, self.nickname, self.rating.ri_off,self.rating.ri_def,self.rating.ro_off,self.rating.ro_def,self.rating.ps_off,self.rating.ps_def,self.rating.pm_off,self.rating.pm_def,self.rating.pl_off,self.rating.pl_def,self.rating.sp_off,self.rating.sp_def
         ##Testing
         
 
