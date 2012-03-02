@@ -13,66 +13,66 @@ from teamTests import team1,team2
 # @TODO: add logging
 #log = open('logfile.txt', 'w')
 
-class Clock(object):
-    "Basic Clock"
-    def __init__(self, quarter_length=15, playoff_game = False):
-        self.quarter_length = quarter_length
-        self.minutes = deepcopy(quarter_length)
-        self.seconds = 00
-        self.clicks = 0
-        self.quarter = 1
-        self.end_of_half = False
-        self.end_of_regulation = False
-        self.definitive_overtime = playoff_game
-
-    def end_of_quarter(self):
-        if self.minutes == 0 and self.seconds == 0:
-            if self.quarter == 2:
-                    self.end_of_half = True
-                    
-            if self.quarter == 4:
-                self.end_of_regulation = True
-                return False
-            
-            self.quarter += 1
-            self.minutes = self.quarter_length
-            self.seconds = 00        
+#class Clock(object):
+#    "Basic Clock"
+#    def __init__(self, quarter_length=15, playoff_game = False):
+#        self.quarter_length = quarter_length
+#        self.minutes = deepcopy(quarter_length)
+#        self.seconds = 00
+#        self.clicks = 0
+#        self.quarter = 1
+#        self.end_of_half = False
+#        self.end_of_regulation = False
+#        self.definitive_overtime = playoff_game
+#
+#    def end_of_quarter(self):
+#        if self.minutes == 0 and self.seconds == 0:
+#            if self.quarter == 2:
+#                    self.end_of_half = True
+#                    
+#            if self.quarter == 4:
+#                self.end_of_regulation = True
+#                return False
+#            
+#            self.quarter += 1
+#            self.minutes = self.quarter_length
+#            self.seconds = 00        
+#        
+#    def run_clock(self):
+#        if self.end_of_regulation:
+#            return False
+#    
+#        self.clicks += 1
+#    
+#        if (self.clicks % 2) > 0:
+#            self.minutes -= 1
+#            self.seconds = 30
+#        else:
+#            self.seconds = 0
+#            
+#        self.end_of_quarter()
+#        
+#        return self.quarter, self.minutes, self.seconds
         
-    def run_clock(self):
-        if self.end_of_regulation:
-            return False
-    
-        self.clicks += 1
-    
-        if (self.clicks % 2) > 0:
-            self.minutes -= 1
-            self.seconds = 30
-        else:
-            self.seconds = 0
-            
-        self.end_of_quarter()
-        
-        return self.quarter, self.minutes, self.seconds
-        
-class overtimeClock(Clock):
-    "Overtime Clock"
-    def __init__(self):
-        self.definitive_overtime = Clock.definitive_overtime
-        self.end_of_ovetime= False
-        
-    def end_of_quarter(self):        
-        if self.minutes == 0 and self.seconds == 0:
-            if not self.definitive_overtime:
-                self.end_of_overtime = True
-                return False
-        else:
-            self.quarter += 1
-            self.minutes = self.quarter_length
-            self.seconds = 00
-            
-        self.end_of_quarter()
-            
-        return self.quarter, self.minutes, self.seconds
+#class overtimeClock(Clock):
+#    "Overtime Clock"
+#    def __init__(self):
+#        self.definitive_overtime = Clock.definitive_overtime
+#        self.end_of_ovetime= False
+#        
+#    def end_of_quarter(self):        
+#        if self.minutes == 0 and self.seconds == 0:
+#            if not self.definitive_overtime:
+#                self.end_of_overtime = True
+#                return False
+#        else:
+#            self.quarter += 1
+#            self.minutes = self.quarter_length
+#            self.seconds = 00
+#            
+#        self.end_of_quarter()
+#            
+#        return self.quarter, self.minutes, self.seconds
 
 ## @QUESTION - is this the best way to handle this. If not, how should I increment and utilize
 ## id generator outside of scope of game function?
@@ -206,42 +206,42 @@ class Game():
         print won_toss
         return won_toss
     
-    def tick_clock(self):
-    ## @QUESTION - better to have this as a "WHILE" of the main logic 
-        if (self.game_state.end_of_game and not self.game_state.overtime) or self.game_state.end_of_overtime:
-            return False
-        
-        self.game_state.clicks += 1
-        
-        if (self.game_state.clicks % 2) > 0:
-            self.game_state.minutes -= 1
-            self.game_state.seconds = 30
-        else:
-            self.game_state.seconds = 0
-            
-        if self.game_state.minutes == 0 and self.game_state.seconds == 0:
-            if self.game_state.quarter == 4:
-                self.game_state.end_of_game = True
-            else:
-                if self.game_state.quarter == 2:
-                    self.game_state.end_of_half = True
-                elif self.game_state.quarter == 5 and not self.game_state.definitive_overtime:
-                    self.game_state.end_of_overtime = True
+#    def tick_clock(self):
+#    ## @QUESTION - better to have this as a "WHILE" of the main logic 
+#        if (self.game_state.end_of_game and not self.game_state.overtime) or self.game_state.end_of_overtime:
+#            return False
+#        
+#        self.game_state.clicks += 1
+#        
+#        if (self.game_state.clicks % 2) > 0:
+#            self.game_state.minutes -= 1
+#            self.game_state.seconds = 30
+#        else:
+#            self.game_state.seconds = 0
+#            
+#        if self.game_state.minutes == 0 and self.game_state.seconds == 0:
+#            if self.game_state.quarter == 4:
+#                self.game_state.end_of_game = True
+#            else:
+#                if self.game_state.quarter == 2:
+#                    self.game_state.end_of_half = True
+#                elif self.game_state.quarter == 5 and not self.game_state.definitive_overtime:
+#                    self.game_state.end_of_overtime = True
+#    
+#            self.game_state.quarter += 1
+#            self.game_state.minutes = 15
+#            self.game_state.seconds = 00
     
-            self.game_state.quarter += 1
-            self.game_state.minutes = 15
-            self.game_state.seconds = 00
     
-    
-        print self.game_state.clicks
-        print self.game_state.minutes
-        print self.game_state.seconds
-        print self.game_state.quarter
-        print self.game_state.end_of_half
-        print self.game_state.end_of_game
-        print self.game_state.overtime
-        print self.game_state.end_of_overtime
-        print self.game_state.definitive_overtime                        
+#        print self.game_state.clicks
+#        print self.game_state.minutes
+#        print self.game_state.seconds
+#        print self.game_state.quarter
+#        print self.game_state.end_of_half
+#        print self.game_state.end_of_game
+#        print self.game_state.overtime
+#        print self.game_state.end_of_overtime
+#        print self.game_state.definitive_overtime                        
 #                     'overtime' : False,
     
 
