@@ -17,7 +17,7 @@ class DownSet(State):
         self.converted = False
         self.active = True
         
-    def convertCheck(self,playResult):
+    def convert_check(self,playResult):
         if not self.active:
             return False
         
