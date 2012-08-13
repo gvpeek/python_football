@@ -33,3 +33,8 @@ class DownSet(State):
             self.down += 1
             return self.down, self.yardsToGo
         
+class Drive(State):
+    "State for drive"
+    def __init__(self, kickoff=False):
+        self.kickoff = kickoff
+    
