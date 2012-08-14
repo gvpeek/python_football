@@ -105,14 +105,14 @@ class Game():
                 self.end_of_overtime = False
                 self.definitive_overtime = playoff_game
         
-                self.direction = 1 ## 1=home, -1=away
-                self.absolute_yardline = 30
-                self.converted_yardline = 30
-                self.down = 1
-                self.yards_to_gain = 10
-                self.target_yardline = 30
-                self.in_home_endzone = False
-                self.in_away_endzone = False
+#                self.direction = 1 ## 1=home, -1=away
+#                self.absolute_yardline = 30
+#                self.converted_yardline = 30
+#                self.down = 1
+#                self.yards_to_gain = 10
+#                self.target_yardline = 30
+#                self.in_home_endzone = False
+#                self.in_away_endzone = False
              
                 self.kickoff = True
                 self.turnover = False
