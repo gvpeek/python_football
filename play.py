@@ -6,6 +6,7 @@ Created on Mar 1, 2012
 
 from random import randint
 from math import ceil, floor
+import pprint
 
 #===============================================================================
 # 
@@ -79,17 +80,15 @@ class Play(object):
             raise Exception
 
     def determine_play_success(self):
+        self.play_success=False 
         play_rnd = randint(1,100)
         if play_rnd <= self.play_rating:
             self.play_success=True
-        else:
-            self.play_success=False  
 
     def determine_turnover(self,adjustment):
         turnover_rnd = randint(1,100)
         if turnover_rnd <= ((100 - self.play_rating) / adjustment):
             self.turnover = True
-            print 'Turnover!!!!!!!'
        
     def determine_return_yardage(self, returner_rating, adjustment):
         return_rnd = randint(1,100)
@@ -168,28 +167,47 @@ class Play(object):
             self.determine_return_yardage(self.defense.rating_dl,-1)
             self.determine_position(self.return_yardage)
 
+    def run_outside(self):
+        self.play_rating = self.determine_off_rating(1,5,1,3) - self.determine_def_rating(3,5,1,1) - self.offense.away_penalty
+        self.determine_play_success()
+        if not self.play_success: 
+            self.determine_turnover(3.5)
+        
+        self.determine_play_yardage(-.7,-1)
+        if self.offense_yardage < -5:
+            self.offense_yardage= -5
+        self.determine_position(self.offense_yardage)
+
+        if self.turnover:
+            self.change_of_possession = True
+            self.determine_return_yardage(self.defense.rating_lb,-1)
+            self.determine_position(self.return_yardage)
 
 #===============================================================================
 #
 ## test execution 
 team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
-print team1.city,team1.nickname,team1.rating_qb,team1.rating_rb,team1.rating_wr,team1.rating_ol,team1.rating_dl,team1.rating_lb,team1.rating_cb,team1.rating_s,team1.rating_sp
-print team2.city,team2.nickname,team2.rating_qb,team2.rating_rb,team2.rating_wr,team2.rating_ol,team2.rating_dl,team2.rating_lb,team2.rating_cb,team2.rating_s,team2.rating_sp
+#print team1.city,team1.nickname,team1.rating_qb,team1.rating_rb,team1.rating_wr,team1.rating_ol,team1.rating_dl,team1.rating_lb,team1.rating_cb,team1.rating_s,team1.rating_sp
+#print team2.city,team2.nickname,team2.rating_qb,team2.rating_rb,team2.rating_wr,team2.rating_ol,team2.rating_dl,team2.rating_lb,team2.rating_cb,team2.rating_s,team2.rating_sp
+pprint.pprint(vars(team1)) 
+print ' '
+pprint.pprint(vars(team2)) 
 
 f = Field()
 
-for a in range(12):
+for a in range(9):
     print ' '
     p1 = Play(team1,team2,f)
     p1.run_clock()
-    print p1.offense_yardage
     p2 = Play(team1,team2,f)
     p2.kickoff()
-    print p2.offense_yardage
     p3 = Play(team1,team2,f)
     p3.run_inside()
-    print p3.offense_yardage    
+    pprint.pprint(vars(p3))
+    p4 = Play(team1,team2,f)
+    p4.run_outside()
+    pprint.pprint(vars(p4)) 
 #===============================================================================
 
 
