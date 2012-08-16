@@ -30,7 +30,7 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #            play_rating = 60
 #        onside_recover = False
 #        play_result['kickoff_yardage'] = determine_kickoff_yardage(play,play_rating)
-        determine_position(position,play_result['kickoff_yardage'])
+#        determine_position(position,play_result['kickoff_yardage'])
  
         #==========================================
         # Determine if offense recovers onside kick
@@ -42,18 +42,18 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #                print 'Offense Recovers!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
 #                onside_recover = True
         
-        if onside_recover:
-            play_result['return_yardage'] = determine_return_yardage(play,offense)
-            determine_position(position,play_result['return_yardage'])
-            play_result['net_yards_on_play'] = play_result['kickoff_yardage'] + play_result['return_yardage']
-        else:
-            play_result['change_of_possession'] = True 
-            if not position['in_home_endzone'] or not position['in_away_endzone']: 
-                play_result['return_yardage'] = determine_return_yardage(play,defense)
-                determine_position(position,play_result['return_yardage'],play_result['change_of_possession'])
-            else:
-                play_result['touchback']
-            play_result['net_yards_on_play'] = play_result['kickoff_yardage'] - play_result['return_yardage']
+#        if onside_recover:
+#            play_result['return_yardage'] = determine_return_yardage(play,offense)
+#            determine_position(position,play_result['return_yardage'])
+#            play_result['net_yards_on_play'] = play_result['kickoff_yardage'] + play_result['return_yardage']
+#        else:
+#            play_result['change_of_possession'] = True 
+#            if not position['in_home_endzone'] or not position['in_away_endzone']: 
+#                play_result['return_yardage'] = determine_return_yardage(play,defense)
+#                determine_position(position,play_result['return_yardage'],play_result['change_of_possession'])
+#            else:
+#                play_result['touchback']
+#            play_result['net_yards_on_play'] = play_result['kickoff_yardage'] - play_result['return_yardage']
         
         print 'kick', play_result['kickoff_yardage'], 'return', play_result['return_yardage']
         

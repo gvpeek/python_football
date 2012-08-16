@@ -27,7 +27,7 @@ class Team():
         self.rating_s = float(randint(60,90))
         self.rating_sp = float(randint(60,90))
         
-        self.away_penalty = float(randint(1,3))
+        self.home_field_advantage = float(randint(1,3))
 
 
 #===============================================================================
@@ -59,6 +59,7 @@ class Play(object):
         self.return_yardage = 0
         self.turnover = False
         self.change_of_possession = False
+        self.touchback = False
         self.onside_recover = False
         self.field = field
         self.field.in_home_endzone = False
@@ -67,7 +68,9 @@ class Play(object):
 
     def determine_off_rating(self,qb_factor,rb_factor,wr_factor,ol_factor):
         if qb_factor + rb_factor + wr_factor + ol_factor == 10:
-            return ceil(((self.offense.rating_qb*qb_factor + self.offense.rating_rb*rb_factor + self.offense.rating_wr*wr_factor + self.offense.rating_ol*ol_factor) / 10))                
+            rating = ceil(((self.offense.rating_qb*qb_factor + self.offense.rating_rb*rb_factor + self.offense.rating_wr*wr_factor + self.offense.rating_ol*ol_factor) / 10))
+            rating -= self.defense.home_field_advantage
+            return rating           
         else:
             print 'Offense rating factors do not equal 10'
             raise Exception
@@ -107,7 +110,7 @@ class Play(object):
             self.field.direction = self.field.direction * -1
 
         self.field.absolute_yardline += (yardage * self.field.direction)
-        
+
         if self.field.absolute_yardline > 50:
             self.field.converted_yardline = 100 - self.field.absolute_yardline
             if self.field.absolute_yardline >= 100:
@@ -117,6 +120,14 @@ class Play(object):
             if self.field.absolute_yardline <= 0:
                 self.field.in_home_endzone = True
 
+    def determine_kickoff_result(self, random_cap, adjustment):
+        self.play_rating = self.offense.rating_sp - self.defense.home_field_advantage
+        if self.play_rating < 60:
+            self.play_rating = 60
+        kick_rnd = randint(1,random_cap) + adjustment
+        kick_adjustment = (80 - self.play_rating) / 2
+        self.offense_yardage = ceil(kick_rnd - kick_adjustment)        
+
 #------------------------------------------------------------------------------ 
 # ***** plays
 
@@ -125,34 +136,35 @@ class Play(object):
         self.determine_position(self.offense_yardage)
 
     def kickoff(self):
-        self.play_rating = (self.offense.rating_sp - ceil((self.defense.rating_sp - 60) / 4)) - self.offense.away_penalty
-        if self.play_rating < 60:
-            self.play_rating = 60
-        kick_rnd = randint(1,20) + 55
-        kick_adjustment = (80 - self.play_rating) / 2
-        self.offense_yardage = ceil(kick_rnd - kick_adjustment)
-        
-#        return_yards = floor(((return_team.rating_sp*125)*pow(return_rnd,-.4)) / 100)
+        self.determine_kickoff_result(20,55)
+        self.determine_position(self.offense_yardage)
+        self.change_of_possession = True 
+        if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+            self.determine_return_yardage((self.defense.rating_sp * 1.25), -.4)
+            self.determine_position(self.return_yardage)
+        else:
+            self.touchback = True     
 
-    def onside_kickoff(self, offense, defense, rating_adjustment=0):
-        self.play_rating = offense.rating_special_teams_off - rating_adjustment
-        if self.play_rating < 60:
-            self.play_rating = 60
-        kick_rnd = randint(1,10) + 10
-        kick_adjustment = (80 - self.play_rating ) / 2
-        self.offense_yardage = ceil(kick_rnd - kick_adjustment)
+    def onside_kickoff(self):
+        self.determine_kickoff_result(10,10)
+        self.determine_position(self.offense_yardage)
         
         if self.offense_yardage >= 10:
             onside_recover_random = randint(1,100)
-            onside_recover_rating = ceil(offense.rating_special_teams_off / 4)
+            onside_recover_rating = ceil(self.offense.rating_sp / 4)
             if onside_recover_random <= onside_recover_rating:
                 print 'Offense Recovers!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
                 self.onside_recover = True
-                
-#        return_yards = floor(((return_team.rating_sp*100)*pow(return_rnd,-1)) / 100)
+            else:
+                self.change_of_possession = True 
+                if not self.field.in_home_endzone or not self.field.in_away_endzone: 
+                    self.determine_return_yardage(self.defense.rating_sp, -1)
+                    self.determine_position(self.return_yardage)
+        else:
+            self.change_of_possession = True 
 
     def run_inside(self):
-        self.play_rating = self.determine_off_rating(1,4,0,5) - self.determine_def_rating(6,3,0,1) - self.offense.away_penalty
+        self.play_rating = self.determine_off_rating(1,4,0,5) - self.determine_def_rating(6,3,0,1)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(3.5)
@@ -168,7 +180,7 @@ class Play(object):
             self.determine_position(self.return_yardage)
 
     def run_outside(self):
-        self.play_rating = self.determine_off_rating(1,5,1,3) - self.determine_def_rating(3,5,1,1) - self.offense.away_penalty
+        self.play_rating = self.determine_off_rating(1,5,1,3) - self.determine_def_rating(3,5,1,1)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(3.5)
@@ -194,20 +206,29 @@ pprint.pprint(vars(team1))
 print ' '
 pprint.pprint(vars(team2)) 
 
-f = Field()
-
 for a in range(9):
     print ' '
+    f = Field()
     p1 = Play(team1,team2,f)
     p1.run_clock()
+    f = Field()
     p2 = Play(team1,team2,f)
     p2.kickoff()
+#    pprint.pprint(vars(p2))
+#    pprint.pprint(vars(p2.field))
+    f = Field()
+    p21 = Play(team1,team2,f)
+    p21.onside_kickoff()
+    pprint.pprint(vars(p21))
+    pprint.pprint(vars(p21.field))
+    f = Field()    
     p3 = Play(team1,team2,f)
     p3.run_inside()
-    pprint.pprint(vars(p3))
+#    pprint.pprint(vars(p3))
+    f = Field()
     p4 = Play(team1,team2,f)
     p4.run_outside()
-    pprint.pprint(vars(p4)) 
+#    pprint.pprint(vars(p4)) 
 #===============================================================================
 
 
