@@ -6,7 +6,11 @@ Created on Mar 1, 2012
 
 from random import randint
 from math import ceil, floor
+import inspect
+
+## for testing
 import pprint
+## for testing
 
 #===============================================================================
 # 
@@ -28,6 +32,8 @@ class Team():
         self.rating_sp = float(randint(60,90))
         
         self.home_field_advantage = float(randint(1,3))
+        self.total_plays_run = 0
+        self.plays_run = {}
 
 
 #===============================================================================
@@ -66,10 +72,18 @@ class Play(object):
         self.field.in_away_endzone = False
         
 
+    def determine_play_rating(self,qb_factor,rb_factor,wr_factor,ol_factor,dl_factor,lb_factor,cb_factor,s_factor):
+        self.play_rating = self.determine_off_rating(qb_factor,rb_factor,wr_factor,ol_factor) - self.determine_def_rating(dl_factor,lb_factor,cb_factor,s_factor)
+        if self.play_rating < 35:
+            self.play_rating = 35
+        elif self.play_rating > 90:
+            self.play_rating = 90
+
     def determine_off_rating(self,qb_factor,rb_factor,wr_factor,ol_factor):
+        rating_penalty = self.determine_play_rating_penalty()
         if qb_factor + rb_factor + wr_factor + ol_factor == 10:
             rating = ceil(((self.offense.rating_qb*qb_factor + self.offense.rating_rb*rb_factor + self.offense.rating_wr*wr_factor + self.offense.rating_ol*ol_factor) / 10))
-            rating -= self.defense.home_field_advantage
+            rating -= rating_penalty
             return rating           
         else:
             print 'Offense rating factors do not equal 10'
@@ -82,28 +96,49 @@ class Play(object):
             print 'Defense rating factors do not equal 10'
             raise Exception
 
+    def determine_play_rating_penalty(self):
+        play = inspect.stack()[3][3] 
+        self.offense.total_plays_run += 1
+        if play in self.offense.plays_run:
+            self.offense.plays_run[play] += 1
+        else:
+            self.offense.plays_run[play] = 1
+    
+        play_freq_pct = (self.offense.plays_run[play] / self.offense.total_plays_run)
+        if self.offense.total_plays_run > 15 and (play_freq_pct > .33):
+            penalty = ceil((play_freq_pct) * (self.offense.plays_run[play] * 2.5))
+        else:
+            penalty = 0
+        
+#        if game.home_team == play.defense:
+        penalty += self.defense.home_field_advantage
+        
+        return penalty
+
     def determine_play_success(self):
         self.play_success=False 
         play_rnd = randint(1,100)
         if play_rnd <= self.play_rating:
             self.play_success=True
 
-    def determine_turnover(self,adjustment):
+    def determine_turnover(self,adjustment,multiplier):
         turnover_rnd = randint(1,100)
-        if turnover_rnd <= ((100 - self.play_rating) / adjustment):
+        if turnover_rnd <= (((100 - self.play_rating) / adjustment) * multiplier):
             self.turnover = True
        
     def determine_return_yardage(self, returner_rating, adjustment):
         return_rnd = randint(1,100)
         self.return_yardage = floor(((returner_rating*100)*pow(return_rnd,adjustment)) / 100)
     
-    def determine_play_yardage(self,gain_adjustment,loss_adjustment):
+    def determine_play_yardage(self,gain_adjustment,loss_adjustment,max_loss):
         yardage_rnd = randint(1,100)
         loss_rating = ((90 - self.play_rating) + 60)
         if self.play_success or self.turnover:
             self.offense_yardage = floor(((self.play_rating*100)*pow(yardage_rnd,gain_adjustment)) / 100)
         else:
             self.offense_yardage = -(floor(((loss_rating*100)*pow(yardage_rnd,loss_adjustment)) / 100))
+        if self.offense_yardage < max_loss:
+            self.offense_yardage= max_loss
 
     def determine_position(self, yardage):
         if self.change_of_possession:
@@ -164,14 +199,12 @@ class Play(object):
             self.change_of_possession = True 
 
     def run_inside(self):
-        self.play_rating = self.determine_off_rating(1,4,0,5) - self.determine_def_rating(6,3,0,1)
+        self.determine_play_rating(1,4,0,5,6,3,0,1)
         self.determine_play_success()
         if not self.play_success: 
-            self.determine_turnover(3.5)
+            self.determine_turnover(3.5,1)
         
-        self.determine_play_yardage(-.7,-1)
-        if self.offense_yardage < -5:
-            self.offense_yardage= -5
+        self.determine_play_yardage(-.7,-1,-5)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -180,19 +213,59 @@ class Play(object):
             self.determine_position(self.return_yardage)
 
     def run_outside(self):
-        self.play_rating = self.determine_off_rating(1,5,1,3) - self.determine_def_rating(3,5,1,1)
+        self.determine_play_rating(1,5,1,3,3,5,1,1)
         self.determine_play_success()
         if not self.play_success: 
-            self.determine_turnover(3.5)
+            self.determine_turnover(3.5,1)
         
-        self.determine_play_yardage(-.7,-1)
-        if self.offense_yardage < -5:
-            self.offense_yardage= -5
+        self.determine_play_yardage(-.7,-1,-5)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_lb,-1)
+            self.determine_position(self.return_yardage)
+
+    def pass_short(self):
+        self.determine_play_rating(4,2,3,1,1,5,3,1)
+        self.determine_play_success()
+        if not self.play_success: 
+            self.determine_turnover(10,1)
+        
+        self.determine_play_yardage(-.7,-1,-5)
+        self.determine_position(self.offense_yardage)
+
+        if self.turnover:
+            self.change_of_possession = True
+            self.determine_return_yardage(self.defense.rating_lb,-.8)
+            self.determine_position(self.return_yardage)
+
+    def pass_medium(self):
+        self.determine_play_rating(4,0,4,2,2,2,4,2)
+        self.determine_play_success()
+        if not self.play_success: 
+            self.determine_turnover(10,1.5)
+        
+        self.determine_play_yardage(-.5,-.8309,-8)
+        self.determine_position(self.offense_yardage)
+
+        if self.turnover:
+            self.change_of_possession = True
+            self.determine_return_yardage(self.defense.rating_cb,-.7)
+            self.determine_position(self.return_yardage)
+            
+    def pass_long(self):
+        self.determine_play_rating(4,0,3,3,3,1,3,3)
+        self.determine_play_success()
+        if not self.play_success: 
+            self.determine_turnover(10,2)
+        
+        self.determine_play_yardage(-.4,-.5,-12)
+        self.determine_position(self.offense_yardage)
+
+        if self.turnover:
+            self.change_of_possession = True
+            self.determine_return_yardage(self.defense.rating_s,-.6)
             self.determine_position(self.return_yardage)
 
 #===============================================================================
@@ -206,7 +279,7 @@ pprint.pprint(vars(team1))
 print ' '
 pprint.pprint(vars(team2)) 
 
-for a in range(9):
+for a in range(20):
     print ' '
     f = Field()
     p1 = Play(team1,team2,f)
@@ -219,8 +292,8 @@ for a in range(9):
     f = Field()
     p21 = Play(team1,team2,f)
     p21.onside_kickoff()
-    pprint.pprint(vars(p21))
-    pprint.pprint(vars(p21.field))
+#    pprint.pprint(vars(p21))
+#    pprint.pprint(vars(p21.field))
     f = Field()    
     p3 = Play(team1,team2,f)
     p3.run_inside()
@@ -229,6 +302,22 @@ for a in range(9):
     p4 = Play(team1,team2,f)
     p4.run_outside()
 #    pprint.pprint(vars(p4)) 
+    f = Field()
+    p5 = Play(team1,team2,f)
+    p5.pass_short()
+    pprint.pprint(vars(p5))
+    pprint.pprint(vars(p5.field))
+    pprint.pprint(vars(p5.offense))
+    f = Field()
+    p6 = Play(team1,team2,f)
+    p6.pass_medium()
+#    pprint.pprint(vars(p6))
+#    pprint.pprint(vars(p6.field))
+    f = Field()
+    p7 = Play(team1,team2,f)
+    p7.pass_long()
+#    pprint.pprint(vars(p7))
+#    pprint.pprint(vars(p7.field))
 #===============================================================================
 
 
