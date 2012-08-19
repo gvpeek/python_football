@@ -4,7 +4,7 @@ Created on Mar 1, 2012
 @author: peekgv
 '''
 
-from random import randint
+from random import randint, choice
 from math import ceil, floor
 import inspect
 
@@ -58,55 +58,49 @@ class Play(object):
     def __init__(self,offense,defense,field):
         self.offense = offense
         self.defense = defense
+        self.play_name = None
         self.play_rating = 0
         self.play_success = None
         self.offense_yardage = 0
-        self.returnable = False
         self.return_yardage = 0
         self.turnover = False
         self.change_of_possession = False
         self.touchback = False
-        self.onside_recover = False
+        self.punt_blocked = False
         self.field = field
         self.field.in_home_endzone = False
         self.field.in_away_endzone = False
         
 
     def determine_play_rating(self,qb_factor,rb_factor,wr_factor,ol_factor,dl_factor,lb_factor,cb_factor,s_factor):
-        self.play_rating = self.determine_off_rating(qb_factor,rb_factor,wr_factor,ol_factor) - self.determine_def_rating(dl_factor,lb_factor,cb_factor,s_factor)
+        rating_penalty = self.determine_play_rating_penalty()
+        if qb_factor + rb_factor + wr_factor + ol_factor == 10:
+            off_rating = ceil(((self.offense.rating_qb*qb_factor + self.offense.rating_rb*rb_factor + self.offense.rating_wr*wr_factor + self.offense.rating_ol*ol_factor) / 10))
+            off_rating -= rating_penalty
+        else:
+            print 'Offense rating factors do not equal 10'
+            raise Exception
+        if dl_factor + lb_factor + cb_factor + s_factor == 10:
+            def_rating = ceil((((self.defense.rating_dl*dl_factor + self.defense.rating_lb*lb_factor + self.defense.rating_cb*cb_factor + self.defense.rating_s*s_factor) / 10) - 60) / 4)
+        else:
+            print 'Defense rating factors do not equal 10'
+            raise Exception
+        self.play_rating = off_rating - def_rating
         if self.play_rating < 35:
             self.play_rating = 35
         elif self.play_rating > 90:
             self.play_rating = 90
 
-    def determine_off_rating(self,qb_factor,rb_factor,wr_factor,ol_factor):
-        rating_penalty = self.determine_play_rating_penalty()
-        if qb_factor + rb_factor + wr_factor + ol_factor == 10:
-            rating = ceil(((self.offense.rating_qb*qb_factor + self.offense.rating_rb*rb_factor + self.offense.rating_wr*wr_factor + self.offense.rating_ol*ol_factor) / 10))
-            rating -= rating_penalty
-            return rating           
-        else:
-            print 'Offense rating factors do not equal 10'
-            raise Exception
-        
-    def determine_def_rating(self,dl_factor,lb_factor,cb_factor,s_factor):
-        if dl_factor + lb_factor + cb_factor + s_factor == 10:
-            return ceil((((self.defense.rating_dl*dl_factor + self.defense.rating_lb*lb_factor + self.defense.rating_cb*cb_factor + self.defense.rating_s*s_factor) / 10) - 60) / 4)
-        else:
-            print 'Defense rating factors do not equal 10'
-            raise Exception
-
     def determine_play_rating_penalty(self):
-        play = inspect.stack()[3][3] 
         self.offense.total_plays_run += 1
-        if play in self.offense.plays_run:
-            self.offense.plays_run[play] += 1
+        if self.play_name in self.offense.plays_run:
+            self.offense.plays_run[self.play_name] += 1
         else:
-            self.offense.plays_run[play] = 1
+            self.offense.plays_run[self.play_name] = 1
     
-        play_freq_pct = (self.offense.plays_run[play] / self.offense.total_plays_run)
+        play_freq_pct = (self.offense.plays_run[self.play_name] / self.offense.total_plays_run)
         if self.offense.total_plays_run > 15 and (play_freq_pct > .33):
-            penalty = ceil((play_freq_pct) * (self.offense.plays_run[play] * 2.5))
+            penalty = ceil((play_freq_pct) * (self.offense.plays_run[self.play_name] * 2.5))
         else:
             penalty = 0
         
@@ -161,16 +155,44 @@ class Play(object):
             self.play_rating = 60
         kick_rnd = randint(1,random_cap) + adjustment
         kick_adjustment = (80 - self.play_rating) / 2
-        self.offense_yardage = ceil(kick_rnd - kick_adjustment)        
+        self.offense_yardage = ceil(kick_rnd - kick_adjustment)
+
+    def determine_punt_yardage(self):
+        punt_rnd = randint(1,100)
+        punt_block_rnd = randint(1,100)
+        punt_block_chance = randint(0,1)
+        pivot_point = ceil(self.play_rating / 1.7)
+        pivot_direction = choice([-1,1])
+        
+    #    if pivot_direction == -1 and punt_rnd < 5.0:
+    #        punt_rnd = 5.0
+    #    if pivot_direction == 1 and punt_rnd > 7.0:
+    #        punt_rnd = 7.0        
+            
+        if (punt_block_rnd == self.play_rating) and punt_block_chance:
+            self.punt_blocked = True
+            self.offense_yardage = 0.0
+        else:
+            self.offense_yardage = (pivot_point + (pivot_direction * floor(((self.play_rating*100) * pow(punt_rnd,-.8309)) / 100)))
+            
+            if self.offense_yardage < (pivot_point - floor(((self.play_rating*100) * pow(5.0,-.8309)) / 100)):
+                self.offense_yardage = (pivot_point - floor(((self.play_rating*100) * pow(5.0,-.8309)) / 100))
+                print '< 5.0'
+            elif self.offense_yardage > (pivot_point + floor(((self.play_rating*100) * pow(7.0,-.8309)) / 100)):
+                self.offense_yardage = (pivot_point + floor(((self.play_rating*100) * pow(7.0,-.8309)) / 100))
+                print '> 7.0'      
+     
 
 #------------------------------------------------------------------------------ 
 # ***** plays
 
     def run_clock(self):
+        self.play_name = inspect.stack()[0][3]
         self.offense_yardage = -2
         self.determine_position(self.offense_yardage)
 
     def kickoff(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_kickoff_result(20,55)
         self.determine_position(self.offense_yardage)
         self.change_of_possession = True 
@@ -181,6 +203,7 @@ class Play(object):
             self.touchback = True     
 
     def onside_kickoff(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_kickoff_result(10,10)
         self.determine_position(self.offense_yardage)
         
@@ -192,19 +215,35 @@ class Play(object):
                 self.onside_recover = True
             else:
                 self.change_of_possession = True 
-                if not self.field.in_home_endzone or not self.field.in_away_endzone: 
+                if not self.field.in_home_endzone and not self.field.in_away_endzone: 
                     self.determine_return_yardage(self.defense.rating_sp, -1)
                     self.determine_position(self.return_yardage)
+                else:
+                    self.touchback = True  
         else:
-            self.change_of_possession = True 
+            self.change_of_possession = True
 
+    def punt(self): 
+        self.play_name = inspect.stack()[0][3]
+        self.play_rating = self.offense.rating_sp - (self.defense.home_field_advantage + ceil((self.defense.rating_sp - 60) / 4))
+        self.determine_punt_yardage()
+        self.determine_position(self.offense_yardage)
+        self.change_of_possession = True
+                
+        if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+            self.determine_return_yardage(self.defense.rating_sp, -.6)
+            self.determine_position(self.return_yardage)
+        else:
+            self.touchback = True  
+        
     def run_inside(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(1,4,0,5,6,3,0,1)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(3.5,1)
         
-        self.determine_play_yardage(-.7,-1,-5)
+        self.determine_play_yardage(-.7,-1,-5.0)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -213,12 +252,13 @@ class Play(object):
             self.determine_position(self.return_yardage)
 
     def run_outside(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(1,5,1,3,3,5,1,1)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(3.5,1)
         
-        self.determine_play_yardage(-.7,-1,-5)
+        self.determine_play_yardage(-.7,-1,-5.0)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -227,12 +267,13 @@ class Play(object):
             self.determine_position(self.return_yardage)
 
     def pass_short(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(4,2,3,1,1,5,3,1)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(10,1)
         
-        self.determine_play_yardage(-.7,-1,-5)
+        self.determine_play_yardage(-.7,-1,-5.0)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -241,12 +282,13 @@ class Play(object):
             self.determine_position(self.return_yardage)
 
     def pass_medium(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(4,0,4,2,2,2,4,2)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(10,1.5)
         
-        self.determine_play_yardage(-.5,-.8309,-8)
+        self.determine_play_yardage(-.5,-.8309,-8.0)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -255,12 +297,13 @@ class Play(object):
             self.determine_position(self.return_yardage)
             
     def pass_long(self):
+        self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(4,0,3,3,3,1,3,3)
         self.determine_play_success()
         if not self.play_success: 
             self.determine_turnover(10,2)
         
-        self.determine_play_yardage(-.4,-.5,-12)
+        self.determine_play_yardage(-.4,-.5,-12.0)
         self.determine_position(self.offense_yardage)
 
         if self.turnover:
@@ -294,6 +337,11 @@ for a in range(20):
     p21.onside_kickoff()
 #    pprint.pprint(vars(p21))
 #    pprint.pprint(vars(p21.field))
+    f = Field()
+    p22 = Play(team1,team2,f)
+    p22.punt()
+    pprint.pprint(vars(p22))
+    pprint.pprint(vars(p22.field))
     f = Field()    
     p3 = Play(team1,team2,f)
     p3.run_inside()
@@ -305,9 +353,9 @@ for a in range(20):
     f = Field()
     p5 = Play(team1,team2,f)
     p5.pass_short()
-    pprint.pprint(vars(p5))
-    pprint.pprint(vars(p5.field))
-    pprint.pprint(vars(p5.offense))
+#    pprint.pprint(vars(p5))
+#    pprint.pprint(vars(p5.field))
+#    pprint.pprint(vars(p5.offense))
     f = Field()
     p6 = Play(team1,team2,f)
     p6.pass_medium()
