@@ -1,6 +1,6 @@
-'''
 Created on Jan 7, 2012
 
+'''
 @author: George Peek
 '''
 
@@ -73,12 +73,12 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #        play_result['net_yards_on_play'] = play_result['punt_yardage'] - play_result['return_yardage']
     
     elif play in ['FG','XP']:
-        play_result['field_goal_attempt'] = True
-        play_result['field_goal_success'] = determine_field_goal_result(play, play_rating, position['absolute_yardline'], away_possession)
-        
-        if not play_result['field_goal_success']:
-            play_result['change_of_possession'] = True
-            determine_position(position,-7)
+#        play_result['field_goal_attempt'] = True
+#        play_result['field_goal_success'] = determine_field_goal_result(play, play_rating, position['absolute_yardline'], away_possession)
+#        
+#        if not play_result['field_goal_success']:
+#            play_result['change_of_possession'] = True
+#            determine_position(position,-7)
     
     else:
         play_rnd = randint(1,100)
@@ -148,24 +148,24 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #            change_of_possession = True
 #    return change_of_possession
 
-def determine_field_goal_result(play, play_rating, absolute_yardline, away_kick_attempt):
-    if away_kick_attempt:
-        distance = absolute_yardline
-    else:
-        distance = 100 - absolute_yardline
-    print 'distance', distance
-    
-    if play == 'FG':
-        fg_rnd = randint(1,110)
-    elif play == 'XP':
-        fg_rnd = randint(1,100)
-    
-    fg_rating = ((80 - play_rating) / 2)
-    
-    if fg_rnd < ((100 - distance) - fg_rating):
-        return True
-    else:
-        return False
+#def determine_field_goal_result(play, play_rating, absolute_yardline, away_kick_attempt):
+#    if away_kick_attempt:
+#        distance = absolute_yardline
+#    else:
+#        distance = 100 - absolute_yardline
+#    print 'distance', distance
+#    
+#    if play == 'FG':
+#        fg_rnd = randint(1,110)
+#    elif play == 'XP':
+#        fg_rnd = randint(1,100)
+#    
+#    fg_rating = ((80 - play_rating) / 2)
+#    
+#    if fg_rnd < ((100 - distance) - fg_rating):
+#        return True
+#    else:
+#        return False
 
 #def determine_kickoff_yardage(play,play_rating):
 #    if play == 'K':
