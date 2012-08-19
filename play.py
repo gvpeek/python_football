@@ -67,6 +67,8 @@ class Play(object):
         self.change_of_possession = False
         self.touchback = False
         self.punt_blocked = False
+        self.kick_successful = False
+        
         self.field = field
         self.field.in_home_endzone = False
         self.field.in_away_endzone = False
@@ -163,26 +165,33 @@ class Play(object):
         punt_block_chance = randint(0,1)
         pivot_point = ceil(self.play_rating / 1.7)
         pivot_direction = choice([-1,1])
-        
-    #    if pivot_direction == -1 and punt_rnd < 5.0:
-    #        punt_rnd = 5.0
-    #    if pivot_direction == 1 and punt_rnd > 7.0:
-    #        punt_rnd = 7.0        
-            
+ 
+        # enforce minimum punt yardage
+        if pivot_direction == -1 and punt_rnd < 5.0:
+            punt_rnd = 5.0
+        # enforce maximum punt yardage
+        if pivot_direction == 1 and punt_rnd < 7.0:
+            punt_rnd = 7.0
+     
         if (punt_block_rnd == self.play_rating) and punt_block_chance:
             self.punt_blocked = True
             self.offense_yardage = 0.0
         else:
             self.offense_yardage = (pivot_point + (pivot_direction * floor(((self.play_rating*100) * pow(punt_rnd,-.8309)) / 100)))
-            
-            if self.offense_yardage < (pivot_point - floor(((self.play_rating*100) * pow(5.0,-.8309)) / 100)):
-                self.offense_yardage = (pivot_point - floor(((self.play_rating*100) * pow(5.0,-.8309)) / 100))
-                print '< 5.0'
-            elif self.offense_yardage > (pivot_point + floor(((self.play_rating*100) * pow(7.0,-.8309)) / 100)):
-                self.offense_yardage = (pivot_point + floor(((self.play_rating*100) * pow(7.0,-.8309)) / 100))
-                print '> 7.0'      
-     
 
+    def determine_field_goal_result(self, adjustment):
+        self.play_rating = self.offense.rating_sp - (self.defense.home_field_advantage + ceil((self.defense.rating_sp - 60) / 4))
+        if self.field.direction == 1:
+            distance = 100 - self.field.absolute_yardline
+        else:
+            distance = self.field.absolute_yardline
+        
+        fg_rnd = randint(1,adjustment)
+        fg_rating = ((80 - self.play_rating) / 2)
+        
+        if fg_rnd < ((100 - distance) - fg_rating):
+            self.kick_successful = True
+            
 #------------------------------------------------------------------------------ 
 # ***** plays
 
@@ -211,7 +220,6 @@ class Play(object):
             onside_recover_random = randint(1,100)
             onside_recover_rating = ceil(self.offense.rating_sp / 4)
             if onside_recover_random <= onside_recover_rating:
-                print 'Offense Recovers!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
                 self.onside_recover = True
             else:
                 self.change_of_possession = True 
@@ -234,7 +242,19 @@ class Play(object):
             self.determine_return_yardage(self.defense.rating_sp, -.6)
             self.determine_position(self.return_yardage)
         else:
-            self.touchback = True  
+            self.touchback = True
+
+    def field_goal(self):
+        self.play_name = inspect.stack()[0][3]
+        self.determine_field_goal_result(110)
+        
+        if not self.kick_successful:
+            self.change_of_possession = True
+            self.determine_position(7)
+ 
+    def extra_point(self):
+        self.play_name = inspect.stack()[0][3]
+        self.determine_field_goal_result(100)
         
     def run_inside(self):
         self.play_name = inspect.stack()[0][3]
@@ -340,8 +360,20 @@ for a in range(20):
     f = Field()
     p22 = Play(team1,team2,f)
     p22.punt()
-    pprint.pprint(vars(p22))
-    pprint.pprint(vars(p22.field))
+#    pprint.pprint(vars(p22))
+#    pprint.pprint(vars(p22.field))
+    f = Field()
+    f.absolute_yardline, f.direction = choice([(70,1),(30,-1)])
+    p23 = Play(team1,team2,f)
+    p23.field_goal()
+    pprint.pprint(vars(p23))
+    pprint.pprint(vars(p23.field))
+    f = Field()
+    f.absolute_yardline = 98
+    p24 = Play(team1,team2,f)
+    p24.extra_point()
+    pprint.pprint(vars(p24))
+    pprint.pprint(vars(p24.field))
     f = Field()    
     p3 = Play(team1,team2,f)
     p3.run_inside()
