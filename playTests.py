@@ -14,8 +14,8 @@ plays_sp = ['2PRI','2PRO','2PPS','K','OK','PUNT','FG','XP']
 
 
 
-def determine_play_result(play,away_possession,position,offense,defense):
-    play_result = {
+#def determine_play_result(play,away_possession,position,offense,defense):
+#    play_result = {
     
         }
 #    play_rating = determine_play_rating(play, offense, defense, away_possession)
@@ -72,7 +72,7 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #        print 'punt', play_result['punt_yardage'], 'return', play_result['return_yardage']
 #        play_result['net_yards_on_play'] = play_result['punt_yardage'] - play_result['return_yardage']
     
-    elif play in ['FG','XP']:
+#    elif play in ['FG','XP']:
 #        play_result['field_goal_attempt'] = True
 #        play_result['field_goal_success'] = determine_field_goal_result(play, play_rating, position['absolute_yardline'], away_possession)
 #        
@@ -80,26 +80,26 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #            play_result['change_of_possession'] = True
 #            determine_position(position,-7)
     
-    else:
-        play_rnd = randint(1,100)
-        if play_rnd <= play_rating:
-            play_success=True
-        else:
-            play_success=False
-            play_result['turnover'] = determine_turnover(play,play_rating)
-        
-        play_result['offense_yardage'] = determine_play_yardage(play,play_rating,play_success,play_result['turnover'])
-        determine_position(position,play_result['offense_yardage'])
-
-        if play_result['turnover']:
-            print 'Turnover!!!!!!!'
-            play_result['change_of_possession'] = True
-            play_result['return_yardage'] = determine_return_yardage(play,defense)
-            determine_position(position,play_result['return_yardage'],play_result['change_of_possession'])
-
-        play_result['net_yards_on_play'] = play_result['offense_yardage'] - play_result['return_yardage']
-
-    return play_result
+#    else:
+#        play_rnd = randint(1,100)
+#        if play_rnd <= play_rating:
+#            play_success=True
+#        else:
+#            play_success=False
+#            play_result['turnover'] = determine_turnover(play,play_rating)
+#        
+#        play_result['offense_yardage'] = determine_play_yardage(play,play_rating,play_success,play_result['turnover'])
+#        determine_position(position,play_result['offense_yardage'])
+#
+#        if play_result['turnover']:
+#            print 'Turnover!!!!!!!'
+#            play_result['change_of_possession'] = True
+#            play_result['return_yardage'] = determine_return_yardage(play,defense)
+#            determine_position(position,play_result['return_yardage'],play_result['change_of_possession'])
+#
+#        play_result['net_yards_on_play'] = play_result['offense_yardage'] - play_result['return_yardage']
+#
+#    return play_result
 
 #def determine_play_yardage(play,play_rating,play_success,turnover=False):
 #    yardage_rnd = randint(1,100)
@@ -176,33 +176,33 @@ def determine_play_result(play,away_possession,position,offense,defense):
 #    kick_yardage = ceil(kick_rnd - kick_rating)
 #    return kick_yardage
 
-def determine_punt_yardage(play_rating):
-    punt_blocked = False
-    punt_rnd = randint(1,100)
-    punt_block_rnd = randint(1,100)
-    punt_block_chance = randint(0,1)
-    pivot_point = ceil(play_rating / 1.7)
-    above_pivot = randint(0,1)
-    
-    if punt_block_rnd == play_rating and punt_block_chance:
-        punt_blocked = True
-        punt_yards = 0.0
-    else:
-        if above_pivot:
-            print 'Above'
-            punt_yards = (pivot_point + floor(((play_rating*100) * pow(punt_rnd,-.8309)) / 100))
-        else:
-            print 'Below'
-            punt_yards = (pivot_point - floor(((play_rating*100) * pow(punt_rnd,-.8309)) / 100))
-        
-        if punt_yards < (pivot_point - floor(((play_rating*100) * pow(5.0,-.8309)) / 100)):
-            punt_yards = (pivot_point - floor(((play_rating*100) * pow(5.0,-.8309)) / 100))
-        elif punt_yards > (pivot_point + floor(((play_rating*100) * pow(7.0,-.8309)) / 100)):
-            punt_yards = (pivot_point + floor(((play_rating*100) * pow(7.0,-.8309)) / 100))      
-    return punt_yards, punt_blocked
+#def determine_punt_yardage(play_rating):
+#    punt_blocked = False
+#    punt_rnd = randint(1,100)
+#    punt_block_rnd = randint(1,100)
+#    punt_block_chance = randint(0,1)
+#    pivot_point = ceil(play_rating / 1.7)
+#    above_pivot = randint(0,1)
+#    
+#    if punt_block_rnd == play_rating and punt_block_chance:
+#        punt_blocked = True
+#        punt_yards = 0.0
+#    else:
+#        if above_pivot:
+#            print 'Above'
+#            punt_yards = (pivot_point + floor(((play_rating*100) * pow(punt_rnd,-.8309)) / 100))
+#        else:
+#            print 'Below'
+#            punt_yards = (pivot_point - floor(((play_rating*100) * pow(punt_rnd,-.8309)) / 100))
+#        
+#        if punt_yards < (pivot_point - floor(((play_rating*100) * pow(5.0,-.8309)) / 100)):
+#            punt_yards = (pivot_point - floor(((play_rating*100) * pow(5.0,-.8309)) / 100))
+#        elif punt_yards > (pivot_point + floor(((play_rating*100) * pow(7.0,-.8309)) / 100)):
+#            punt_yards = (pivot_point + floor(((play_rating*100) * pow(7.0,-.8309)) / 100))      
+#    return punt_yards, punt_blocked
 
-def determine_return_yardage(play,return_team):
-    return_rnd = randint(1,100)
+#def determine_return_yardage(play,return_team):
+#    return_rnd = randint(1,100)
 #    if play in ['RI','2PRI','RC']:
 #        return_yards = floor(((return_team.rating_dl*100)*pow(return_rnd,-1)) / 100)
 #    elif play in ['RO','2PRO']:
