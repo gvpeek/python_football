@@ -41,17 +41,41 @@ class Team():
 #===============================================================================
 # 
 # To be removed to game.py
+class Game():
+    "Game"
+    def __init__(self, home_team, away_team, league_game=False, division_game=False, conference_game=False, playoff_game=False):
+#        self.game_id = get_next_game_id()
+        self.home = home_team
+        self.away = away_team
+        self.league_game = league_game
+        self.division_game = division_game
+        self.conference_game = conference_game 
+        self.playoff_game = playoff_game  
+        self.field = Field()
+
 class Field():
     "Playing Field"
     def __init__(self):
         self.direction = 1 ## 1=home, -1=away
         self.absolute_yardline = 30
         self.converted_yardline = 30
-        self.down = 1
-        self.yards_to_gain = 10
-        self.target_yardline = 30
         self.in_home_endzone = False
         self.in_away_endzone = False
+        
+    def determine_position(self, yardage, change_of_possession):
+        if change_of_possession:
+            self.direction = self.direction * -1
+
+        self.absolute_yardline += (yardage * self.direction)
+
+        if self.absolute_yardline > 50:
+            self.converted_yardline = 100 - self.absolute_yardline
+            if self.absolute_yardline >= 100:
+                self.in_away_endzone = True
+        else:
+            self.converted_yardline = self.absolute_yardline
+            if self.absolute_yardline <= 0:
+                self.in_home_endzone = True
 #===============================================================================
 
 class Play(object):
@@ -68,11 +92,7 @@ class Play(object):
         self.touchback = False
         self.punt_blocked = False
         self.kick_successful = False
-        
         self.field = field
-        self.field.in_home_endzone = False
-        self.field.in_away_endzone = False
-        
 
     def determine_play_rating(self,qb_factor,rb_factor,wr_factor,ol_factor,dl_factor,lb_factor,cb_factor,s_factor):
         rating_penalty = self.determine_play_rating_penalty()
@@ -88,27 +108,27 @@ class Play(object):
             print 'Defense rating factors do not equal 10'
             raise Exception
         self.play_rating = off_rating - def_rating
-        if self.play_rating < 35:
-            self.play_rating = 35
-        elif self.play_rating > 90:
-            self.play_rating = 90
+        if self.play_rating < 35.0:
+            self.play_rating = 35.0
+        elif self.play_rating > 90.0:
+            self.play_rating = 90.0
 
     def determine_play_rating_penalty(self):
         self.offense.total_plays_run += 1
         if self.play_name in self.offense.plays_run:
-            self.offense.plays_run[self.play_name] += 1
+            self.offense.plays_run[self.play_name] += 1.0
         else:
-            self.offense.plays_run[self.play_name] = 1
+            self.offense.plays_run[self.play_name] = 1.0
     
         play_freq_pct = (self.offense.plays_run[self.play_name] / self.offense.total_plays_run)
-        if self.offense.total_plays_run > 15 and (play_freq_pct > .33):
+        if self.offense.total_plays_run > 15 and play_freq_pct > .33:
             penalty = ceil((play_freq_pct) * (self.offense.plays_run[self.play_name] * 2.5))
         else:
             penalty = 0
         
 #        if game.home_team == play.defense:
         penalty += self.defense.home_field_advantage
-        
+
         return penalty
 
     def determine_play_success(self):
@@ -135,21 +155,6 @@ class Play(object):
             self.offense_yardage = -(floor(((loss_rating*100)*pow(yardage_rnd,loss_adjustment)) / 100))
         if self.offense_yardage < max_loss:
             self.offense_yardage= max_loss
-
-    def determine_position(self, yardage):
-        if self.change_of_possession:
-            self.field.direction = self.field.direction * -1
-
-        self.field.absolute_yardline += (yardage * self.field.direction)
-
-        if self.field.absolute_yardline > 50:
-            self.field.converted_yardline = 100 - self.field.absolute_yardline
-            if self.field.absolute_yardline >= 100:
-                self.field.in_away_endzone = True
-        else:
-            self.field.converted_yardline = self.field.absolute_yardline
-            if self.field.absolute_yardline <= 0:
-                self.field.in_home_endzone = True
 
     def determine_kickoff_result(self, random_cap, adjustment):
         self.play_rating = self.offense.rating_sp - self.defense.home_field_advantage
@@ -198,23 +203,23 @@ class Play(object):
     def run_clock(self):
         self.play_name = inspect.stack()[0][3]
         self.offense_yardage = -2
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
     def kickoff(self):
         self.play_name = inspect.stack()[0][3]
         self.determine_kickoff_result(20,55)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
         self.change_of_possession = True 
         if not self.field.in_home_endzone and not self.field.in_away_endzone: 
             self.determine_return_yardage((self.defense.rating_sp * 1.25), -.4)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
         else:
             self.touchback = True     
 
     def onside_kickoff(self):
         self.play_name = inspect.stack()[0][3]
         self.determine_kickoff_result(10,10)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
         
         if self.offense_yardage >= 10:
             onside_recover_random = randint(1,100)
@@ -225,7 +230,7 @@ class Play(object):
                 self.change_of_possession = True 
                 if not self.field.in_home_endzone and not self.field.in_away_endzone: 
                     self.determine_return_yardage(self.defense.rating_sp, -1)
-                    self.determine_position(self.return_yardage)
+                    self.field.determine_position(self.return_yardage, self.change_of_possession)
                 else:
                     self.touchback = True  
         else:
@@ -235,12 +240,12 @@ class Play(object):
         self.play_name = inspect.stack()[0][3]
         self.play_rating = self.offense.rating_sp - (self.defense.home_field_advantage + ceil((self.defense.rating_sp - 60) / 4))
         self.determine_punt_yardage()
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
         self.change_of_possession = True
                 
         if not self.field.in_home_endzone and not self.field.in_away_endzone: 
             self.determine_return_yardage(self.defense.rating_sp, -.6)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
         else:
             self.touchback = True
 
@@ -250,7 +255,7 @@ class Play(object):
         
         if not self.kick_successful:
             self.change_of_possession = True
-            self.determine_position(7)
+            self.field.determine_position(7, self.change_of_possession)
  
     def extra_point(self):
         self.play_name = inspect.stack()[0][3]
@@ -264,12 +269,12 @@ class Play(object):
             self.determine_turnover(3.5,1)
         
         self.determine_play_yardage(-.7,-1,-5.0)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_dl,-1)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
 
     def run_outside(self):
         self.play_name = inspect.stack()[0][3]
@@ -279,12 +284,12 @@ class Play(object):
             self.determine_turnover(3.5,1)
         
         self.determine_play_yardage(-.7,-1,-5.0)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_lb,-1)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
 
     def pass_short(self):
         self.play_name = inspect.stack()[0][3]
@@ -294,12 +299,12 @@ class Play(object):
             self.determine_turnover(10,1)
         
         self.determine_play_yardage(-.7,-1,-5.0)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_lb,-.8)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
 
     def pass_medium(self):
         self.play_name = inspect.stack()[0][3]
@@ -309,12 +314,12 @@ class Play(object):
             self.determine_turnover(10,1.5)
         
         self.determine_play_yardage(-.5,-.8309,-8.0)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_cb,-.7)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
             
     def pass_long(self):
         self.play_name = inspect.stack()[0][3]
@@ -324,20 +329,19 @@ class Play(object):
             self.determine_turnover(10,2)
         
         self.determine_play_yardage(-.4,-.5,-12.0)
-        self.determine_position(self.offense_yardage)
+        self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
             self.change_of_possession = True
             self.determine_return_yardage(self.defense.rating_s,-.6)
-            self.determine_position(self.return_yardage)
+            self.field.determine_position(self.return_yardage, self.change_of_possession)
 
 #===============================================================================
 #
 ## test execution 
 team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
-#print team1.city,team1.nickname,team1.rating_qb,team1.rating_rb,team1.rating_wr,team1.rating_ol,team1.rating_dl,team1.rating_lb,team1.rating_cb,team1.rating_s,team1.rating_sp
-#print team2.city,team2.nickname,team2.rating_qb,team2.rating_rb,team2.rating_wr,team2.rating_ol,team2.rating_dl,team2.rating_lb,team2.rating_cb,team2.rating_s,team2.rating_sp
+
 pprint.pprint(vars(team1)) 
 print ' '
 pprint.pprint(vars(team2)) 
@@ -363,13 +367,14 @@ for a in range(20):
 #    pprint.pprint(vars(p22))
 #    pprint.pprint(vars(p22.field))
     f = Field()
-    f.absolute_yardline, f.direction = choice([(70,1),(30,-1)])
+    f.absolute_yardline, f.direction = randint(1,99), choice([1,-1])
+#    print f.absolute_yardline
     p23 = Play(team1,team2,f)
     p23.field_goal()
     pprint.pprint(vars(p23))
     pprint.pprint(vars(p23.field))
     f = Field()
-    f.absolute_yardline = 98
+    f.absolute_yardline = 2
     p24 = Play(team1,team2,f)
     p24.extra_point()
     pprint.pprint(vars(p24))
@@ -377,17 +382,17 @@ for a in range(20):
     f = Field()    
     p3 = Play(team1,team2,f)
     p3.run_inside()
-#    pprint.pprint(vars(p3))
+    pprint.pprint(vars(p3))
     f = Field()
     p4 = Play(team1,team2,f)
     p4.run_outside()
-#    pprint.pprint(vars(p4)) 
+    pprint.pprint(vars(p4)) 
     f = Field()
     p5 = Play(team1,team2,f)
     p5.pass_short()
 #    pprint.pprint(vars(p5))
 #    pprint.pprint(vars(p5.field))
-#    pprint.pprint(vars(p5.offense))
+    pprint.pprint(vars(p5.offense))
     f = Field()
     p6 = Play(team1,team2,f)
     p6.pass_medium()
@@ -396,8 +401,8 @@ for a in range(20):
     f = Field()
     p7 = Play(team1,team2,f)
     p7.pass_long()
-#    pprint.pprint(vars(p7))
-#    pprint.pprint(vars(p7.field))
+    pprint.pprint(vars(p7))
+    pprint.pprint(vars(p7.field))
 #===============================================================================
 
 
