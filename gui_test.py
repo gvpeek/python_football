@@ -13,6 +13,26 @@ from play import Play, Field, Team
 
 pygame.init()
 
+class PlayButton():
+    def __init__(self, coords, text, play_category):
+        self.rect = pygame.Rect(coords,(100,20))
+        self.text = myfont.render(text, True, white)
+        if play_category == 'run':
+            self.color = (128,0,0)
+        elif play_category == 'pass':
+            self.color = (0,0,128)
+        elif play_category == 'special':
+            self.color = (128,0,128)
+        else:
+            self.color = (128,128,128)             
+            
+    def display_button(self):
+        pygame.draw.rect(screen, self.color, self.rect)
+        screen.blit(self.text, self.rect)
+        
+    def update_coords(self, new_coords):
+        self.rect = pygame.Rect(new_coords,(100,20))
+
 screen = pygame.display.set_mode((1200,800))
 myfont = pygame.font.Font(None,20)
 blue = (0,0,255)
@@ -22,7 +42,22 @@ team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
 f = Field()
 
-current_play = Play(team1,team2,f)
+run_i = PlayButton((0,0),'run_inside','run')
+run_o = PlayButton((0,0),'run_outside','run')
+pass_s = PlayButton((0,0),'pass short','pass')
+pass_m = PlayButton((0,0),'pass medium','pass')
+pass_l = PlayButton((0,0),'pass long','pass')
+
+play_buttons = [run_i, run_o, pass_s, pass_m, pass_l]
+
+def set_play():
+    if f.direction == 1:
+        current_play = Play(team1,team2,f)
+    else:
+        current_play = Play(team2,team1,f)
+    return current_play
+    
+current_play = set_play()
 
 while True:
     for event in pygame.event.get():
@@ -30,26 +65,53 @@ while True:
             sys.exit()
             
         if event.type == KEYUP:
-            if f.direction == 1:
-                current_play = Play(team1,team2,f)
-            else:
-                current_play = Play(team2,team1,f)
-                
             if event.key == pygame.K_k:
+                current_play = set_play()
                 current_play.kickoff()
             if event.key == pygame.K_i:
+                current_play = set_play()
                 current_play.run_inside()
             if event.key == pygame.K_o:
+                current_play = set_play()
                 current_play.run_outside()
             if event.key == pygame.K_s:
+                current_play = set_play()
                 current_play.pass_short()
             if event.key == pygame.K_m:
+                current_play = set_play()
                 current_play.pass_medium()
             if event.key == pygame.K_l:
+                current_play = set_play()
                 current_play.pass_long()
+        
+        elif event.type == MOUSEBUTTONDOWN:
+            mousex, mousey = event.pos
+            mouse_pos = myfont.render(str(mousex) + ',' + str(mousey), True, white)
+            
+            if run_i.rect.collidepoint((mousex, mousey)):
+                current_play = set_play()
+                current_play.run_inside()
+            if run_o.rect.collidepoint((mousex, mousey)):
+                current_play = set_play()
+                current_play.run_outside()
+            if pass_s.rect.collidepoint((mousex, mousey)):
+                current_play = set_play()
+                current_play.pass_short()
+            if pass_m.rect.collidepoint((mousex, mousey)):
+                current_play = set_play()
+                current_play.pass_medium()
+            if pass_l.rect.collidepoint((mousex, mousey)):
+                current_play = set_play()
+                current_play.pass_long()
+            
+            
+            
 
     screen.fill(blue)
-    
+    try:
+        screen.blit(mouse_pos,(1100,10))
+    except:
+        pass
 #    pprint.pprint(vars(team1)) 
 #    print ' '
 #    pprint.pprint(vars(team2)) 
@@ -73,6 +135,12 @@ while True:
     for item in display:
         screen.blit(item, (5,35 + display_offset))
         display_offset += 20
+        
+    for button in play_buttons:
+        button.update_coords((5,(35 + display_offset)))
+        button.display_button()
+        display_offset += 30
+        
     pygame.display.update()
         
 #    screen.blit( (5,55))
