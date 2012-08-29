@@ -9,7 +9,7 @@ import pprint
 import pygame
 from pygame.locals import *
 
-from play import Play, Field, Team
+from play import Game, Play, Field, Team
 
 pygame.init()
 
@@ -33,14 +33,14 @@ class PlayButton():
     def update_coords(self, new_coords):
         self.rect = pygame.Rect(new_coords,(100,20))
 
-screen = pygame.display.set_mode((1200,800))
+screen = pygame.display.set_mode((1400,800))
 myfont = pygame.font.Font(None,20)
 blue = (0,0,255)
 white = (255,255,255)
 
 team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
-f = Field()
+game = Game(team1,team2)
 
 run_i = PlayButton((0,0),'run_inside','run')
 run_o = PlayButton((0,0),'run_outside','run')
@@ -50,14 +50,14 @@ pass_l = PlayButton((0,0),'pass long','pass')
 
 play_buttons = [run_i, run_o, pass_s, pass_m, pass_l]
 
-def set_play():
-    if f.direction == 1:
-        current_play = Play(team1,team2,f)
-    else:
-        current_play = Play(team2,team1,f)
-    return current_play
-    
-current_play = set_play()
+#def set_play():
+#    if game.field.direction == 1:
+#        current_play = Play(game.home,game.away,game.field)
+#    else:
+#        current_play = Play(game.away,game.home,game.field)
+#    return current_play
+#    
+#current_play = set_play()
 
 while True:
     for event in pygame.event.get():
@@ -66,43 +66,44 @@ while True:
             
         if event.type == KEYUP:
             if event.key == pygame.K_k:
-                current_play = set_play()
-                current_play.kickoff()
+#                current_play = set_play()
+                game.plays[-1].kickoff()
+                game.current_state.check_state(game.plays[-1])
             if event.key == pygame.K_i:
-                current_play = set_play()
-                current_play.run_inside()
+#                current_play = set_play()
+                game.plays[-1].run_inside()
             if event.key == pygame.K_o:
-                current_play = set_play()
-                current_play.run_outside()
+#                current_play = set_play()
+                game.plays[-1].run_outside()
             if event.key == pygame.K_s:
-                current_play = set_play()
-                current_play.pass_short()
+#                current_play = set_play()
+                game.plays[-1].pass_short()
             if event.key == pygame.K_m:
-                current_play = set_play()
-                current_play.pass_medium()
+#                current_play = set_play()
+                game.plays[-1].pass_medium()
             if event.key == pygame.K_l:
-                current_play = set_play()
-                current_play.pass_long()
+#                current_play = set_play()
+                game.plays[-1].pass_long()
         
         elif event.type == MOUSEBUTTONDOWN:
             mousex, mousey = event.pos
             mouse_pos = myfont.render(str(mousex) + ',' + str(mousey), True, white)
             
             if run_i.rect.collidepoint((mousex, mousey)):
-                current_play = set_play()
-                current_play.run_inside()
+#                current_play = set_play()
+                game.plays[-1].run_inside()
             if run_o.rect.collidepoint((mousex, mousey)):
-                current_play = set_play()
-                current_play.run_outside()
+#                current_play = set_play()
+                game.plays[-1].run_outside()
             if pass_s.rect.collidepoint((mousex, mousey)):
-                current_play = set_play()
-                current_play.pass_short()
+#                current_play = set_play()
+                game.plays[-1].pass_short()
             if pass_m.rect.collidepoint((mousex, mousey)):
-                current_play = set_play()
-                current_play.pass_medium()
+#                current_play = set_play()
+                game.plays[-1].pass_medium()
             if pass_l.rect.collidepoint((mousex, mousey)):
-                current_play = set_play()
-                current_play.pass_long()
+#                current_play = set_play()
+                game.plays[-1].pass_long()
             
             
             
@@ -116,31 +117,45 @@ while True:
 #    print ' '
 #    pprint.pprint(vars(team2)) 
 #    print ' '
-    home_name = myfont.render(team1.city + team1.nickname, True, white)
-    away_name = myfont.render(team2.city + team2.nickname, True, white)
-    abs_yardline = myfont.render("Yardline: " + str(f.absolute_yardline), True, white)
-    play_name = myfont.render("Play: " + str(current_play.play_name), True, white)
-    play_rating = myfont.render("Rating: " + str(current_play.play_rating), True, white)
-    plays = myfont.render(str(team1.plays_run) + str(team1.total_plays_run), True, white)
-    yards_gained = myfont.render("Off Yards: " + str(current_play.offense_yardage), True, white)
-    return_yards = myfont.render("Ret Yards: " + str(current_play.return_yardage), True, white)
-    turnover = myfont.render("Turnover: " + str(current_play.turnover), True, white)
+    home_name = myfont.render(game.home.city + game.home.nickname, True, white)
+    away_name = myfont.render(game.away.city + game.away.nickname, True, white)
+    abs_yardline = myfont.render("Yardline: " + str(game.field.absolute_yardline), True, white)
+    direction = myfont.render("Direction: " + str(game.field.direction), True, white)
+    play_name = myfont.render("Play: " + str(game.plays[-1].play_name), True, white)
+    play_rating = myfont.render("Rating: " + str(game.plays[-1].play_rating), True, white)
+    playsh = myfont.render("H: " + str(game.home.plays_run) + str(game.home.total_plays_run), True, white)
+    playsa = myfont.render("A: " + str(game.away.plays_run) + str(game.away.total_plays_run), True, white)
+    yards_gained = myfont.render("Off Yards: " + str(game.plays[-1].offense_yardage), True, white)
+    return_yards = myfont.render("Ret Yards: " + str(game.plays[-1].return_yardage), True, white)
+    turnover = myfont.render("Turnover: " + str(game.plays[-1].turnover), True, white)
 #    pprint.pprint(vars(current_play.field))
 
-    display = [abs_yardline, play_name, play_rating, plays, yards_gained, turnover, return_yards]
+## stats display
+    display = [abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards]
     display_offset = 0
-                   
+    horizontal_offset = 0
+    
     screen.blit(home_name, (5,5))
     screen.blit(away_name, (105,5))
     for item in display:
         screen.blit(item, (5,35 + display_offset))
         display_offset += 20
         
+## play button display
     for button in play_buttons:
-        button.update_coords((5,(35 + display_offset)))
+        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
         button.display_button()
-        display_offset += 30
-        
+        horizontal_offset += 130
+
+## field display
+    pygame.draw.rect(screen,(0,255,0),(5,(100 + display_offset),1200,500))
+    pygame.draw.rect(screen,game.home.primary_color,(5,(100 + display_offset),100,500))
+    pygame.draw.rect(screen,game.away.primary_color,(1105,(100 + display_offset),100,500))
+    for line in range(12):
+        pygame.draw.line(screen,(255,255,255),((5 + (line * 100)),(100 + display_offset)),((5 + (line * 100)),(100 + display_offset + 500)))
+    pygame.draw.ellipse(screen,(0,0,0),(((10 * game.field.absolute_yardline) + 90), (display_offset + 300),30,15))
+
+
     pygame.display.update()
         
 #    screen.blit( (5,55))
