@@ -8,8 +8,6 @@ from random import randint, choice
 from math import ceil, floor
 import inspect
 
-from state_machine import Kickoff
-
 ## for testing
 import pprint
 ## for testing
@@ -40,66 +38,6 @@ class Team():
         self.primary_color = (randint(0,255),randint(0,255),randint(0,255))
         self.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
 
-
-#===============================================================================
-
-#===============================================================================
-# 
-# To be removed to game.py
-class Game():
-    "Game"
-    def __init__(self, home_team, away_team, league_game=False, division_game=False, conference_game=False, playoff_game=False):
-#        self.game_id = get_next_game_id()
-        self.home = home_team
-        self.away = away_team
-        self.league_game = league_game
-        self.division_game = division_game
-        self.conference_game = conference_game 
-        self.playoff_game = playoff_game  
-        self.field = Field()
-        self.plays = []
-        self.coin_flip()
-        self.current_state = Kickoff()
-
-    def coin_flip(self):
-        self.field.direction = choice([-1,1])
-        if self.field.direction == -1:
-            self.plays.append(Play(self.home,self.away,self.field))
-        elif self.field.direction == 1:
-            self.plays.append(Play(self.away,self.home,self.field))
-        self.field.kickoff_set()
-
-class Field():
-    "Playing Field"
-    def __init__(self):
-        self.direction = 1 ## 1=home, -1=away
-        self.absolute_yardline = 30
-        self.converted_yardline = 30
-        self.in_home_endzone = False
-        self.in_away_endzone = False
-        
-    def determine_position(self, yardage, change_of_possession):
-        if change_of_possession:
-            self.direction = self.direction * -1
-
-        self.absolute_yardline += (yardage * self.direction)
-
-        if self.absolute_yardline > 50:
-            self.converted_yardline = 100 - self.absolute_yardline
-            if self.absolute_yardline >= 100:
-                self.in_away_endzone = True
-        else:
-            self.converted_yardline = self.absolute_yardline
-            if self.absolute_yardline <= 0:
-                self.in_home_endzone = True
-                
-    def kickoff_set(self):
-        if self.direction == 1:
-            self.absolute_yardline = 30
-            self.converted_yardline = 30
-        elif self.direction == -1:
-            self.absolute_yardline = 70
-            self.converted_yardline = 30
 
 #===============================================================================
 
@@ -364,73 +302,73 @@ class Play(object):
 #===============================================================================
 #
 ## test execution 
-def test_execution():
-    team1 = Team("Austin","Easy")
-    team2 = Team("Chicago","Grown Men")
-    
-    pprint.pprint(vars(team1)) 
-    print ' '
-    pprint.pprint(vars(team2)) 
-    
-    for a in range(20):
-        print ' '
-        f = Field()
-        p1 = Play(team1,team2,f)
-        p1.run_clock()
-        f = Field()
-        p2 = Play(team1,team2,f)
-        p2.kickoff()
-    #    pprint.pprint(vars(p2))
-    #    pprint.pprint(vars(p2.field))
-        f = Field()
-        p21 = Play(team1,team2,f)
-        p21.onside_kickoff()
-    #    pprint.pprint(vars(p21))
-    #    pprint.pprint(vars(p21.field))
-        f = Field()
-        p22 = Play(team1,team2,f)
-        p22.punt()
-    #    pprint.pprint(vars(p22))
-    #    pprint.pprint(vars(p22.field))
-        f = Field()
-        f.absolute_yardline, f.direction = randint(1,99), choice([1,-1])
-    #    print f.absolute_yardline
-        p23 = Play(team1,team2,f)
-        p23.field_goal()
-        pprint.pprint(vars(p23))
-        pprint.pprint(vars(p23.field))
-        f = Field()
-        f.absolute_yardline = 2
-        p24 = Play(team1,team2,f)
-        p24.extra_point()
-        pprint.pprint(vars(p24))
-        pprint.pprint(vars(p24.field))
-        f = Field()    
-        p3 = Play(team1,team2,f)
-        p3.run_inside()
-        pprint.pprint(vars(p3))
-        f = Field()
-        p4 = Play(team1,team2,f)
-        p4.run_outside()
-        pprint.pprint(vars(p4)) 
-        f = Field()
-        p5 = Play(team1,team2,f)
-        p5.pass_short()
-    #    pprint.pprint(vars(p5))
-    #    pprint.pprint(vars(p5.field))
-        pprint.pprint(vars(p5.offense))
-        f = Field()
-        p6 = Play(team1,team2,f)
-        p6.pass_medium()
-    #    pprint.pprint(vars(p6))
-    #    pprint.pprint(vars(p6.field))
-        f = Field()
-        p7 = Play(team1,team2,f)
-        p7.pass_long()
-        pprint.pprint(vars(p7))
-        pprint.pprint(vars(p7.field))
-    #===============================================================================
-    
-    
+#def test_execution():
+#    team1 = Team("Austin","Easy")
+#    team2 = Team("Chicago","Grown Men")
+#    
+#    pprint.pprint(vars(team1)) 
+#    print ' '
+#    pprint.pprint(vars(team2)) 
+#    
+#    for a in range(20):
+#        print ' '
+#        f = Field()
+#        p1 = Play(team1,team2,f)
+#        p1.run_clock()
+#        f = Field()
+#        p2 = Play(team1,team2,f)
+#        p2.kickoff()
+#    #    pprint.pprint(vars(p2))
+#    #    pprint.pprint(vars(p2.field))
+#        f = Field()
+#        p21 = Play(team1,team2,f)
+#        p21.onside_kickoff()
+#    #    pprint.pprint(vars(p21))
+#    #    pprint.pprint(vars(p21.field))
+#        f = Field()
+#        p22 = Play(team1,team2,f)
+#        p22.punt()
+#    #    pprint.pprint(vars(p22))
+#    #    pprint.pprint(vars(p22.field))
+#        f = Field()
+#        f.absolute_yardline, f.direction = randint(1,99), choice([1,-1])
+#    #    print f.absolute_yardline
+#        p23 = Play(team1,team2,f)
+#        p23.field_goal()
+#        pprint.pprint(vars(p23))
+#        pprint.pprint(vars(p23.field))
+#        f = Field()
+#        f.absolute_yardline = 2
+#        p24 = Play(team1,team2,f)
+#        p24.extra_point()
+#        pprint.pprint(vars(p24))
+#        pprint.pprint(vars(p24.field))
+#        f = Field()    
+#        p3 = Play(team1,team2,f)
+#        p3.run_inside()
+#        pprint.pprint(vars(p3))
+#        f = Field()
+#        p4 = Play(team1,team2,f)
+#        p4.run_outside()
+#        pprint.pprint(vars(p4)) 
+#        f = Field()
+#        p5 = Play(team1,team2,f)
+#        p5.pass_short()
+#    #    pprint.pprint(vars(p5))
+#    #    pprint.pprint(vars(p5.field))
+#        pprint.pprint(vars(p5.offense))
+#        f = Field()
+#        p6 = Play(team1,team2,f)
+#        p6.pass_medium()
+#    #    pprint.pprint(vars(p6))
+#    #    pprint.pprint(vars(p6.field))
+#        f = Field()
+#        p7 = Play(team1,team2,f)
+#        p7.pass_long()
+#        pprint.pprint(vars(p7))
+#        pprint.pprint(vars(p7.field))
+#    #===============================================================================
+#    
+#    
     
 
