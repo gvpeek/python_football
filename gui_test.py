@@ -9,7 +9,8 @@ import pprint
 import pygame
 from pygame.locals import *
 
-from play import Game, Play, Field, Team
+from game import Game
+from play import Team
 
 pygame.init()
 
@@ -68,7 +69,7 @@ while True:
             if event.key == pygame.K_k:
 #                current_play = set_play()
                 game.plays[-1].kickoff()
-                game.current_state.check_state(game.plays[-1])
+                game.current_state.check_state(game)
             if event.key == pygame.K_i:
 #                current_play = set_play()
                 game.plays[-1].run_inside()
@@ -92,6 +93,7 @@ while True:
             if run_i.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].run_inside()
+                game.current_state.check_state(game)
             if run_o.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].run_outside()
@@ -119,6 +121,7 @@ while True:
 #    print ' '
     home_name = myfont.render(game.home.city + game.home.nickname, True, white)
     away_name = myfont.render(game.away.city + game.away.nickname, True, white)
+    current_state = myfont.render(str(game.current_state), True, white)
     abs_yardline = myfont.render("Yardline: " + str(game.field.absolute_yardline), True, white)
     direction = myfont.render("Direction: " + str(game.field.direction), True, white)
     play_name = myfont.render("Play: " + str(game.plays[-1].play_name), True, white)
@@ -131,7 +134,7 @@ while True:
 #    pprint.pprint(vars(current_play.field))
 
 ## stats display
-    display = [abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards]
+    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards]
     display_offset = 0
     horizontal_offset = 0
     
