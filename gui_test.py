@@ -73,18 +73,23 @@ while True:
             if event.key == pygame.K_i:
 #                current_play = set_play()
                 game.plays[-1].run_inside()
+                game.current_state.check_state(game)
             if event.key == pygame.K_o:
 #                current_play = set_play()
                 game.plays[-1].run_outside()
+                game.current_state.check_state(game)
             if event.key == pygame.K_s:
 #                current_play = set_play()
                 game.plays[-1].pass_short()
+                game.current_state.check_state(game)
             if event.key == pygame.K_m:
 #                current_play = set_play()
                 game.plays[-1].pass_medium()
+                game.current_state.check_state(game)
             if event.key == pygame.K_l:
 #                current_play = set_play()
                 game.plays[-1].pass_long()
+                game.current_state.check_state(game)
         
         elif event.type == MOUSEBUTTONDOWN:
             mousex, mousey = event.pos
@@ -97,15 +102,19 @@ while True:
             if run_o.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].run_outside()
+                game.current_state.check_state(game)
             if pass_s.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].pass_short()
+                game.current_state.check_state(game)
             if pass_m.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].pass_medium()
+                game.current_state.check_state(game)
             if pass_l.rect.collidepoint((mousex, mousey)):
 #                current_play = set_play()
                 game.plays[-1].pass_long()
+                game.current_state.check_state(game)
             
             
             
