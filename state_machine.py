@@ -5,6 +5,7 @@ Created on Aug 19, 2012
 '''
 
 from play import Play
+import pprint
 
 class State():
     "Basic State"
@@ -13,16 +14,22 @@ class State():
     
     def check_state(self, game):
         print 'check_state'
+        pprint.pprint(vars(game.plays[-1]))
         next_state = None
-        if game.field.direction == 1 and game.field.in_away_endzone:
+        if game.field.direction == 1 and game.field.in_away_endzone and not game.plays[-1].change_of_possession:
             print 'Home touchdown'
-        elif game.field.direction == -1 and game.field.in_home_endzone:
+        elif game.field.direction == -1 and game.field.in_home_endzone and not game.plays[-1].change_of_possession:
             print 'Away touchdown'
         elif isinstance(self, Kickoff):
             self.active = False
             game.current_state = DownSet(game)
         elif isinstance(self, DownSet):
             self.convert_check()
+            if self.converted:
+                game.current_state = DownSet(game)
+            elif not self.active:
+                game.plays[-1].change_of_possession = True
+                game.current_state = DownSet(game)
             print self.down
         
         if game.plays[-1].change_of_possession:
