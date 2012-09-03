@@ -20,6 +20,7 @@ class Game():
         self.conference_game = conference_game 
         self.playoff_game = playoff_game  
         self.field = Field()
+        self.scoreboard = Scoreboard()
         self.plays = []
         self.possession = [self.home, self.away]
         self.coin_flip()
@@ -62,9 +63,26 @@ class Field():
     def kickoff_set(self):
         if self.direction == 1:
             self.absolute_yardline = 30
-            self.converted_yardline = 30
         elif self.direction == -1:
             self.absolute_yardline = 70
-            self.converted_yardline = 30
+        self.converted_yardline = 30
+            
+    def touchback_set(self):
+        if self.direction == 1:
+            self.absolute_yardline = 80
+        elif self.direction == -1:
+            self.absolute_yardline = 20
+        self.converted_yardline = 20
+        
+
+class Scoreboard():
+    def __init__(self):
+        self.absolute_yardline = '30'
+        self.play_name = 'None'
+        self.play_rating = '0'
+        self.offense_yardage ='0'
+        self.return_yardage = '0'
+        self.turnover = 'False'
+        self.down = '1'
 
 #===============================================================================

@@ -34,7 +34,7 @@ class PlayButton():
     def update_coords(self, new_coords):
         self.rect = pygame.Rect(new_coords,(100,20))
 
-screen = pygame.display.set_mode((1400,800))
+screen = pygame.display.set_mode((1300,700))
 myfont = pygame.font.Font(None,20)
 blue = (0,0,255)
 white = (255,255,255)
@@ -116,9 +116,7 @@ while True:
                 game.plays[-1].pass_long()
                 game.current_state.check_state(game)
             
-            
-            
-
+    
     screen.fill(blue)
     try:
         screen.blit(mouse_pos,(1100,10))
@@ -131,19 +129,20 @@ while True:
     home_name = myfont.render(game.home.city + game.home.nickname, True, white)
     away_name = myfont.render(game.away.city + game.away.nickname, True, white)
     current_state = myfont.render(str(game.current_state), True, white)
-    abs_yardline = myfont.render("Yardline: " + str(game.field.absolute_yardline), True, white)
+    abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
     direction = myfont.render("Direction: " + str(game.field.direction), True, white)
-    play_name = myfont.render("Play: " + str(game.plays[-1].play_name), True, white)
-    play_rating = myfont.render("Rating: " + str(game.plays[-1].play_rating), True, white)
+    play_name = myfont.render("Play: " + str(game.scoreboard.play_name), True, white)
+    play_rating = myfont.render("Rating: " + str(game.scoreboard.play_rating), True, white)
     playsh = myfont.render("H: " + str(game.home.plays_run) + str(game.home.total_plays_run), True, white)
     playsa = myfont.render("A: " + str(game.away.plays_run) + str(game.away.total_plays_run), True, white)
-    yards_gained = myfont.render("Off Yards: " + str(game.plays[-1].offense_yardage), True, white)
-    return_yards = myfont.render("Ret Yards: " + str(game.plays[-1].return_yardage), True, white)
-    turnover = myfont.render("Turnover: " + str(game.plays[-1].turnover), True, white)
+    yards_gained = myfont.render("Off Yards: " + str(game.scoreboard.offense_yardage), True, white)
+    return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
+    turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
+    down = myfont.render("Down: " + str(game.scoreboard.down), True, white)
 #    pprint.pprint(vars(current_play.field))
 
 ## stats display
-    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards]
+    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards, down]
     display_offset = 0
     horizontal_offset = 0
     
