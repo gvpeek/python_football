@@ -10,37 +10,51 @@ import pprint
 class State():
     "Basic State"
     def __init__(self):
-        pass
+        self.active = True
     
     def check_state(self, game):
         print 'check_state'
         pprint.pprint(vars(game.plays[-1]))
         next_state = None
-        if game.field.direction == 1 and game.field.in_away_endzone: 
+        if game.field.direction == 1 and game.field.in_away_endzone and not isinstance(self, Conversion): 
             if game.plays[-1].touchback:
                 print 'Away touchback'
                 game.field.touchback_set()
                 game.current_state = DownSet(game)
             else:
                 print 'Home touchdown'
-        elif game.field.direction == -1 and game.field.in_home_endzone:
+                game.current_state = Conversion(game)
+        elif game.field.direction == -1 and game.field.in_home_endzone and not isinstance(self, Conversion):
             if game.plays[-1].touchback:
                 print 'Home touchback'
                 game.field.touchback_set()
                 game.current_state = DownSet(game)
             else:
                 print 'Away touchdown'
+                game.current_state = Conversion(game)
+        elif isinstance(self, Conversion):
+            self.active = False
+            game.current_state = Kickoff(game)
         elif isinstance(self, Kickoff):
             self.active = False
             game.current_state = DownSet(game)
         elif isinstance(self, DownSet):
-            self.convert_check()
-            if self.converted:
+            if game.plays[-1].play_name == 'punt':
                 game.current_state = DownSet(game)
-            elif not self.active:
-                game.plays[-1].change_of_possession = True
-                game.current_state = DownSet(game)
-            print self.down
+            elif game.plays[-1].play_name == 'field_goal':
+                if game.plays[-1].kick_successful == True:
+                    self.active = False
+                    game.current_state = Kickoff(game)
+                else:
+                    game.current_state = DownSet(game)
+            else:
+                self.convert_check()
+                if self.converted:
+                    game.current_state = DownSet(game)
+                elif not self.active:
+                    game.plays[-1].change_of_possession = True
+                    game.field.direction *= -1
+                    game.current_state = DownSet(game)
         
         if game.plays[-1].change_of_possession:
             game.possession[0], game.possession[1] = game.possession[1], game.possession[0]
@@ -52,11 +66,17 @@ class State():
         game.scoreboard.return_yardage = game.plays[-1].return_yardage
         game.scoreboard.turnover =  game.plays[-1].turnover
         game.scoreboard.play_rating = game.plays[-1].play_rating
-        game.scoreboard.down = game.current_state.down 
+        if isinstance(game.current_state,DownSet):
+            game.scoreboard.down = game.current_state.down
+            game.scoreboard.yards_to_go = game.current_state.yards_to_convert
+        else:
+            game.scoreboard.down = ''
+            game.scoreboard.yards_to_go = ''
         
         pprint.pprint(vars(game.current_state))
         pprint.pprint(vars(game.field))
         
+        game.field.play_reset()
         game.plays.append(Play(game.possession[0],game.possession[1],game.field))
         return next_state
     
@@ -65,10 +85,10 @@ class State():
 
 class Kickoff(State):
     "State for kickoffs"
-    def __init__(self):
+    def __init__(self, game):
         self.play_choice = ['kickoff','onside_kickoff']
-        self.active = True
-        
+        game.field.kickoff_set()
+     
         
 class Drive(State):
     "State for normal offensive possession"
@@ -90,7 +110,8 @@ class DownSet(State):
         if not self.active:
             return False
         
-        self.yards_to_convert = (self.field.absolute_yardline - self.target_yardline) * self.field.direction
+        self.yards_to_convert = (self.target_yardline - self.field.absolute_yardline) * self.field.direction
+        print 'YTC' + str(self.yards_to_convert)
         if (self.yards_to_convert <= 0):
             self.converted = True
             self.active = False
@@ -101,6 +122,12 @@ class DownSet(State):
         else:
             self.down += 1
             return self.down, self.yards_to_convert
+        
+class Conversion(State):
+    "State for conversion attempt after touchdown"
+    def __init__(self, game):
+        self.play_choice = ['extra_point', 'run_inside', 'run_outside', 'pass_short']
+        game.field.conversion_set()
         
 #class Drive():
 #    "State for drive"
