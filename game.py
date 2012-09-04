@@ -24,7 +24,7 @@ class Game():
         self.plays = []
         self.possession = [self.home, self.away]
         self.coin_flip()
-        self.current_state = Kickoff()
+        self.current_state = Kickoff(self)
 
     def coin_flip(self):
         self.field.direction = choice([-1,1])
@@ -44,10 +44,14 @@ class Field():
         self.in_home_endzone = False
         self.in_away_endzone = False
         
+    def play_reset(self):
+        self.in_home_endzone = False
+        self.in_away_endzone = False    
+    
     def determine_position(self, yardage, change_of_possession):
         if change_of_possession:
             print 'chg pos' + str(change_of_possession)
-            self.direction = self.direction * -1
+            self.direction *= -1
 
         self.absolute_yardline += (yardage * self.direction)
 
@@ -68,11 +72,19 @@ class Field():
         self.converted_yardline = 30
             
     def touchback_set(self):
-        if self.direction == 1:
+        self.direction *= -1
+        if self.direction == -1:
             self.absolute_yardline = 80
-        elif self.direction == -1:
+        elif self.direction == 1:
             self.absolute_yardline = 20
         self.converted_yardline = 20
+        
+    def conversion_set(self):
+        if self.direction == 1:
+            self.absolute_yardline = 98
+        elif self.direction == -1:
+            self.absolute_yardline = 2
+        self.converted_yardline = 2
         
 
 class Scoreboard():
@@ -84,5 +96,6 @@ class Scoreboard():
         self.return_yardage = '0'
         self.turnover = 'False'
         self.down = '1'
+        self.yards_to_go = '10'
 
 #===============================================================================

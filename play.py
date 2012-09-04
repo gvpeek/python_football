@@ -177,7 +177,7 @@ class Play(object):
             self.determine_return_yardage((self.defense.rating_sp * 1.25), -.4)
             self.field.determine_position(self.return_yardage, self.change_of_possession)
         else:
-            self.touchback = True     
+            self.touchback = True    
 
     def onside_kickoff(self):
         self.play_name = inspect.stack()[0][3]

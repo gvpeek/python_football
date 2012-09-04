@@ -34,7 +34,7 @@ class PlayButton():
     def update_coords(self, new_coords):
         self.rect = pygame.Rect(new_coords,(100,20))
 
-screen = pygame.display.set_mode((1300,700))
+screen = pygame.display.set_mode((1300,900))
 myfont = pygame.font.Font(None,20)
 blue = (0,0,255)
 white = (255,255,255)
@@ -48,8 +48,16 @@ run_o = PlayButton((0,0),'run_outside','run')
 pass_s = PlayButton((0,0),'pass short','pass')
 pass_m = PlayButton((0,0),'pass medium','pass')
 pass_l = PlayButton((0,0),'pass long','pass')
+kickoff = PlayButton((0,0),'kickoff','special')
+onside_kickoff = PlayButton((0,0),'onside kickoff','special')
+extra_point = PlayButton((0,0),'extra point','special')
+punt = PlayButton((0,0),'punt','special')
+field_goal = PlayButton((0,0),'field goal','special') 
+run_clock = PlayButton((0,0),'run_clock','special')
 
-play_buttons = [run_i, run_o, pass_s, pass_m, pass_l]
+
+play_buttons = [run_i, run_o, pass_s, pass_m, pass_l] 
+special_buttons = [kickoff, onside_kickoff, extra_point, punt, field_goal, run_clock]
 
 #def set_play():
 #    if game.field.direction == 1:
@@ -65,57 +73,43 @@ while True:
         if event.type == QUIT:
             sys.exit()
             
-        if event.type == KEYUP:
-            if event.key == pygame.K_k:
-#                current_play = set_play()
-                game.plays[-1].kickoff()
-                game.current_state.check_state(game)
-            if event.key == pygame.K_i:
-#                current_play = set_play()
-                game.plays[-1].run_inside()
-                game.current_state.check_state(game)
-            if event.key == pygame.K_o:
-#                current_play = set_play()
-                game.plays[-1].run_outside()
-                game.current_state.check_state(game)
-            if event.key == pygame.K_s:
-#                current_play = set_play()
-                game.plays[-1].pass_short()
-                game.current_state.check_state(game)
-            if event.key == pygame.K_m:
-#                current_play = set_play()
-                game.plays[-1].pass_medium()
-                game.current_state.check_state(game)
-            if event.key == pygame.K_l:
-#                current_play = set_play()
-                game.plays[-1].pass_long()
-                game.current_state.check_state(game)
-        
         elif event.type == MOUSEBUTTONDOWN:
             mousex, mousey = event.pos
             mouse_pos = myfont.render(str(mousex) + ',' + str(mousey), True, white)
             
             if run_i.rect.collidepoint((mousex, mousey)):
-#                current_play = set_play()
                 game.plays[-1].run_inside()
                 game.current_state.check_state(game)
             if run_o.rect.collidepoint((mousex, mousey)):
-#                current_play = set_play()
                 game.plays[-1].run_outside()
                 game.current_state.check_state(game)
             if pass_s.rect.collidepoint((mousex, mousey)):
-#                current_play = set_play()
                 game.plays[-1].pass_short()
                 game.current_state.check_state(game)
             if pass_m.rect.collidepoint((mousex, mousey)):
-#                current_play = set_play()
                 game.plays[-1].pass_medium()
                 game.current_state.check_state(game)
             if pass_l.rect.collidepoint((mousex, mousey)):
-#                current_play = set_play()
                 game.plays[-1].pass_long()
                 game.current_state.check_state(game)
-            
+            if kickoff.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].kickoff()
+                game.current_state.check_state(game)
+            if onside_kickoff.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].onside_kickoff()
+                game.current_state.check_state(game)
+            if extra_point.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].extra_point()
+                game.current_state.check_state(game)
+            if punt.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].punt()
+                game.current_state.check_state(game)
+            if field_goal.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].field_goal()
+                game.current_state.check_state(game)
+            if run_clock.rect.collidepoint((mousex, mousey)):
+                game.plays[-1].run_clock()
+                game.current_state.check_state(game)
     
     screen.fill(blue)
     try:
@@ -139,10 +133,11 @@ while True:
     return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
     down = myfont.render("Down: " + str(game.scoreboard.down), True, white)
+    yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)
 #    pprint.pprint(vars(current_play.field))
 
 ## stats display
-    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards, down]
+    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards, down, yards_to_go]
     display_offset = 0
     horizontal_offset = 0
     
@@ -157,6 +152,14 @@ while True:
         button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
         button.display_button()
         horizontal_offset += 130
+  
+    display_offset += 30
+    horizontal_offset = 0
+        
+    for button in special_buttons:
+        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
+        button.display_button()
+        horizontal_offset += 130        
 
 ## field display
     pygame.draw.rect(screen,(0,255,0),(5,(100 + display_offset),1200,500))
