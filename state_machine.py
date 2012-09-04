@@ -16,37 +16,62 @@ class State():
         print 'check_state'
         pprint.pprint(vars(game.plays[-1]))
         next_state = None
-        if game.field.direction == 1 and game.field.in_away_endzone and not isinstance(self, Conversion): 
-            if game.plays[-1].touchback:
-                print 'Away touchback'
-                game.field.touchback_set()
-                game.current_state = DownSet(game)
+        if game.field.direction == 1 and game.field.in_away_endzone:
+            if isinstance(self, Conversion):
+                self.active = False
+                game.scoreboard.home_conversion_play()
+                game.current_state = Kickoff(game)
             else:
-                print 'Home touchdown'
-                game.current_state = Conversion(game)
-        elif game.field.direction == -1 and game.field.in_home_endzone and not isinstance(self, Conversion):
-            if game.plays[-1].touchback:
-                print 'Home touchback'
-                game.field.touchback_set()
-                game.current_state = DownSet(game)
+                if game.plays[-1].touchback:
+                    print 'Away touchback'
+                    game.field.touchback_set()
+                    game.current_state = DownSet(game)
+                else:
+                    print 'Home touchdown'
+                    game.scoreboard.home_touchdown()
+                    game.current_state = Conversion(game)
+        elif game.field.direction == -1 and game.field.in_home_endzone:
+            if isinstance(self, Conversion):
+                self.active = False
+                game.scoreboard.away_conversion_play()
+                game.current_state = Kickoff(game)
             else:
-                print 'Away touchdown'
-                game.current_state = Conversion(game)
+                if game.plays[-1].touchback:
+                    print 'Home touchback'
+                    game.field.touchback_set()
+                    game.current_state = DownSet(game)
+                else:
+                    print 'Away touchdown'
+                    game.scoreboard.away_touchdown()
+                    game.current_state = Conversion(game)
         elif isinstance(self, Conversion):
             self.active = False
+            if game.plays[-1].kick_successful:
+                if game.field.direction == 1:
+                    game.scoreboard.home_conversion_kick()
+                elif game.field.direction == -1:
+                    game.scoreboard.away_conversion_kick()
             game.current_state = Kickoff(game)
         elif isinstance(self, Kickoff):
             self.active = False
             game.current_state = DownSet(game)
         elif isinstance(self, DownSet):
-            if game.plays[-1].play_name == 'punt':
+            if game.plays[-1].punt_attempt:
+                self.active = False
                 game.current_state = DownSet(game)
-            elif game.plays[-1].play_name == 'field_goal':
+            elif game.plays[-1].field_goal_attempt:
                 if game.plays[-1].kick_successful == True:
                     self.active = False
+                    if game.field.direction == 1:
+                        game.scoreboard.home_field_goal()
+                    elif game.field.direction == -1:
+                        game.scoreboard.away_field_goal()
                     game.current_state = Kickoff(game)
                 else:
                     game.current_state = DownSet(game)
+            elif game.plays[-1].turnover:
+                self.active = False
+                game.current_state = DownSet(game)               
             else:
                 self.convert_check()
                 if self.converted:
@@ -68,7 +93,10 @@ class State():
         game.scoreboard.play_rating = game.plays[-1].play_rating
         if isinstance(game.current_state,DownSet):
             game.scoreboard.down = game.current_state.down
-            game.scoreboard.yards_to_go = game.current_state.yards_to_convert
+            if 0 < game.current_state.target_yardline < 100:
+                game.scoreboard.yards_to_go = game.current_state.yards_to_convert
+            else:
+                game.scoreboard.yards_to_go ='Goal'
         else:
             game.scoreboard.down = ''
             game.scoreboard.yards_to_go = ''
@@ -90,14 +118,15 @@ class Kickoff(State):
         game.field.kickoff_set()
      
         
-class Drive(State):
-    "State for normal offensive possession"
-    def __init__(self):
-        self.play_choice = ['run_clock', 'run_inside', 'run_outside', 'pass_short', 'pass_medium', 'pass_long', 'field_goal', 'punt']
+#class Drive(State):
+#    "State for normal offensive possession"
+#    def __init__(self):
+#        self.play_choice = ['run_clock', 'run_inside', 'run_outside', 'pass_short', 'pass_medium', 'pass_long', 'field_goal', 'punt']
 
 class DownSet(State):
     "State for normal offensive possession"
     def __init__(self, game, downs_to_convert = 4, yards_to_convert = 10.0):
+        self.play_choice = ['run_inside', 'run_outside', 'pass_short', 'pass_medium', 'pass_long', 'field_goal', 'punt', 'run_clock']
         self.down = 1
         self.downs_to_convert = downs_to_convert
         self.yards_to_convert = yards_to_convert
