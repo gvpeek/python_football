@@ -53,7 +53,9 @@ class Play(object):
         self.turnover = False
         self.change_of_possession = False
         self.touchback = False
+        self.punt_attempt = False
         self.punt_blocked = False
+        self.field_goal_attempt = False
         self.kick_successful = False
         self.field = field
 
@@ -198,9 +200,11 @@ class Play(object):
                     self.touchback = True  
         else:
             self.change_of_possession = True
+            self.field.determine_position(0, self.change_of_possession)
 
     def punt(self): 
         self.play_name = inspect.stack()[0][3]
+        self.punt_attempt = True
         self.play_rating = self.offense.rating_sp - (self.defense.home_field_advantage + ceil((self.defense.rating_sp - 60) / 4))
         self.determine_punt_yardage()
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
@@ -214,6 +218,7 @@ class Play(object):
 
     def field_goal(self):
         self.play_name = inspect.stack()[0][3]
+        self.field_goal_attempt = True
         self.determine_field_goal_result(110)
         
         if not self.kick_successful:

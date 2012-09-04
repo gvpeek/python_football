@@ -28,9 +28,9 @@ class Game():
 
     def coin_flip(self):
         self.field.direction = choice([-1,1])
-        if self.field.direction == -1:
+        if self.field.direction == 1:
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
-        elif self.field.direction == 1:
+        elif self.field.direction == -1:
             self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
         self.field.kickoff_set()
@@ -88,7 +88,7 @@ class Field():
         
 
 class Scoreboard():
-    def __init__(self):
+    def __init__(self, touchdown_pts=6, field_goal_pts=3, safety_pts=2, conversion_play_pts=2, conversion_kick_pts=1):
         self.absolute_yardline = '30'
         self.play_name = 'None'
         self.play_rating = '0'
@@ -97,5 +97,43 @@ class Scoreboard():
         self.turnover = 'False'
         self.down = '1'
         self.yards_to_go = '10'
+        
+        self.touchdown_pts = touchdown_pts
+        self.field_goal_pts = field_goal_pts   
+        self.safety_pts = safety_pts       
+        self.conversion_play_pts = conversion_play_pts
+        self.conversion_kick_pts = conversion_kick_pts
+        
+        self.home_score = 0
+        self.away_score = 0
+        
+    def home_touchdown(self):
+        self.home_score += self.touchdown_pts
+        
+    def away_touchdown(self):
+        self.away_score += self.touchdown_pts
+        
+    def home_field_goal(self):
+        self.home_score += self.field_goal_pts
+        
+    def away_field_goal(self):
+        self.away_score += self.field_goal_pts
 
+    def home_safety(self):
+        self.home_score += self.safety_pts
+        
+    def away_safety(self):
+        self.away_score += self.safety_pts
+
+    def home_conversion_play(self):
+        self.home_score += self.conversion_play_pts
+        
+    def away_conversion_play(self):
+        self.away_score += self.conversion_play_pts
+
+    def home_conversion_kick(self):
+        self.home_score += self.conversion_kick_pts
+        
+    def away_conversion_kick(self):
+        self.away_score += self.conversion_kick_pts
 #===============================================================================

@@ -38,26 +38,27 @@ screen = pygame.display.set_mode((1300,900))
 myfont = pygame.font.Font(None,20)
 blue = (0,0,255)
 white = (255,255,255)
+black = (0,0,0)
+reset_coords = (-1000,-1000)
 
 team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
 game = Game(team1,team2)
 
-run_i = PlayButton((0,0),'run_inside','run')
-run_o = PlayButton((0,0),'run_outside','run')
-pass_s = PlayButton((0,0),'pass short','pass')
-pass_m = PlayButton((0,0),'pass medium','pass')
-pass_l = PlayButton((0,0),'pass long','pass')
-kickoff = PlayButton((0,0),'kickoff','special')
-onside_kickoff = PlayButton((0,0),'onside kickoff','special')
-extra_point = PlayButton((0,0),'extra point','special')
-punt = PlayButton((0,0),'punt','special')
-field_goal = PlayButton((0,0),'field goal','special') 
-run_clock = PlayButton((0,0),'run_clock','special')
+run_inside = PlayButton(reset_coords,'run inside','run')
+run_outside = PlayButton(reset_coords,'run outside','run')
+pass_short = PlayButton(reset_coords,'pass short','pass')
+pass_medium = PlayButton(reset_coords,'pass medium','pass')
+pass_long = PlayButton(reset_coords,'pass long','pass')
+kickoff = PlayButton(reset_coords,'kickoff','special')
+onside_kickoff = PlayButton(reset_coords,'onside kickoff','special')
+extra_point = PlayButton(reset_coords,'extra point','special')
+punt = PlayButton(reset_coords,'punt','special')
+field_goal = PlayButton(reset_coords,'field goal','special') 
+run_clock = PlayButton(reset_coords,'run clock','special')
 
 
-play_buttons = [run_i, run_o, pass_s, pass_m, pass_l] 
-special_buttons = [kickoff, onside_kickoff, extra_point, punt, field_goal, run_clock]
+play_buttons = [run_inside, run_outside, pass_short, pass_medium, pass_long, kickoff, onside_kickoff, extra_point, punt, field_goal, run_clock]
 
 #def set_play():
 #    if game.field.direction == 1:
@@ -77,19 +78,19 @@ while True:
             mousex, mousey = event.pos
             mouse_pos = myfont.render(str(mousex) + ',' + str(mousey), True, white)
             
-            if run_i.rect.collidepoint((mousex, mousey)):
+            if run_inside.rect.collidepoint((mousex, mousey)):
                 game.plays[-1].run_inside()
                 game.current_state.check_state(game)
-            if run_o.rect.collidepoint((mousex, mousey)):
+            if run_outside.rect.collidepoint((mousex, mousey)):
                 game.plays[-1].run_outside()
                 game.current_state.check_state(game)
-            if pass_s.rect.collidepoint((mousex, mousey)):
+            if pass_short.rect.collidepoint((mousex, mousey)):
                 game.plays[-1].pass_short()
                 game.current_state.check_state(game)
-            if pass_m.rect.collidepoint((mousex, mousey)):
+            if pass_medium.rect.collidepoint((mousex, mousey)):
                 game.plays[-1].pass_medium()
                 game.current_state.check_state(game)
-            if pass_l.rect.collidepoint((mousex, mousey)):
+            if pass_long.rect.collidepoint((mousex, mousey)):
                 game.plays[-1].pass_long()
                 game.current_state.check_state(game)
             if kickoff.rect.collidepoint((mousex, mousey)):
@@ -120,8 +121,8 @@ while True:
 #    print ' '
 #    pprint.pprint(vars(team2)) 
 #    print ' '
-    home_name = myfont.render(game.home.city + game.home.nickname, True, white)
-    away_name = myfont.render(game.away.city + game.away.nickname, True, white)
+    home_name = myfont.render(game.home.city + game.home.nickname + ' -- ' + str(game.scoreboard.home_score), True, white)
+    away_name = myfont.render(game.away.city + game.away.nickname + ' -- ' + str(game.scoreboard.away_score), True, white)
     current_state = myfont.render(str(game.current_state), True, white)
     abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
     direction = myfont.render("Direction: " + str(game.field.direction), True, white)
@@ -137,29 +138,37 @@ while True:
 #    pprint.pprint(vars(current_play.field))
 
 ## stats display
-    display = [current_state, abs_yardline, direction, play_name, play_rating, playsh, playsa, yards_gained, turnover, return_yards, down, yards_to_go]
+    display = [current_state, play_name, yards_gained, return_yards, turnover, down, yards_to_go, abs_yardline, direction, play_rating, playsh, playsa]
     display_offset = 0
     horizontal_offset = 0
     
-    screen.blit(home_name, (5,5))
-    screen.blit(away_name, (105,5))
+    screen.blit(home_name, (25,5))
+    screen.blit(away_name, (180,5))
+    if game.field.direction == 1:
+        pygame.draw.circle(screen,white,(10,12),5)
+    elif game.field.direction == -1:
+        pygame.draw.circle(screen,white,(165,12),5)
+            
     for item in display:
         screen.blit(item, (5,35 + display_offset))
         display_offset += 20
         
 ## play button display
     for button in play_buttons:
-        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
-        button.display_button()
+        button.update_coords(reset_coords)
+        
+    for button in game.current_state.play_choice:
+        vars()[button].update_coords(((5 + horizontal_offset),(50 + display_offset)))
+        vars()[button].display_button()
         horizontal_offset += 130
   
-    display_offset += 30
-    horizontal_offset = 0
+#    display_offset += 30
+#    horizontal_offset = 0
         
-    for button in special_buttons:
-        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
-        button.display_button()
-        horizontal_offset += 130        
+#    for button in special_buttons:
+#        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
+#        button.display_button()
+#        horizontal_offset += 130        
 
 ## field display
     pygame.draw.rect(screen,(0,255,0),(5,(100 + display_offset),1200,500))
@@ -171,9 +180,3 @@ while True:
 
 
     pygame.display.update()
-        
-#    screen.blit( (5,55))
-#    screen.blit())
-#    screen.blit(, (5,95))
-#    screen.blit(,115))
-#    screen.blit(, (5,135))
