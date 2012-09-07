@@ -4,8 +4,11 @@ Created on Aug 19, 2012
 @author: George Peek
 '''
 
-from play import Play
 import pprint
+
+
+from play import Play
+from timekeeping import Clock
 
 class State():
     "Basic State"
@@ -14,36 +17,47 @@ class State():
     
     def check_state(self, game):
         print 'check_state'
-        pprint.pprint(vars(game.plays[-1]))
+
+#        pprint.pprint(vars(game.plays[-1]))
         next_state = None
-        if game.field.direction == 1 and game.field.in_away_endzone:
-            if isinstance(self, Conversion):
-                self.active = False
-                game.scoreboard.home_conversion_play()
-                game.current_state = Kickoff(game)
-            else:
-                if game.plays[-1].touchback:
-                    print 'Away touchback'
-                    game.field.touchback_set()
-                    game.current_state = DownSet(game)
+        if game.field.in_away_endzone:
+            if game.field.direction == 1:
+                if isinstance(self, Conversion):
+                    self.active = False
+                    game.scoreboard.home_conversion_play()
+                    game.current_state = Kickoff(game)
                 else:
-                    print 'Home touchdown'
-                    game.scoreboard.home_touchdown()
-                    game.current_state = Conversion(game)
-        elif game.field.direction == -1 and game.field.in_home_endzone:
-            if isinstance(self, Conversion):
-                self.active = False
-                game.scoreboard.away_conversion_play()
-                game.current_state = Kickoff(game)
-            else:
-                if game.plays[-1].touchback:
-                    print 'Home touchback'
-                    game.field.touchback_set()
-                    game.current_state = DownSet(game)
+                    if game.plays[-1].touchback:
+                        print 'Away touchback'
+                        game.field.touchback_set()
+                        game.current_state = DownSet(game)
+                    else:
+                        print 'Home touchdown'
+                        game.scoreboard.home_touchdown()
+                        game.current_state = Conversion(game)
+            elif game.field.direction == -1:
+                print 'Home safety'
+                game.scoreboard.home_safety()
+                game.current_state = Kickoff(game, True)
+        elif game.field.in_home_endzone:
+            if game.field.direction == -1: 
+                if isinstance(self, Conversion):
+                    self.active = False
+                    game.scoreboard.away_conversion_play()
+                    game.current_state = Kickoff(game)
                 else:
-                    print 'Away touchdown'
-                    game.scoreboard.away_touchdown()
-                    game.current_state = Conversion(game)
+                    if game.plays[-1].touchback:
+                        print 'Home touchback'
+                        game.field.touchback_set()
+                        game.current_state = DownSet(game)
+                    else:
+                        print 'Away touchdown'
+                        game.scoreboard.away_touchdown()
+                        game.current_state = Conversion(game)
+            elif game.field.direction == 1:
+                print 'Away safety'
+                game.scoreboard.away_safety()
+                game.current_state = Kickoff(game, True)               
         elif isinstance(self, Conversion):
             self.active = False
             if game.plays[-1].kick_successful:
@@ -84,6 +98,41 @@ class State():
         if game.plays[-1].change_of_possession:
             game.possession[0], game.possession[1] = game.possession[1], game.possession[0]
 
+        if game.end_of_half and not isinstance(game.current_state, Conversion):
+            game.set_second_half()
+            game.current_state = Kickoff(game)
+            game.end_of_half = False
+
+        if not isinstance(game.current_state, Conversion):
+            game.scoreboard.clock = str(game.current_clock.run_clock())[2:7]
+            if not game.current_clock.time_remaining:
+                if game.timekeeping:
+                    if game.number_of_periods / game.period == 2:
+                        game.end_of_half = True
+                    game.period += 1
+                    game.scoreboard.period = game.period
+                    game.current_clock = game.timekeeping.pop()
+                    game.scoreboard.clock = str(game.current_clock.time_remaining)[2:7]
+                else:
+                    game.end_of_regulation = True
+                    print 'outof timekeeping'
+                    if game.scoreboard.home_score == game.scoreboard.away_score: 
+                        if not game.overtime:
+                            game.overtime = True
+                            game.coin_flip()
+                            game.current_state = Kickoff(game)
+                    if game.overtime:
+                        print 'in overtime'
+                        game.period += 1
+                        game.scoreboard.period = game.period
+                        game.current_clock = Clock()
+                        game.scoreboard.clock = str(game.current_clock.time_remaining)[2:7]
+
+        if (game.end_of_regulation and not game.overtime) or (game.overtime and game.scoreboard.home_score != game.scoreboard.away_score):                    
+            game.end_of_game = True
+            game.current_state = EndOfGame(game)
+                    
+ 
         print 'scoreboard'
         game.scoreboard.absolute_yardline = str(game.field.absolute_yardline)
         game.scoreboard.play_name = game.plays[-1].play_name
@@ -101,9 +150,10 @@ class State():
             game.scoreboard.down = ''
             game.scoreboard.yards_to_go = ''
         
-        pprint.pprint(vars(game.current_state))
-        pprint.pprint(vars(game.field))
+#        pprint.pprint(vars(game.current_state))
+#        pprint.pprint(vars(game.field))
         
+       
         game.field.play_reset()
         game.plays.append(Play(game.possession[0],game.possession[1],game.field))
         return next_state
@@ -113,16 +163,12 @@ class State():
 
 class Kickoff(State):
     "State for kickoffs"
-    def __init__(self, game):
+    def __init__(self, game, post_safety=False):
         self.play_choice = ['kickoff','onside_kickoff']
-        game.field.kickoff_set()
+        game.field.kickoff_set(post_safety)
+
      
         
-#class Drive(State):
-#    "State for normal offensive possession"
-#    def __init__(self):
-#        self.play_choice = ['run_clock', 'run_inside', 'run_outside', 'pass_short', 'pass_medium', 'pass_long', 'field_goal', 'punt']
-
 class DownSet(State):
     "State for normal offensive possession"
     def __init__(self, game, downs_to_convert = 4, yards_to_convert = 10.0):
@@ -158,7 +204,6 @@ class Conversion(State):
         self.play_choice = ['extra_point', 'run_inside', 'run_outside', 'pass_short']
         game.field.conversion_set()
         
-#class Drive():
-#    "State for drive"
-#    def __init__(self, kickoff=False):
-
+class EndOfGame():
+    def __init__(self, game):
+        self.play_choice = []

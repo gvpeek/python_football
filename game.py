@@ -5,13 +5,15 @@ Created on Mar 1, 2012
 '''
 
 from random import choice
+from collections import deque
 
 from play import Play
 from state_machine import Kickoff
+from timekeeping import Clock
 
 class Game():
     "Game"
-    def __init__(self, home_team, away_team, league_game=False, division_game=False, conference_game=False, playoff_game=False):
+    def __init__(self, home_team, away_team, league_game=False, division_game=False, conference_game=False, playoff_game=False, number_of_periods=4):
 #        self.game_id = get_next_game_id()
         self.home = home_team
         self.away = away_team
@@ -19,12 +21,21 @@ class Game():
         self.division_game = division_game
         self.conference_game = conference_game 
         self.playoff_game = playoff_game  
+        self.number_of_periods = number_of_periods
+        self.period = 1
         self.field = Field()
         self.scoreboard = Scoreboard()
         self.plays = []
         self.possession = [self.home, self.away]
-        self.coin_flip()
+        self.coin_flip_winner = self.coin_flip()
         self.current_state = Kickoff(self)
+        self.timekeeping = deque()
+        self.timekeeping.extend([Clock() for x in range(number_of_periods)])
+        self.current_clock = self.timekeeping.pop()
+        self.end_of_half = False
+        self.end_of_regulation = False
+        self.overtime = False
+        self.end_of_game = False
 
     def coin_flip(self):
         self.field.direction = choice([-1,1])
@@ -34,13 +45,24 @@ class Game():
             self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
         self.field.kickoff_set()
-
+        
+        return self.field.direction
+    
+    def set_second_half(self):
+        ## sets up kickoff the opposite of opening kick
+        if self.coin_flip_winner == -1:
+            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
+        elif self.coin_flip_winner == 1:
+            self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
+            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
+        self.field.kickoff_set()
+        
 class Field():
     "Playing Field"
     def __init__(self):
         self.direction = 1 ## 1=home, -1=away
-        self.absolute_yardline = 30
-        self.converted_yardline = 30
+        self.absolute_yardline = 30.0
+        self.converted_yardline = 30.0
         self.in_home_endzone = False
         self.in_away_endzone = False
         
@@ -55,36 +77,43 @@ class Field():
 
         self.absolute_yardline += (yardage * self.direction)
 
-        if self.absolute_yardline > 50:
-            self.converted_yardline = 100 - self.absolute_yardline
-            if self.absolute_yardline >= 100:
+        if self.absolute_yardline > 50.0:
+            self.converted_yardline = 100.0 - self.absolute_yardline
+            if self.absolute_yardline >= 100.0:
                 self.in_away_endzone = True
         else:
             self.converted_yardline = self.absolute_yardline
-            if self.absolute_yardline <= 0:
+            if self.absolute_yardline <= 0.0:
                 self.in_home_endzone = True
                 
-    def kickoff_set(self):
-        if self.direction == 1:
-            self.absolute_yardline = 30
-        elif self.direction == -1:
-            self.absolute_yardline = 70
-        self.converted_yardline = 30
+    def kickoff_set(self, post_safety=False):
+        if not post_safety:
+            if self.direction == 1:
+                self.absolute_yardline = 30.0
+            elif self.direction == -1:
+                self.absolute_yardline = 70.0
+            self.converted_yardline = 30.0
+        else:
+            if self.direction == 1:
+                self.absolute_yardline = 20.0
+            elif self.direction == -1:
+                self.absolute_yardline = 80.0
+            self.converted_yardline = 20.0
             
     def touchback_set(self):
         self.direction *= -1
         if self.direction == -1:
-            self.absolute_yardline = 80
+            self.absolute_yardline = 80.0
         elif self.direction == 1:
-            self.absolute_yardline = 20
-        self.converted_yardline = 20
+            self.absolute_yardline = 20.0
+        self.converted_yardline = 20.0
         
     def conversion_set(self):
         if self.direction == 1:
-            self.absolute_yardline = 98
+            self.absolute_yardline = 98.0
         elif self.direction == -1:
-            self.absolute_yardline = 2
-        self.converted_yardline = 2
+            self.absolute_yardline = 2.0
+        self.converted_yardline = 2.0
         
 
 class Scoreboard():
@@ -97,6 +126,8 @@ class Scoreboard():
         self.turnover = 'False'
         self.down = '1'
         self.yards_to_go = '10'
+        self.clock = '15:00'
+        self.period = '1'
         
         self.touchdown_pts = touchdown_pts
         self.field_goal_pts = field_goal_pts   

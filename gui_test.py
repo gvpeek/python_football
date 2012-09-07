@@ -36,6 +36,7 @@ class PlayButton():
 
 screen = pygame.display.set_mode((1300,900))
 myfont = pygame.font.Font(None,20)
+fps = pygame.time.Clock()
 blue = (0,0,255)
 white = (255,255,255)
 black = (0,0,0)
@@ -60,16 +61,11 @@ run_clock = PlayButton(reset_coords,'run clock','special')
 
 play_buttons = [run_inside, run_outside, pass_short, pass_medium, pass_long, kickoff, onside_kickoff, extra_point, punt, field_goal, run_clock]
 
-#def set_play():
-#    if game.field.direction == 1:
-#        current_play = Play(game.home,game.away,game.field)
-#    else:
-#        current_play = Play(game.away,game.home,game.field)
-#    return current_play
-#    
-#current_play = set_play()
 
 while True:
+    
+    fps.tick(5)
+    
     for event in pygame.event.get():
         if event.type == QUIT:
             sys.exit()
@@ -117,10 +113,7 @@ while True:
         screen.blit(mouse_pos,(1100,10))
     except:
         pass
-#    pprint.pprint(vars(team1)) 
-#    print ' '
-#    pprint.pprint(vars(team2)) 
-#    print ' '
+
     home_name = myfont.render(game.home.city + game.home.nickname + ' -- ' + str(game.scoreboard.home_score), True, white)
     away_name = myfont.render(game.away.city + game.away.nickname + ' -- ' + str(game.scoreboard.away_score), True, white)
     current_state = myfont.render(str(game.current_state), True, white)
@@ -133,12 +126,13 @@ while True:
     yards_gained = myfont.render("Off Yards: " + str(game.scoreboard.offense_yardage), True, white)
     return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
+    quarter = myfont.render("Qtr: " + str(game.scoreboard.period), True, white)
+    clock = myfont.render("Time: " + str(game.scoreboard.clock), True, white)
     down = myfont.render("Down: " + str(game.scoreboard.down), True, white)
     yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)
-#    pprint.pprint(vars(current_play.field))
 
 ## stats display
-    display = [current_state, play_name, yards_gained, return_yards, turnover, down, yards_to_go, abs_yardline, direction, play_rating, playsh, playsa]
+    display = [current_state, play_name, yards_gained, return_yards, turnover, quarter, clock, down, yards_to_go, abs_yardline, direction, play_rating, playsh, playsa]
     display_offset = 0
     horizontal_offset = 0
     
@@ -162,14 +156,6 @@ while True:
         vars()[button].display_button()
         horizontal_offset += 130
   
-#    display_offset += 30
-#    horizontal_offset = 0
-        
-#    for button in special_buttons:
-#        button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
-#        button.display_button()
-#        horizontal_offset += 130        
-
 ## field display
     pygame.draw.rect(screen,(0,255,0),(5,(100 + display_offset),1200,500))
     pygame.draw.rect(screen,game.home.primary_color,(5,(100 + display_offset),100,500))
