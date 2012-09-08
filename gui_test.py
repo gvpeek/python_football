@@ -118,6 +118,7 @@ while True:
     away_name = myfont.render(game.away.city + game.away.nickname + ' -- ' + str(game.scoreboard.away_score), True, white)
     current_state = myfont.render(str(game.current_state), True, white)
     abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
+    conv_yardline = myfont.render("Yardline: " + game.scoreboard.converted_yardline, True, white)
     direction = myfont.render("Direction: " + str(game.field.direction), True, white)
     play_name = myfont.render("Play: " + str(game.scoreboard.play_name), True, white)
     play_rating = myfont.render("Rating: " + str(game.scoreboard.play_rating), True, white)
@@ -132,8 +133,8 @@ while True:
     yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)
 
 ## stats display
-    display = [current_state, play_name, yards_gained, return_yards, turnover, quarter, clock, down, yards_to_go, abs_yardline, direction, play_rating, playsh, playsa]
     display_offset = 0
+    display = [current_state, play_name, yards_gained, return_yards, turnover, quarter, clock, down, yards_to_go, conv_yardline, direction, play_rating, playsh, playsa]
     horizontal_offset = 0
     
     screen.blit(home_name, (25,5))
