@@ -98,11 +98,6 @@ class State():
         if game.plays[-1].change_of_possession:
             game.possession[0], game.possession[1] = game.possession[1], game.possession[0]
 
-        if game.end_of_half and not isinstance(game.current_state, Conversion):
-            game.set_second_half()
-            game.current_state = Kickoff(game)
-            game.end_of_half = False
-
         if not isinstance(game.current_state, Conversion):
             game.scoreboard.clock = str(game.current_clock.run_clock())[2:7]
             if not game.current_clock.time_remaining:
@@ -128,6 +123,11 @@ class State():
                         game.current_clock = Clock()
                         game.scoreboard.clock = str(game.current_clock.time_remaining)[2:7]
 
+        if game.end_of_half and not isinstance(game.current_state, Conversion):
+            game.set_second_half()
+            game.current_state = Kickoff(game)
+            game.end_of_half = False
+
         if (game.end_of_regulation and not game.overtime) or (game.overtime and game.scoreboard.home_score != game.scoreboard.away_score):                    
             game.end_of_game = True
             game.current_state = EndOfGame(game)
@@ -135,6 +135,7 @@ class State():
  
         print 'scoreboard'
         game.scoreboard.absolute_yardline = str(game.field.absolute_yardline)
+        game.scoreboard.converted_yardline = str(game.field.converted_yardline)
         game.scoreboard.play_name = game.plays[-1].play_name
         game.scoreboard.offense_yardage = game.plays[-1].offense_yardage
         game.scoreboard.return_yardage = game.plays[-1].return_yardage

@@ -51,8 +51,10 @@ class Game():
     def set_second_half(self):
         ## sets up kickoff the opposite of opening kick
         if self.coin_flip_winner == -1:
+            self.field.direction = 1
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
         elif self.coin_flip_winner == 1:
+            self.field.direction = -1
             self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
         self.field.kickoff_set()
@@ -119,6 +121,7 @@ class Field():
 class Scoreboard():
     def __init__(self, touchdown_pts=6, field_goal_pts=3, safety_pts=2, conversion_play_pts=2, conversion_kick_pts=1):
         self.absolute_yardline = '30'
+        self.converted_yardline = '30'
         self.play_name = 'None'
         self.play_rating = '0'
         self.offense_yardage ='0'
