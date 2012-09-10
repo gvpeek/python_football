@@ -240,9 +240,12 @@ class Play(object):
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
-            self.change_of_possession = True
-            self.determine_return_yardage(self.defense.rating_dl,-1)
-            self.field.determine_position(self.return_yardage, self.change_of_possession)
+            if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+                self.change_of_possession = True
+                self.determine_return_yardage(self.defense.rating_dl,-1)
+                self.field.determine_position(self.return_yardage, self.change_of_possession)
+            else:
+                self.touchback = True
 
     def run_outside(self):
         self.play_name = inspect.stack()[0][3]
@@ -255,9 +258,12 @@ class Play(object):
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
-            self.change_of_possession = True
-            self.determine_return_yardage(self.defense.rating_lb,-1)
-            self.field.determine_position(self.return_yardage, self.change_of_possession)
+            if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+                self.change_of_possession = True
+                self.determine_return_yardage(self.defense.rating_lb,-1)
+                self.field.determine_position(self.return_yardage, self.change_of_possession)
+            else:
+                self.touchback = True            
 
     def pass_short(self):
         self.play_name = inspect.stack()[0][3]
@@ -270,10 +276,13 @@ class Play(object):
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
-            self.change_of_possession = True
-            self.determine_return_yardage(self.defense.rating_lb,-.8)
-            self.field.determine_position(self.return_yardage, self.change_of_possession)
-
+            if not self.field.in_home_endzone and not self.field.in_away_endzone:             
+                self.change_of_possession = True
+                self.determine_return_yardage(self.defense.rating_lb,-.8)
+                self.field.determine_position(self.return_yardage, self.change_of_possession)
+            else:
+                self.touchback = True
+                
     def pass_medium(self):
         self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(4,0,4,2,2,2,4,2)
@@ -285,10 +294,13 @@ class Play(object):
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
-            self.change_of_possession = True
-            self.determine_return_yardage(self.defense.rating_cb,-.7)
-            self.field.determine_position(self.return_yardage, self.change_of_possession)
-            
+            if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+                self.change_of_possession = True
+                self.determine_return_yardage(self.defense.rating_cb,-.7)
+                self.field.determine_position(self.return_yardage, self.change_of_possession)
+            else:
+                self.touchback = True
+                 
     def pass_long(self):
         self.play_name = inspect.stack()[0][3]
         self.determine_play_rating(4,0,3,3,3,1,3,3)
@@ -300,10 +312,12 @@ class Play(object):
         self.field.determine_position(self.offense_yardage, self.change_of_possession)
 
         if self.turnover:
-            self.change_of_possession = True
-            self.determine_return_yardage(self.defense.rating_s,-.6)
-            self.field.determine_position(self.return_yardage, self.change_of_possession)
-
+            if not self.field.in_home_endzone and not self.field.in_away_endzone: 
+                self.change_of_possession = True
+                self.determine_return_yardage(self.defense.rating_s,-.6)
+                self.field.determine_position(self.return_yardage, self.change_of_possession)
+            else:
+                self.touchback = True
 #===============================================================================
 #
 ## test execution 
