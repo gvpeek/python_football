@@ -50,6 +50,7 @@ class Game():
     
     def set_second_half(self):
         ## sets up kickoff the opposite of opening kick
+        self.possession = [self.home, self.away]
         if self.coin_flip_winner == -1:
             self.field.direction = 1
             self.plays.append(Play(self.possession[0],self.possession[1],self.field))
