@@ -26,6 +26,7 @@ class Game():
         self.field = Field()
         self.scoreboard = Scoreboard()
         self.plays = []
+        self.plays_run = {'offense':[],'defense':[]}
         self.possession = [self.home, self.away]
         self.coin_flip_winner = self.coin_flip()
         self.current_state = Kickoff(self)
