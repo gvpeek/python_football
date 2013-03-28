@@ -19,7 +19,7 @@ count=0.0
 turnover_ctr=0.0
 
 for i in range(1,20):
-    for play in t2.playbook:
+    for play in t1.playbook:
         count+=1
         off_yd, turnover, ret_yd = play.run(t1.skills,t2.skills,3)
         if turnover:
