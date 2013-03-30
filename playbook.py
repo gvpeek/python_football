@@ -4,7 +4,7 @@ Created on Mar 24, 2013
 @author: George
 '''
 
-from random import randint
+from random import randint, choice
 from math import ceil, floor
 
 class Playbook(list):
@@ -18,7 +18,7 @@ class Playbook(list):
                          1,
                          0,
                          'Run Clock',
-                         (1,2,3,4,'E'),
+                         (1,2,3,4,'C'),
                          0,
                          (0.0,0.0),
                          {},
@@ -29,7 +29,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Inside',
-                         (1,2,3,4,'E'),
+                         (1,2,3,4,'C'),
                          0,
                          (35.0,90.0),
                          {'qb':1,'rb':4,'wr':0,'ol':5},
@@ -40,7 +40,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Outside',
-                         (1,2,3,4,'E'),
+                         (1,2,3,4,'C'),
                          0,
                          (35.0,90.0),
                          {'qb':1,'rb':5,'wr':1,'ol':3},
@@ -51,7 +51,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Pass Short',
-                         (1,2,3,4,'E'),
+                         (1,2,3,4,'C'),
                          0,
                          (35.0,90.0),
                          {'qb':4,'rb':3,'wr':2,'ol':1},
@@ -62,8 +62,8 @@ class Playbook(list):
                          10,
                          1,
                          'Pass Medium',
-                         (1,2,3,4,'E'),
-                         0,
+                         (1,2,3,4,'C'),
+                         5,
                          (35.0,90.0),
                          {'qb':4,'rb':0,'wr':4,'ol':2},
                          {'dl':2,'lb':2,'cb':4,'s':2}))
@@ -73,8 +73,8 @@ class Playbook(list):
                          10,
                          2,
                          'Pass Long',
-                         (1,2,3,4,'E'),
-                         0,
+                         (1,2,3,4,'C'),
+                         10,
                          (35.0,90.0),
                          {'qb':4,'rb':0,'wr':3,'ol':3},
                          {'dl':3,'lb':1,'cb':3,'s':3}))
@@ -96,6 +96,24 @@ class Playbook(list):
                             (60.0,100.0),
                             {'sp':1},
                             {}))
+        self.append(Punt('Punt',
+                         (1,2,3,4,'F'),
+                         0,
+                         (60.0,100.0),
+                         {'sp':1},
+                         {}))
+        self.append(FieldGoal('Field Goal',
+                         (1,2,3,4),
+                         0,
+                         (60.0,90.0),
+                         {'sp':1},
+                         {}))
+        self.append(FieldGoal('Extra Point',
+                         ('C'),
+                         0,
+                         (60.0,90.0),
+                         {'sp':1},
+                         {}))
         
 play_id = 0
 global play_id
@@ -114,8 +132,6 @@ class Play():
         invalid within 10 yards of endzone - valid_yardline = 10
         offense_weights = {'qb':4,'rb':1,'wr':3,'ol':2}
         defense_weights = {'dl':3,'lb':2,'cb':3,'s':2}
-        offensive weights must equal 10
-        defensive weights must equal 10
         '''
         self.id = self.next_play_id()
         self.name=name
@@ -134,9 +150,9 @@ class Play():
                               off_skills,
                               def_skills,
                               rating_penalty):
-        off_rating = ceil(sum([(self.offense_weights[pos] * off_skills[pos]) for pos in self.offense_weights]) / 10)
+        off_rating = ceil(sum([(self.offense_weights[pos] * off_skills[pos]) for pos in self.offense_weights]) / (.0001 + sum(self.offense_weights.values())))
         off_rating -= rating_penalty
-        def_rating = ceil(((sum([(self.defense_weights[pos] * def_skills[pos]) for pos in self.defense_weights]) / 10) - 60) / 4)
+        def_rating = ceil(((sum([(self.defense_weights[pos] * def_skills[pos]) for pos in self.defense_weights]) / (.0001 + sum(self.defense_weights.values()))) - 60) / 4)
         play_rating = off_rating - def_rating
                      
         if play_rating < min(self.rating_bounds):
@@ -151,7 +167,7 @@ class Play():
        
     def determine_return_yardage(self, def_skills,off_yardage):
         return_rnd = randint(1,100)
-        if isinstance(self, Kickoff):
+        if isinstance(self, Kickoff) or isinstance(self, Punt):
             pos = 'sp'
             if off_yardage <= 15:
                 adjustment = -1
@@ -289,4 +305,73 @@ class Kickoff(Play):
         
         return off_yardage, turnover, return_yardage    
     
+class Punt(Play):
+    def __init__(self,
+                 *args):
+        Play.__init__(self, *args)
     
+    def determine_play_yardage(self,rating):
+        punt_rnd = randint(1,100)
+        pivot_point = ceil(rating / 1.7)
+        pivot_direction = choice([-1,1])
+ 
+        # enforce minimum punt yardage
+        if pivot_direction == -1 and punt_rnd < 5.0:
+            punt_rnd = 5.0
+        # enforce maximum punt yardage
+        if pivot_direction == 1 and punt_rnd < 7.0:
+            punt_rnd = 7.0
+
+        return (pivot_point + (pivot_direction * floor(((rating*100) * pow(punt_rnd,-.8309)) / 100)))
+            
+    def determine_punt_block(self,rating):
+        return (randint(1,100)*randint(0,1)) == rating
+    
+    def run(self,
+            off_skills,
+            def_skills,
+            rating_penalty):
+        turnover = False
+        return_yardage = 0    
+    
+        play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
+        turnover = self.determine_punt_block(play_rating)
+        if not turnover:
+            off_yardage = self.determine_play_yardage(play_rating)
+        else:
+            off_yardage = 0.0
+        return_yardage = self.determine_return_yardage(def_skills, off_yardage)
+
+        return off_yardage, turnover, return_yardage
+    
+class FieldGoal(Play):
+    def __init__(self,
+                 *args):
+        Play.__init__(self, *args)
+        
+        ''' 
+        Field Goal returns maximum distance for a successful kick
+        in the off_yardage variable. If yardline is less than or 
+        equal to that value, the kick is good. 
+        '''
+
+    
+    def determine_play_yardage(self,rating):
+        kick_rnd = randint(1,100)
+        if kick_rnd > 30:
+            success_range = (rating / 75.0 * 30) + (.2 * (kick_rnd - 30))
+        else:
+            success_range = rating / 75.0 * kick_rnd
+        return success_range
+            
+    def run(self,
+            off_skills,
+            def_skills,
+            rating_penalty):
+        turnover = False
+        return_yardage = 0    
+    
+        play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
+        off_yardage = self.determine_play_yardage(play_rating)
+        
+        return off_yardage, turnover, return_yardage
