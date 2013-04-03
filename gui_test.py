@@ -10,22 +10,23 @@ import pygame
 from pygame.locals import *
 
 from game import Game
-from play import Team
+from team import Team
+from playbook import Rush, Pass
 
 pygame.init()
 
 class PlayButton():
-    def __init__(self, coords, text, play_category):
+    def __init__(self, coords, play):
+        self.play = play
         self.rect = pygame.Rect(coords,(100,20))
-        self.text = myfont.render(text, True, white)
-        if play_category == 'run':
+        self.text = myfont.render(play.name, True, white)
+        
+        if isinstance(play,Rush):
             self.color = (128,0,0)
-        elif play_category == 'pass':
+        elif isinstance(play,Pass):
             self.color = (0,0,128)
-        elif play_category == 'special':
-            self.color = (128,0,128)
         else:
-            self.color = (128,128,128)             
+            self.color = (128,0,128)
             
     def display_button(self):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -46,21 +47,10 @@ team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
 game = Game(team1,team2)
 
-run_inside = PlayButton(reset_coords,'run inside','run')
-run_outside = PlayButton(reset_coords,'run outside','run')
-pass_short = PlayButton(reset_coords,'pass short','pass')
-pass_medium = PlayButton(reset_coords,'pass medium','pass')
-pass_long = PlayButton(reset_coords,'pass long','pass')
-kickoff = PlayButton(reset_coords,'kickoff','special')
-onside_kickoff = PlayButton(reset_coords,'onside kickoff','special')
-extra_point = PlayButton(reset_coords,'extra point','special')
-punt = PlayButton(reset_coords,'punt','special')
-field_goal = PlayButton(reset_coords,'field goal','special') 
-run_clock = PlayButton(reset_coords,'run clock','special')
+play_buttons=[]
 
-
-play_buttons = [run_inside, run_outside, pass_short, pass_medium, pass_long, kickoff, onside_kickoff, extra_point, punt, field_goal, run_clock]
-
+for play in game.possession.offense.team.playbook:
+    play_buttons.append(PlayButton(reset_coords,play))
 
 while True:
     
@@ -74,40 +64,10 @@ while True:
             mousex, mousey = event.pos
             mouse_pos = myfont.render(str(mousex) + ',' + str(mousey), True, white)
             
-            if run_inside.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].run_inside()
-                game.current_state.check_state(game)
-            if run_outside.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].run_outside()
-                game.current_state.check_state(game)
-            if pass_short.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].pass_short()
-                game.current_state.check_state(game)
-            if pass_medium.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].pass_medium()
-                game.current_state.check_state(game)
-            if pass_long.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].pass_long()
-                game.current_state.check_state(game)
-            if kickoff.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].kickoff()
-                game.current_state.check_state(game)
-            if onside_kickoff.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].onside_kickoff()
-                game.current_state.check_state(game)
-            if extra_point.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].extra_point()
-                game.current_state.check_state(game)
-            if punt.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].punt()
-                game.current_state.check_state(game)
-            if field_goal.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].field_goal()
-                game.current_state.check_state(game)
-            if run_clock.rect.collidepoint((mousex, mousey)):
-                game.plays[-1].run_clock()
-                game.current_state.check_state(game)
-    
+            for button in play_buttons:
+                if button.rect.collidepoint((mousex, mousey)):
+                    game.run_play(button.play)
+
     screen.fill(blue)
     try:
         screen.blit(mouse_pos,(1100,10))
@@ -119,11 +79,10 @@ while True:
     current_state = myfont.render(str(game.current_state), True, white)
     abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
     conv_yardline = myfont.render("Yardline: " + game.scoreboard.converted_yardline, True, white)
-    direction = myfont.render("Direction: " + str(game.field.direction), True, white)
     play_name = myfont.render("Play: " + str(game.scoreboard.play_name), True, white)
     play_rating = myfont.render("Rating: " + str(game.scoreboard.play_rating), True, white)
-    playsh = myfont.render("H: " + str(game.home.plays_run) + str(game.home.total_plays_run), True, white)
-    playsa = myfont.render("A: " + str(game.away.plays_run) + str(game.away.total_plays_run), True, white)
+    playsh = myfont.render("H: " + str(game.home.plays_run) + str(sum(game.home.plays_run.values())), True, white)
+    playsa = myfont.render("A: " + str(game.away.plays_run) + str(sum(game.away.plays_run.values())), True, white)
     yards_gained = myfont.render("Off Yards: " + str(game.scoreboard.offense_yardage), True, white)
     return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
@@ -134,14 +93,16 @@ while True:
 
 ## stats display
     display_offset = 0
-    display = [current_state, play_name, yards_gained, return_yards, turnover, quarter, clock, down, yards_to_go, conv_yardline, direction, play_rating, playsh, playsa]
+    display = [current_state, play_name, yards_gained, return_yards, 
+               turnover, quarter, clock, down, 
+               yards_to_go, conv_yardline, play_rating, playsh, playsa]
     horizontal_offset = 0
     
     screen.blit(home_name, (25,5))
     screen.blit(away_name, (180,5))
-    if game.field.direction == 1:
+    if game.possession.offense.direction == 1:
         pygame.draw.circle(screen,white,(10,12),5)
-    elif game.field.direction == -1:
+    elif game.possession.offense.direction == -1:
         pygame.draw.circle(screen,white,(165,12),5)
             
     for item in display:
@@ -152,10 +113,11 @@ while True:
     for button in play_buttons:
         button.update_coords(reset_coords)
         
-    for button in game.current_state.play_choice:
-        vars()[button].update_coords(((5 + horizontal_offset),(50 + display_offset)))
-        vars()[button].display_button()
-        horizontal_offset += 130
+#    for button in game.current_state.play_choice:
+        if isinstance(game.current_state,(button.play.valid_states)) and game.field.converted_yardline > button.play.valid_yardline:
+            button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
+            button.display_button()
+            horizontal_offset += 130
   
 ## field display
     pygame.draw.rect(screen,(0,255,0),(5,(100 + display_offset),1200,500))
@@ -163,7 +125,7 @@ while True:
     pygame.draw.rect(screen,game.away.primary_color,(1105,(100 + display_offset),100,500))
     for line in range(12):
         pygame.draw.line(screen,(255,255,255),((5 + (line * 100)),(100 + display_offset)),((5 + (line * 100)),(100 + display_offset + 500)))
-    pygame.draw.ellipse(screen,(0,0,0),(((10 * game.field.absolute_yardline) + 90), (display_offset + 300),30,15))
+    pygame.draw.ellipse(screen,(139,69,19),(((10 * game.field.absolute_yardline) + 90), (display_offset + 300),30,15))
 
 
     pygame.display.update()

@@ -4,19 +4,24 @@ Created on Mar 1, 2012
 @author: George Peek
 '''
 
+from math import ceil
 from random import choice
 from collections import deque
+from copy import deepcopy
+from collections import namedtuple
 
-from play import Play
-from state_machine import Kickoff
+from playbook import Kickoff, Punt, FieldGoal
 from timekeeping import Clock
+from state_machine import State
 
 class Game():
     "Game"
     def __init__(self, home_team, away_team, league_game=False, division_game=False, conference_game=False, playoff_game=False, number_of_periods=4):
 #        self.game_id = get_next_game_id()
-        self.home = home_team
-        self.away = away_team
+        self.home = deepcopy(home_team)
+        self.away = deepcopy(away_team)
+        self.home.plays_run = dict()
+        self.away.plays_run = dict()
         self.league_game = league_game
         self.division_game = division_game
         self.conference_game = conference_game 
@@ -26,10 +31,10 @@ class Game():
         self.field = Field()
         self.scoreboard = Scoreboard()
         self.plays = []
-        self.plays_run = {'offense':[],'defense':[]}
-        self.possession = [self.home, self.away]
-        self.coin_flip_winner = self.coin_flip()
-        self.current_state = Kickoff(self)
+        self.coin_flip_winner = self._coin_flip()
+        self._Possession = namedtuple('Possession', ['offense','defense'])
+        self.possession = self._possession_setup()
+        self.current_state = State.check_state()
         self.timekeeping = deque()
         self.timekeeping.extend([Clock() for x in range(number_of_periods)])
         self.current_clock = self.timekeeping.pop()
@@ -37,88 +42,169 @@ class Game():
         self.end_of_regulation = False
         self.overtime = False
         self.end_of_game = False
-
-    def coin_flip(self):
-        self.field.direction = choice([-1,1])
-        if self.field.direction == 1:
-            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
-        elif self.field.direction == -1:
-            self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
-            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
-        self.field.kickoff_set()
         
-        return self.field.direction
-    
+    def _possession_setup(self):
+        PossTeam = namedtuple('PossTeam', ['team','direction','home_team'])
+        
+        t1 = PossTeam(self.home,1,True)
+        t2 = PossTeam(self.away,-1,False)
+        
+        # set coin flip loser as initial offense because they will be kicking off
+        if self.coin_flip_winner == t1.direction:
+            return self._Possession(t2,t1)
+        else:
+            return self._Possession(t1,t2)
+
+    def _coin_flip(self):
+        return choice([-1,1])
+        
     def set_second_half(self):
         ## sets up kickoff the opposite of opening kick
-        self.possession = [self.home, self.away]
-        if self.coin_flip_winner == -1:
-            self.field.direction = 1
-            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
-        elif self.coin_flip_winner == 1:
-            self.field.direction = -1
-            self.possession[0], self.possession[1] = self.possession[1], self.possession[0]
-            self.plays.append(Play(self.possession[0],self.possession[1],self.field))
+        if (self.coin_flip_winner * -1) == self.offense.direction:
+            self.change_possession()
         self.field.kickoff_set()
+        
+    def change_possession(self):
+        print 'chg possession'
+        self.possession = self._Possession(self.possession[1],self.possession[0])
+        
+    def run_play(self,play):
+        next_play = Play(self.possession.offense.team,
+                         self.possession.defense.team,
+                         self.field)
+        next_play.play_call = play
+        next_play.run_play()
+        self.plays.append(next_play)
+        self.current_state.check_state(self)
         
 class Field():
     "Playing Field"
-    def __init__(self):
-        self.direction = 1 ## 1=home, -1=away
-        self.absolute_yardline = 30.0
-        self.converted_yardline = 30.0
-        self.in_home_endzone = False
-        self.in_away_endzone = False
+    def __init__(self, 
+                 length=100.0,
+                 kickoff_yardline=30.0,
+                 free_kick_yardline=20.0,
+                 conversion_yardline=2.0,
+                 touchback_yardline=20.0):
+#        self.direction = 1 ## 1=home, -1=away
+        self.length = length
+        self.kickoff_yardline = kickoff_yardline
+        self.free_kick_yardline = free_kick_yardline
+        self.conversion_yardline = conversion_yardline
+        self.touchback_yardline = touchback_yardline
+        self.absolute_yardline = self.kickoff_yardline
+        self.converted_yardline = self.kickoff_yardline
+        self.home_endzone = 0.0
+        self.away_endzone = self.length
         
-    def play_reset(self):
-        self.in_home_endzone = False
-        self.in_away_endzone = False    
-    
-    def determine_position(self, yardage, change_of_possession):
-        if change_of_possession:
-            print 'chg pos' + str(change_of_possession)
-            self.direction *= -1
-
+    def determine_position(self, yardage):
         self.absolute_yardline += (yardage * self.direction)
 
-        if self.absolute_yardline > 50.0:
-            self.converted_yardline = 100.0 - self.absolute_yardline
-            if self.absolute_yardline >= 100.0:
-                self.in_away_endzone = True
+        if self.absolute_yardline > (self.length / 2):
+            self.converted_yardline = self.length - self.absolute_yardline
         else:
             self.converted_yardline = self.absolute_yardline
-            if self.absolute_yardline <= 0.0:
-                self.in_home_endzone = True
+
+    def _set_ball_position(self,yardline):
+        if self.direction == 1:
+            self.absolute_yardline = yardline
+        elif self.direction == -1:
+            self.absolute_yardline = self.length - yardline
+        self.converted_yardline = yardline        
                 
-    def kickoff_set(self, post_safety=False):
-        if not post_safety:
-            if self.direction == 1:
-                self.absolute_yardline = 30.0
-            elif self.direction == -1:
-                self.absolute_yardline = 70.0
-            self.converted_yardline = 30.0
-        else:
-            if self.direction == 1:
-                self.absolute_yardline = 20.0
-            elif self.direction == -1:
-                self.absolute_yardline = 80.0
-            self.converted_yardline = 20.0
+    def kickoff_set(self):
+        self._set_ball_position(self.kickoff_yardline)
+
+    def free_kick_set(self):
+        self._set_ball_position(self.free_kick_yardline)
             
     def touchback_set(self):
-        self.direction *= -1
-        if self.direction == -1:
-            self.absolute_yardline = 80.0
-        elif self.direction == 1:
-            self.absolute_yardline = 20.0
-        self.converted_yardline = 20.0
+        self.change_possession()
+        self._set_ball_position(self.touchback_yardline)
         
     def conversion_set(self):
-        if self.direction == 1:
-            self.absolute_yardline = 98.0
-        elif self.direction == -1:
-            self.absolute_yardline = 2.0
-        self.converted_yardline = 2.0
+        self._set_ball_position(self.conversion_yardline)
         
+class Play():
+    def __init__(self,offense,defense,field):
+        self.offense = offense
+        self.defense = defense
+        self.field = field
+        self.play_call = None
+        self.offense_yardage = 0
+        self.return_yardage = 0
+        self.turnover = False
+        self.events = {'touchback' : False,
+                       'punt_attempt' : False,
+                       'punt_blocked' : False,
+                       'kick_attempt' : False,
+                       'kick_successful' : False,
+                       'safety' : False,
+                       'offense_touchdown' : False,
+                       'defense_touchdown' : False,
+                       'change_of_possession' : False}
+
+    def run_play(self):
+        self.offense_yardage, self.turnover,self.return_yardage = self.play_call.run(self.offense.skills,
+                                                 self.defense.skills,
+                                                 self.determine_play_rating_penalty())
+        self.field.determine_position(self.offense_yardage)
+        self.check_for_events()
+        
+     
+    def check_for_events(self):
+        in_home_endzone = False
+        in_away_endzone = False
+        if self.absolute_yardline >= self.field.away_endzone:
+            in_away_endzone = True
+        if self.absolute_yardline <= self.field.home_endzone:
+            in_home_endzone = True
+            
+        if in_home_endzone:
+            if self.offense.home_team:
+                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
+                    self.events['away_touchdown'] = True
+                else:
+                    self.events['safety'] = True
+            else:
+                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
+                    self.events['touchback'] = True
+                elif isinstance(self.play_call,(FieldGoal)):
+                    self.events['kick_successful'] = True
+                else:
+                    self.events['away_touchdown'] = True
+        elif in_away_endzone:
+            if not self.offense.home_team:
+                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
+                    self.events['home_touchdown'] = True
+                else:
+                    self.events['safety'] = True
+            else:
+                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
+                    self.events['touchback'] = True
+                elif isinstance(self.play_call,(FieldGoal)):
+                    self.events['kick_successful'] = True
+                else:
+                    self.events['home_touchdown'] = True
+    
+    def determine_play_rating_penalty(self):
+        if self.play_call.id in self.offense.plays_run:
+            self.offense.plays_run[self.play_call.id] += 1.0
+        else:
+            self.offense.plays_run[self.play_call.id] = 1.0
+            
+        current_play_ctr = self.offense.plays_run[self.play_call.id]
+        total_play_ctr = sum(self.offense.plays_run.values())
+    
+        play_freq_pct = (current_play_ctr / total_play_ctr)
+        if total_play_ctr > 15 and play_freq_pct > .33:
+            penalty = ceil((play_freq_pct) * (current_play_ctr * 2.5))
+        else:
+            penalty = 0
+        
+        if not self.offense.home_team:
+            penalty += self.defense.home_field_advantage
+
+        return penalty       
 
 class Scoreboard():
     def __init__(self, touchdown_pts=6, field_goal_pts=3, safety_pts=2, conversion_play_pts=2, conversion_kick_pts=1):
