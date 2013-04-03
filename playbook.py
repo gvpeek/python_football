@@ -7,6 +7,8 @@ Created on Mar 24, 2013
 from random import randint, choice
 from math import ceil, floor
 
+from state_machine import Kickoff as K, Conversion as C, DownSet as D,FreeKick as F
+
 class Playbook(list):
     def __init__(self):
         self.initialize()
@@ -18,7 +20,7 @@ class Playbook(list):
                          1,
                          0,
                          'Run Clock',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          0,
                          (0.0,0.0),
                          {},
@@ -29,7 +31,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Inside',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          0,
                          (35.0,90.0),
                          {'qb':1,'rb':4,'wr':0,'ol':5},
@@ -40,7 +42,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Outside',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          0,
                          (35.0,90.0),
                          {'qb':1,'rb':5,'wr':1,'ol':3},
@@ -51,7 +53,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Pass Short',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          0,
                          (35.0,90.0),
                          {'qb':4,'rb':3,'wr':2,'ol':1},
@@ -62,7 +64,7 @@ class Playbook(list):
                          10,
                          1,
                          'Pass Medium',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          5,
                          (35.0,90.0),
                          {'qb':4,'rb':0,'wr':4,'ol':2},
@@ -73,7 +75,7 @@ class Playbook(list):
                          10,
                          2,
                          'Pass Long',
-                         (1,2,3,4,'C'),
+                         (D,C),
                          10,
                          (35.0,90.0),
                          {'qb':4,'rb':0,'wr':3,'ol':3},
@@ -82,7 +84,7 @@ class Playbook(list):
                             55,
                             False,
                             'Kickoff',
-                            ('K','F'),
+                            (K,F),
                             0,
                             (60.0,100.0),
                             {'sp':1},
@@ -91,25 +93,25 @@ class Playbook(list):
                             10,
                             True,
                             'Onside Kickoff',
-                            ('K','F'),
+                            (K,F),
                             0,
                             (60.0,100.0),
                             {'sp':1},
                             {}))
         self.append(Punt('Punt',
-                         (1,2,3,4,'F'),
+                         (D,F),
                          0,
                          (60.0,100.0),
                          {'sp':1},
                          {}))
         self.append(FieldGoal('Field Goal',
-                         (1,2,3,4),
+                         (D),
                          0,
                          (60.0,90.0),
                          {'sp':1},
                          {}))
         self.append(FieldGoal('Extra Point',
-                         ('C'),
+                         (C),
                          0,
                          (60.0,90.0),
                          {'sp':1},
@@ -121,21 +123,22 @@ global play_id
 class Play():
     def __init__(self,
                  name,
-                 valid_downs,
+                 valid_states,
                  valid_yardline = 0,
                  rating_bounds = (0.0,100.0),
                  offense_weights={},
                  defense_weights={}):
         '''
-        valid_downs = (1,2,3,4,'K','F','E')
+        valid_states = (D,K,F,C)
         valid for entire field (default) - valid_yardline = 0
         invalid within 10 yards of endzone - valid_yardline = 10
+        rating_bounds = (0.0,100.0) - default, (min,max)
         offense_weights = {'qb':4,'rb':1,'wr':3,'ol':2}
         defense_weights = {'dl':3,'lb':2,'cb':3,'s':2}
         '''
         self.id = self.next_play_id()
         self.name=name
-        self.valid_downs = valid_downs
+        self.valid_states = valid_states
         self.rating_bounds = rating_bounds
         self.valid_yardline = valid_yardline
         self.offense_weights = offense_weights
@@ -226,8 +229,11 @@ class Rush(Play):
             off_skills,
             def_skills,
             rating_penalty):
+        '''
+        returns off_yardage, turnover, return_yardage
+        '''
         turnover = False
-        return_yardage = 0
+        return_yardage = 0.0
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         play_success = self.determine_play_success(play_rating)
@@ -259,8 +265,11 @@ class Pass(Play):
             off_skills,
             def_skills,
             rating_penalty):
+        '''
+        returns off_yardage, turnover, return_yardage
+        '''
         turnover = False
-        return_yardage = 0
+        return_yardage = 0.0
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         play_success = self.determine_play_success(play_rating)
@@ -293,17 +302,20 @@ class Kickoff(Play):
             off_skills,
             def_skills,
             rating_penalty):
-        turnover = False
-        return_yardage = 0
+        '''
+        returns off_yardage, onside_recover, return_yardage
+        '''
+        onside_recover = False
+        return_yardage = 0.0
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         off_yardage = self.determine_play_yardage(play_rating, self.random_cap, self.adjustment)
         if self.recoverable and off_yardage >= 10:
-            turnover = randint(1,100) <= ceil(off_skills['sp'] / 4)
-        if not turnover:
+            onside_recover = randint(1,100) <= ceil(off_skills['sp'] / 4)
+        if not onside_recover:
             return_yardage = self.determine_return_yardage(def_skills, off_yardage)
         
-        return off_yardage, turnover, return_yardage    
+        return off_yardage, onside_recover, return_yardage    
     
 class Punt(Play):
     def __init__(self,
@@ -331,18 +343,18 @@ class Punt(Play):
             off_skills,
             def_skills,
             rating_penalty):
-        turnover = False
-        return_yardage = 0    
+        punt_block = False
+        return_yardage = 0.0    
     
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
-        turnover = self.determine_punt_block(play_rating)
-        if not turnover:
+        punt_block = self.determine_punt_block(play_rating)
+        if not punt_block:
             off_yardage = self.determine_play_yardage(play_rating)
         else:
             off_yardage = 0.0
         return_yardage = self.determine_return_yardage(def_skills, off_yardage)
 
-        return off_yardage, turnover, return_yardage
+        return off_yardage, punt_block, return_yardage
     
 class FieldGoal(Play):
     def __init__(self,
@@ -350,6 +362,7 @@ class FieldGoal(Play):
         Play.__init__(self, *args)
         
         ''' 
+        returns max_field_goal_distance, False, 0.0
         Field Goal returns maximum distance for a successful kick
         in the off_yardage variable. If yardline is less than or 
         equal to that value, the kick is good. 
@@ -369,9 +382,9 @@ class FieldGoal(Play):
             def_skills,
             rating_penalty):
         turnover = False
-        return_yardage = 0    
+        return_yardage = 0.0    
     
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
-        off_yardage = self.determine_play_yardage(play_rating)
+        max_field_goal_distance = self.determine_play_yardage(play_rating)
         
-        return off_yardage, turnover, return_yardage
+        return max_field_goal_distance, turnover, return_yardage
