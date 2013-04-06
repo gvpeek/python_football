@@ -81,8 +81,8 @@ while True:
     conv_yardline = myfont.render("Yardline: " + game.scoreboard.converted_yardline, True, white)
     play_name = myfont.render("Play: " + str(game.scoreboard.play_name), True, white)
     play_rating = myfont.render("Rating: " + str(game.scoreboard.play_rating), True, white)
-    playsh = myfont.render("H: " + str(game.home.plays_run) + str(sum(game.home.plays_run.values())), True, white)
-    playsa = myfont.render("A: " + str(game.away.plays_run) + str(sum(game.away.plays_run.values())), True, white)
+    playso = myfont.render("O: " + str(game.possession.offense.plays_run) + str(sum(game.possession.offense.plays_run.values())), True, white)
+#    playsa = myfont.render("D: " + str(game.away.plays_run) + str(sum(game.away.plays_run.values())), True, white)
     yards_gained = myfont.render("Off Yards: " + str(game.scoreboard.offense_yardage), True, white)
     return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
@@ -95,7 +95,7 @@ while True:
     display_offset = 0
     display = [current_state, play_name, yards_gained, return_yards, 
                turnover, quarter, clock, down, 
-               yards_to_go, conv_yardline, play_rating, playsh, playsa]
+               yards_to_go, conv_yardline, play_rating, playso]
     horizontal_offset = 0
     
     screen.blit(home_name, (25,5))
