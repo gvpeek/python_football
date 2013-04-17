@@ -148,7 +148,22 @@ class Play():
         global play_id
         play_id += 1
         return play_id 
-
+    
+    def is_rush(self):
+        return isinstance(self, Rush)
+    
+    def is_pass(self):
+        return isinstance(self, Pass)
+    
+    def is_kickoff(self):
+        return isinstance(self, Kickoff)
+    
+    def is_field_goal(self):
+        return isinstance(self, FieldGoal)
+    
+    def is_punt(self):
+        return isinstance(self, Punt)
+        
     def determine_play_rating(self,
                               off_skills,
                               def_skills,
@@ -230,20 +245,17 @@ class Rush(Play):
             def_skills,
             rating_penalty):
         '''
-        returns off_yardage, turnover, return_yardage
+        returns off_yardage, turnover
         '''
         turnover = False
-        return_yardage = 0.0
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         play_success = self.determine_play_success(play_rating)
         if not play_success:
             turnover = self.determine_turnover(play_rating,self.turnover_adjust, self.turnover_multiplier)
         off_yardage = self.determine_play_yardage(play_rating, play_success, turnover, self.gain_adjust, self.loss_adjust, self.play_multiplier)
-        if turnover:
-            return_yardage = self.determine_return_yardage(def_skills, off_yardage)
         
-        return off_yardage, turnover, return_yardage
+        return off_yardage, turnover
 
 class Pass(Play):
     def __init__(self,
@@ -266,20 +278,17 @@ class Pass(Play):
             def_skills,
             rating_penalty):
         '''
-        returns off_yardage, turnover, return_yardage
+        returns off_yardage, turnover
         '''
         turnover = False
-        return_yardage = 0.0
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         play_success = self.determine_play_success(play_rating)
         if not play_success:
             turnover = self.determine_turnover(play_rating,self.turnover_adjust, self.turnover_multiplier)
         off_yardage = self.determine_play_yardage(play_rating, play_success, turnover, self.gain_adjust, self.loss_adjust, self.play_multiplier)
-        if turnover:
-            return_yardage = self.determine_return_yardage(def_skills, off_yardage)
         
-        return off_yardage, turnover, return_yardage
+        return off_yardage, turnover
     
 class Kickoff(Play):
     def __init__(self,
@@ -303,19 +312,16 @@ class Kickoff(Play):
             def_skills,
             rating_penalty):
         '''
-        returns off_yardage, onside_recover, return_yardage
+        returns off_yardage, onside_recover
         '''
-        onside_recover = False
-        return_yardage = 0.0
+        onside_failed = True
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         off_yardage = self.determine_play_yardage(play_rating, self.random_cap, self.adjustment)
         if self.recoverable and off_yardage >= 10:
-            onside_recover = randint(1,100) <= ceil(off_skills['sp'] / 4)
-        if not onside_recover:
-            return_yardage = self.determine_return_yardage(def_skills, off_yardage)
+            onside_failed = randint(1,100) > ceil(off_skills['sp'] / 4)
         
-        return off_yardage, onside_recover, return_yardage    
+        return off_yardage, onside_failed
     
 class Punt(Play):
     def __init__(self,
@@ -343,8 +349,6 @@ class Punt(Play):
             off_skills,
             def_skills,
             rating_penalty):
-        punt_block = False
-        return_yardage = 0.0    
     
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         punt_block = self.determine_punt_block(play_rating)
@@ -352,9 +356,8 @@ class Punt(Play):
             off_yardage = self.determine_play_yardage(play_rating)
         else:
             off_yardage = 0.0
-        return_yardage = self.determine_return_yardage(def_skills, off_yardage)
 
-        return off_yardage, punt_block, return_yardage
+        return off_yardage, True
     
 class FieldGoal(Play):
     def __init__(self,
@@ -381,10 +384,8 @@ class FieldGoal(Play):
             off_skills,
             def_skills,
             rating_penalty):
-        turnover = False
-        return_yardage = 0.0    
     
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
         max_field_goal_distance = self.determine_play_yardage(play_rating)
         
-        return max_field_goal_distance, turnover, return_yardage
+        return max_field_goal_distance, False

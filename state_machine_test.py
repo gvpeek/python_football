@@ -4,37 +4,18 @@ Created on May 31, 2012
 @author: George Peek
 '''
 
-class State():
-    "Basic State"
-    def __init__(self):
-        pass
+import state_machine
+
+events = [{'touchback' : False},
+          {'punt' : False},
+          {'kick_attempt' : False},
+          {'kick_successful' : False},
+          {'safety' : False},
+          {'offense_touchdown' : False},
+          {'defense_touchdown' : False}]
+
+for event in events:
+    print event
     
-class DownSet(State):
-    "State for normal offensive possession"
-    def __init__(self):
-        self.down = 1
-        self.yardsToGo = 10
-        self.converted = False
-        self.active = True
-        
-    def convert_check(self,playResult):
-        if not self.active:
-            return False
-        
-        self.yardsToGo -= playResult
-        if (self.yardsToGo <= 0):
-            self.converted = True
-            self.active = False
-            return self.converted 
-        elif (self.down == 4):
-            self.active = False
-            return self.active
-        else:
-            self.down += 1
-            return self.down, self.yardsToGo
-        
-class Drive(State):
-    "State for drive"
-    def __init__(self, kickoff=False):
-        self.kickoff = kickoff
+current_state = state_machine.initialize_state()
     
