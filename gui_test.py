@@ -52,6 +52,10 @@ play_buttons=[]
 for play in game.possession.offense.team.playbook:
     play_buttons.append(PlayButton(reset_coords,play))
 
+selected_play = None
+down=myfont.render('1',True,white)
+yards_to_go = myfont.render('10',True,white)
+
 while True:
     
     fps.tick(5)
@@ -66,6 +70,7 @@ while True:
             
             for button in play_buttons:
                 if button.rect.collidepoint((mousex, mousey)):
+                    selected_play = button.play.name
                     game.run_play(button.play)
 
     screen.fill(blue)
@@ -74,12 +79,12 @@ while True:
     except:
         pass
 
-    home_name = myfont.render(game.home.city + game.home.nickname + ' -- ' + str(game.scoreboard.home_score), True, white)
-    away_name = myfont.render(game.away.city + game.away.nickname + ' -- ' + str(game.scoreboard.away_score), True, white)
+    home_name = myfont.render(game.home.city + game.home.nickname + ' -- ' + str(game.get_home_team().statbook.offense_stats['score']), True, white)
+    away_name = myfont.render(game.away.city + game.away.nickname + ' -- ' + str(game.get_away_team().statbook.offense_stats['score']), True, white)
     current_state = myfont.render(str(game.current_state), True, white)
-    abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
-    conv_yardline = myfont.render("Yardline: " + game.scoreboard.converted_yardline, True, white)
-    play_name = myfont.render("Play: " + str(game.scoreboard.play_name), True, white)
+    abs_yardline = myfont.render("Yardline: " + str(game.field.absolute_yardline), True, white)
+    conv_yardline = myfont.render("Yardline: " + str(game.field.converted_yardline), True, white)
+    play_name = myfont.render("Play: " + str(selected_play), True, white)
     play_rating = myfont.render("Rating: " + str(game.scoreboard.play_rating), True, white)
     playso = myfont.render("O: " + str(game.possession.offense.plays_run) + str(sum(game.possession.offense.plays_run.values())), True, white)
 #    playsa = myfont.render("D: " + str(game.away.plays_run) + str(sum(game.away.plays_run.values())), True, white)
@@ -88,9 +93,11 @@ while True:
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
     quarter = myfont.render("Qtr: " + str(game.scoreboard.period), True, white)
     clock = myfont.render("Time: " + str(game.scoreboard.clock), True, white)
-    down = myfont.render("Down: " + str(game.scoreboard.down), True, white)
-    yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)
-
+    try:
+        down = myfont.render("Down: " + str(game.current_state.get_down_distance()), True, white)
+        yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)
+    except:
+        pass
 ## stats display
     display_offset = 0
     display = [current_state, play_name, yards_gained, return_yards, 
@@ -114,7 +121,7 @@ while True:
         button.update_coords(reset_coords)
         
 #    for button in game.current_state.play_choice:
-        if isinstance(game.current_state,(button.play.valid_states)) and game.field.converted_yardline > button.play.valid_yardline:
+        if isinstance(game.current_state,(button.play.valid_states)) and (100-abs(game.field.absolute_yardline - game.possession.offense.endzone)) > button.play.valid_yardline:
             button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
             button.display_button()
             horizontal_offset += 130
