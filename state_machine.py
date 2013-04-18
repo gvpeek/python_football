@@ -38,6 +38,9 @@ class State():
     def is_conversion(self):
         return isinstance(self,Conversion)
         
+    def timed_play(self):
+        return True
+    
     def check_events(self,events):
         next_state = False
         if events.get('offense_touchdown') or events.get('defense_touchdown'):
@@ -178,6 +181,9 @@ class Conversion(State):
     "State for conversion attempt after touchdown"
     def __init__(self, *args):
         State.__init__(self,*args)
+        
+    def timed_play(self):
+        return False
 
     def check_state(self,turnover,events):
         self.active = False
