@@ -91,8 +91,8 @@ while True:
     yards_gained = myfont.render("Off Yards: " + str(game.scoreboard.offense_yardage), True, white)
     return_yards = myfont.render("Ret Yards: " + str(game.scoreboard.return_yardage), True, white)
     turnover = myfont.render("Turnover: " + str(game.scoreboard.turnover), True, white)
-    quarter = myfont.render("Qtr: " + str(game.scoreboard.period), True, white)
-    clock = myfont.render("Time: " + str(game.scoreboard.clock), True, white)
+    quarter = myfont.render("Qtr: " + str(game.period), True, white)
+    clock = myfont.render("Time: " + str(game.current_clock.get_time_remaining())[2:7], True, white)
     try:
         down = myfont.render("Down: " + str(game.current_state.get_down_distance()), True, white)
         yards_to_go = myfont.render("Yards To Go: " + str(game.scoreboard.yards_to_go), True, white)

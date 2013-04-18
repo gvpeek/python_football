@@ -23,7 +23,7 @@ class Game():
 #        self.league_game = league_game
 #        self.division_game = division_game
 #        self.conference_game = conference_game 
-        self.playoff_game = playoff_game  
+#        self.playoff_game = playoff_game  
         self.number_of_periods = number_of_periods
         self.period = 1
         self.field = Field(self.get_offense)
@@ -35,7 +35,7 @@ class Game():
         self.current_state = initialize_state(self.field,
                                    self.change_possession,
                                    self.get_offense)
-        self.timekeeping = deque().extend([Clock() for x in range(number_of_periods)])
+        self.timekeeping = deque([Clock() for x in range(number_of_periods)])
         self.current_clock = self.timekeeping.pop()
         self.end_of_half = False
         self.end_of_regulation = False
@@ -59,9 +59,13 @@ class Game():
         
     def set_second_half(self):
         ## sets up kickoff the opposite of opening kick
-        if (self.coin_flip_winner * -1) == self.offense.direction:
+        if (self.coin_flip_winner * -1) == self.possession.offense.direction:
             self.change_possession()
-        self.field.kickoff_set()
+            
+    def set_overtime(self):
+        ## sets up kickoff the opposite of opening kick
+        if self.coin_flip_winner == self.possession.offense.direction:
+            self.change_possession()
         
     def change_possession(self):
         print 'chg possession'
@@ -97,11 +101,47 @@ class Game():
             self.current_clock.run_clock()
         self.current_state = self.current_state.check_state(play.turnover,
                                                             play.events)
+        self.check_time_remaining()
         print ''
         print '*' * 20
         pprint(vars(self.field))
         pprint(vars(play))
         
+    def check_time_remaining(self):
+        if not self.current_clock.get_time_remaining():
+            if self.timekeeping:
+                if (self.number_of_periods / self.period) == 2:
+                    self.end_of_half = True
+                self.period += 1
+                self.current_clock = self.timekeeping.pop()
+            else:
+                self.end_of_regulation = True
+                print 'outof timekeeping'
+                if self.possession.offense.statbook.offense_stats['score'] == self.possession.defense.statbook.offense_stats['score']: 
+                    if not self.overtime:
+                        self.overtime = True
+                        self._coin_flip()
+                        self.set_overtime()
+                        self.current_state = initialize_state(self.field,
+                                                              self.change_possession,
+                                                              self.get_offense)
+                if self.overtime:
+                    print 'in overtime'
+                    self.period += 1
+                    self.scoreboard.period = self.period
+                    self.current_clock = Clock()
+                        
+        if self.end_of_half and self.current_state.timed_play():
+            self.set_second_half()
+            self.current_state  = initialize_state(self.field,
+                                                   self.change_possession,
+                                                   self.get_offense)
+            self.end_of_half = False
+#
+        if (self.end_of_regulation and not self.overtime) or (self.overtime and self.possession.offense.statbook.offense_stats['score'] != self.possession.defense.statbook.offense_stats['score']):                    
+            self.end_of_game = True
+            self.current_state = None
+    
     def determine_events(self,play):
         if play.play_call.is_field_goal():
             play.events['kick_attempt'] = True
@@ -137,41 +177,6 @@ class Game():
                         play.events['safety'] = True
                         self.scoreboard.safety(self.possession.defense.statbook)
                     
-#        if in_home_endzone:
-#            returnable = False
-#            if self.offense.home_team:
-#                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
-#                    self.events['away_score'] = True
-#                else:
-#                    self.events['safety'] = True
-#            else:
-#                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
-#                    self.events['touchback'] = True
-#                elif isinstance(self.play_call,(FieldGoal)):
-#                    self.events['kick_successful'] = True
-#                else:
-#                    self.events['away_score'] = True
-#        elif in_away_endzone:
-#            returnable = False
-#            if not self.offense.home_team:
-#                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
-#                    self.events['home_score'] = True
-#                else:
-#                    self.events['safety'] = True
-#            else:
-#                if self.turnover or isinstance(self.play_call,(Punt,Kickoff)):
-#                    self.events['touchback'] = True
-#                elif isinstance(self.play_call,(FieldGoal)):
-#                    self.events['kick_successful'] = True
-#                else:
-#                    self.events['home_score'] = True
-#                    
-#        if isinstance(self.play_call,Punt):
-#            self.events['punt_attempt'] = True
-#        if isinstance(self.play_call,FieldGoal):
-#            self.events['kick_attempt'] = True 
-                        
-                
 
 class Field():
     "Playing Field"
@@ -316,7 +321,7 @@ class Clock(object):
     def __init__(self, quarter_length=15):
         self.time_remaining = timedelta(seconds=(quarter_length*60))
 
-    def time_remaining(self):
+    def get_time_remaining(self):
         return self.time_remaining
 
     def run_clock(self):
