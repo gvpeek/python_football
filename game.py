@@ -6,12 +6,11 @@ Created on Mar 1, 2012
 
 from math import ceil
 from random import choice
-from collections import deque
-from collections import namedtuple, defaultdict
+from datetime import timedelta
+from collections import deque, namedtuple, defaultdict
 from pprint import pprint
 
 from playbook import Kickoff, Punt, FieldGoal
-from timekeeping import Clock
 from state_machine import initialize_state
 from stats import StatBook
 
@@ -36,8 +35,7 @@ class Game():
         self.current_state = initialize_state(self.field,
                                    self.change_possession,
                                    self.get_offense)
-        self.timekeeping = deque()
-        self.timekeeping.extend([Clock() for x in range(number_of_periods)])
+        self.timekeeping = deque().extend([Clock() for x in range(number_of_periods)])
         self.current_clock = self.timekeeping.pop()
         self.end_of_half = False
         self.end_of_regulation = False
@@ -95,7 +93,10 @@ class Game():
         play.run_play()
         self.determine_events(play)
         self.plays.append(play)
-        self.current_state = self.current_state.check_state(play.turnover,play.events)
+        if self.current_state.timed_play():
+            self.current_clock.run_clock()
+        self.current_state = self.current_state.check_state(play.turnover,
+                                                            play.events)
         print ''
         print '*' * 20
         pprint(vars(self.field))
@@ -105,7 +106,7 @@ class Game():
         if play.play_call.is_field_goal():
             play.events['kick_attempt'] = True
             print 'ayl', (100-abs(self.field.absolute_yardline - self.possession.offense.endzone)), 'k', play.offense_yardage
-            if (100 - abs(self.field.absolute_yardline - self.possession.offense.endzone)) < play.offense_yardage:
+            if (100 - abs(self.field.absolute_yardline - self.possession.offense.endzone)) <= play.offense_yardage:
                 play.events['kick_successful'] = True
                 if self.current_state.is_conversion():
                     self.scoreboard.conversion_kick(self.possession.offense.statbook)
@@ -309,4 +310,17 @@ class Scoreboard():
 
     def conversion_kick(self,statbook):
         statbook.offense_stats['score'] += self.conversion_kick_pts
+        
+class Clock(object):
+    "Basic Clock"
+    def __init__(self, quarter_length=15):
+        self.time_remaining = timedelta(seconds=(quarter_length*60))
+
+    def time_remaining(self):
+        return self.time_remaining
+
+    def run_clock(self):
+        self.time_remaining -= timedelta(seconds=30)
+    
+        return self.time_remaining
 #===============================================================================
