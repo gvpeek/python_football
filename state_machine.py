@@ -44,13 +44,11 @@ class State():
     def check_events(self,events):
         next_state = False
         if events.get('offense_touchdown') or events.get('defense_touchdown'):
-            self.field.conversion_set() 
             next_state = Conversion(self.field,
                                     self.change_possession,
                                     self.get_offense)
         
         elif events.get('safety'):
-            self.field.free_kick_set()
             next_state = FreeKick(self.field,
                                  self.change_possession,
                                  self.get_offense)
@@ -62,7 +60,6 @@ class State():
                                  self.get_offense)
 
         elif events.get('kick_successful'):
-            self.field.kickoff_set()
             next_state = Kickoff(self.field,
                                  self.change_possession,
                                  self.get_offense)
@@ -181,6 +178,10 @@ class Conversion(State):
     "State for conversion attempt after touchdown"
     def __init__(self, *args):
         State.__init__(self,*args)
+        self.setup()
+        
+    def setup(self):
+        self.field.conversion_set()        
         
     def timed_play(self):
         return False
@@ -192,7 +193,6 @@ class Conversion(State):
                              self.get_offense)
         
         return next_state       
-
 
 
 
