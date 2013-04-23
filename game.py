@@ -42,7 +42,17 @@ class Game():
         self.end_of_regulation = False
         self.overtime = False
         self.end_of_game = False
-        
+
+    def start_game(self):
+        while not self.end_of_game:
+            if not self.possession.offense.team.human_control:
+                play = self.possession.offense.team.coach.call_play(self.get_available_plays(),
+                                                                   self.current_state.get_down_distance,
+                                                                   self.get_score_difference,
+                                                                   self.get_period,
+                                                                   self.get_clock)
+                self.run_play(play)
+                
     def _possession_setup(self):
         PossTeam = namedtuple('PossTeam', ['team','direction','endzone','home_team','plays_run','statbook'])
         
@@ -105,6 +115,9 @@ class Game():
             if isinstance(self.current_state,(play.valid_states)) and (self.field.length-abs(self.field.absolute_yardline - self.possession.offense.endzone)) > play.valid_yardline:
                 available_plays.append(play)
         return available_plays
+    
+    def get_score_difference(self):
+        return self.possession.offense.statbook.stats['score'] - self.possession.defense.statbook.stats['score']
             
     def run_play(self,play_call):
         play = Play(self.possession.offense,
@@ -120,10 +133,6 @@ class Game():
                                                             play.events)
         self.check_time_remaining()
         self.scoreboard.refresh(play)
-        print ''
-        print '*' * 20
-        pprint(vars(self.field))
-        pprint(vars(play))
         
     def check_time_remaining(self):
         if not self.current_clock.get_time_remaining():
@@ -135,7 +144,7 @@ class Game():
             else:
                 self.end_of_regulation = True
                 print 'outof timekeeping'
-                if self.possession.offense.statbook.offense_stats['score'] == self.possession.defense.statbook.offense_stats['score']: 
+                if not self.get_score_difference(): 
                     if not self.overtime:
                         self.overtime = True
                         self._coin_flip()
@@ -156,7 +165,7 @@ class Game():
                                                    self.get_offense)
             self.end_of_half = False
 #
-        if (self.end_of_regulation and not self.overtime and self.current_state.timed_play()) or (self.overtime and self.possession.offense.statbook.offense_stats['score'] != self.possession.defense.statbook.offense_stats['score']):                    
+        if (self.end_of_regulation and not self.overtime and self.current_state.timed_play()) or (self.overtime and self.get_score_difference()):                    
             self.end_of_game = True
             self.current_state = None
     
@@ -310,7 +319,7 @@ class Scoreboard():
         self.converted_yardline = str(self._field.converted_yardline)
         self.period = str(self.get_period())
         self.clock = str(self.get_clock().get_time_remaining())[2:7]
-        self.down, self.yards_to_go = self.get_state().get_down_distance()
+        self.down, self.yards_to_go = self.get_state().get_down_distance(string_format=True)
         self.play_name = ''
         self.offense_yardage = ''
         self.return_yardage = ''
@@ -330,7 +339,7 @@ class Scoreboard():
         self.turnover = str(play.turnover)
         # at end of game, state is None, so wrapping in try
         try:
-            self.down, self.yards_to_go = self.get_state().get_down_distance()
+            self.down, self.yards_to_go = self.get_state().get_down_distance(string_format=True)
         except:
             pass
 
@@ -343,19 +352,19 @@ class StatKeeper():
         self.conversion_kick_pts = conversion_kick_pts
     
     def touchdown(self,statbook):
-        statbook.offense_stats['score'] += self.touchdown_pts
+        statbook.stats['score'] += self.touchdown_pts
         
     def field_goal(self,statbook):
-        statbook.offense_stats['score'] += self.field_goal_pts
+        statbook.stats['score'] += self.field_goal_pts
 
     def safety(self,statbook):
-        statbook.offense_stats['score'] += self.safety_pts
+        statbook.stats['score'] += self.safety_pts
 
     def conversion_play(self,statbook):
-        statbook.offense_stats['score'] += self.conversion_play_pts
+        statbook.stats['score'] += self.conversion_play_pts
 
     def conversion_kick(self,statbook):
-        statbook.offense_stats['score'] += self.conversion_kick_pts
+        statbook.stats['score'] += self.conversion_kick_pts
         
 class Clock(object):
     "Basic Clock"

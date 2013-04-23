@@ -71,8 +71,8 @@ while True:
     except:
         pass
 
-    home_name = myfont.render(game.home.city + ' ' + game.home.nickname + ' -- ' + str(game.get_home_team().statbook.offense_stats['score']), True, white)
-    away_name = myfont.render(game.away.city + ' ' + game.away.nickname + ' -- ' + str(game.get_away_team().statbook.offense_stats['score']), True, white)
+    home_name = myfont.render(game.home.city + ' ' + game.home.nickname + ' -- ' + str(game.get_home_team().statbook.stats['score']), True, white)
+    away_name = myfont.render(game.away.city + ' ' + game.away.nickname + ' -- ' + str(game.get_away_team().statbook.stats['score']), True, white)
     current_state = myfont.render(str(game.current_state), True, white)
     abs_yardline = myfont.render("Yardline: " + game.scoreboard.absolute_yardline, True, white)
     conv_yardline = myfont.render("Yardline: " + game.scoreboard.converted_yardline, True, white)
@@ -105,7 +105,7 @@ while True:
         screen.blit(item, (5,35 + display_offset))
         display_offset += 20
         
-        play_buttons = [PlayButton(reset_coords,play) for play in game.get_available_plays()]
+    play_buttons = [PlayButton(reset_coords,play) for play in game.get_available_plays()]
 ## play button display
     for button in play_buttons:
         button.update_coords(reset_coords)

@@ -4,7 +4,7 @@ Created on Apr 20, 2013
 @author: George
 '''
 
-from random import randint
+from random import randint, random, choice
 from collections import namedtuple
 
 class Coach():
@@ -42,9 +42,25 @@ class Coach():
                     self.fg_dist_probabilities={k: (len([i for i in kicks if i >= k])/float(len(kicks)))*100 for k in range(1,51)}
 
                         
-    def call_play(self,available_plays):
+    def call_play(self,available_plays,down_distance,score_difference,period,time_remaining):
+        ## 
         ## to sort list of namedtupes: 
         ## in place - list.sort(key=lambda tup: tup.success,reverse=True)
         ## sorted_list = sorted(list, key=lambda tup: tup.success,reverse=True)
-        pass
+        choices=[]
+        down, dist = down_distance()
+        if down:
+            for play in self.play_probabilities:
+                if self.play_probabilities[play][dist]:
+                    choices.append(self.play_probabilities[play].get(dist))
+            avg=sum(choices)/len(choices)
+            prob=[((item / avg) /len(choices)) for item in choices]
+            
+            rand_play=random
+        
+        return choice(available_plays)
+        
+        
+        
+        
                 
