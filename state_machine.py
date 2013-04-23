@@ -41,6 +41,9 @@ class State():
     def timed_play(self):
         return True
     
+    def get_down_distance(self):
+        return '',''
+    
     def check_events(self,events):
         next_state = False
         if events.get('offense_touchdown') or events.get('defense_touchdown'):

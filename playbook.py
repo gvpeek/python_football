@@ -14,17 +14,6 @@ class Playbook(list):
         self.initialize()
 
     def initialize(self):
-        self.append(Rush(0,
-                         0,
-                         -2,
-                         1,
-                         0,
-                         'Run Clock',
-                         (D,C),
-                         0,
-                         (0.0,0.0),
-                         {},
-                         {}))
         self.append(Rush(-.7,
                          -1,
                          -5.0,
@@ -47,10 +36,22 @@ class Playbook(list):
                          (35.0,90.0),
                          {'qb':1,'rb':5,'wr':1,'ol':3},
                          {'dl':3,'lb':5,'cb':1,'s':1}))
+        self.append(Rush(-.7,
+                         -1,
+                         -5.0,
+                         3.5,
+                         1,
+                         'Pitch Outside',
+                         (D,C),
+                         0,
+                         (35.0,90.0),
+                         {'qb':2,'rb':6,'wr':1,'ol':1},
+                         {'dl':3,'lb':5,'cb':1,'s':1}))
         self.append(Pass(-.7,
                          -1,
                          -5.0,
                          3.5,
+                         1,
                          1,
                          'Pass Short',
                          (D,C),
@@ -63,6 +64,7 @@ class Playbook(list):
                          -8.0,
                          10,
                          1,
+                         2.5,
                          'Pass Medium',
                          (D,C),
                          5,
@@ -74,6 +76,7 @@ class Playbook(list):
                          -12.0,
                          10,
                          2,
+                         4,
                          'Pass Long',
                          (D,C),
                          10,
@@ -115,6 +118,17 @@ class Playbook(list):
                          0,
                          (60.0,90.0),
                          {'sp':1},
+                         {}))
+        self.append(Rush(0,
+                         0,
+                         -2,
+                         1,
+                         0,
+                         'Run Clock',
+                         (D,C),
+                         0,
+                         (0.0,0.0),
+                         {},
                          {}))
         
 play_id = 0
@@ -264,6 +278,7 @@ class Pass(Play):
                  play_multiplier,
                  turnover_adjust,
                  turnover_multiplier,
+                 completion_adjust,
                  *args):
         Play.__init__(self,*args)
 
@@ -272,6 +287,7 @@ class Pass(Play):
         self.turnover_adjust = turnover_adjust
         self.turnover_multiplier = turnover_multiplier
         self.play_multiplier = play_multiplier
+        self.completion_adjust = completion_adjust
         
     def run(self,
             off_skills,
@@ -283,7 +299,7 @@ class Pass(Play):
         turnover = False
 
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
-        play_success = self.determine_play_success(play_rating)
+        play_success = self.determine_play_success(play_rating-(self.completion_adjust*(play_rating/10)))
         if not play_success:
             turnover = self.determine_turnover(play_rating,self.turnover_adjust, self.turnover_multiplier)
         off_yardage = self.determine_play_yardage(play_rating, play_success, turnover, self.gain_adjust, self.loss_adjust, self.play_multiplier)
