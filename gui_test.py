@@ -105,7 +105,7 @@ while True:
         screen.blit(item, (5,35 + display_offset))
         display_offset += 20
         
-    play_buttons = [PlayButton(reset_coords,play) for play in game.get_available_plays()]
+    play_buttons = [PlayButton(reset_coords,play) for play in game.get_available_plays().values()]
 ## play button display
     for button in play_buttons:
         button.update_coords(reset_coords)

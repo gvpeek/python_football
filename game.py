@@ -50,7 +50,8 @@ class Game():
                                                                    self.current_state.get_down_distance,
                                                                    self.get_score_difference,
                                                                    self.get_period,
-                                                                   self.get_clock)
+                                                                   self.get_clock,
+                                                                   self.field.get_distance_to_endzone)
                 self.run_play(play)
                 
     def _possession_setup(self):
@@ -110,10 +111,10 @@ class Game():
         return self.current_clock
     
     def get_available_plays(self):
-        available_plays=[]
+        available_plays={}
         for play in self.possession.offense.team.playbook:
-            if isinstance(self.current_state,(play.valid_states)) and (self.field.length-abs(self.field.absolute_yardline - self.possession.offense.endzone)) > play.valid_yardline:
-                available_plays.append(play)
+            if isinstance(self.current_state,(play.valid_states)) and (self.field.get_distance_to_endzone()) > play.valid_yardline:
+                available_plays[play.id]=play
         return available_plays
     
     def get_score_difference(self):
@@ -225,6 +226,9 @@ class Field():
         self.home_endzone = 0.0
         self.away_endzone = self.length
         
+    def get_distance_to_endzone(self):
+        return self.length - abs(self.absolute_yardline - self.get_offense().endzone)
+    
     def determine_position(self, yardage):
         self.absolute_yardline += yardage
 
@@ -265,6 +269,8 @@ class Field():
         
     def failed_field_goal_set(self):
         self._set_ball_position(self.absolute_yardline + self.get_offense().direction * 7)
+        if self.in_endzone():
+            self._set_ball_position(1)
         
 class Play():
     def __init__(self,offense,defense,field):
@@ -325,9 +331,6 @@ class Scoreboard():
         self.return_yardage = ''
         self.turnover = ''
         
-        self.home_score = 0
-        self.away_score = 0
-
     def refresh(self,play):
         self.absolute_yardline = str(self._field.absolute_yardline)
         self.converted_yardline = str(self._field.converted_yardline)
