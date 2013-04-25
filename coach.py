@@ -80,16 +80,12 @@ class Coach():
         elif down == 4:
             try:
                 if self.fg_dist_probabilities.get(distance_to_endzone()) >= 40:
-                    for play in available_plays.values():
-                        if play.is_field_goal():
-                            play_choice=play
+                    play_choice=available_plays['FG']
             except:
                 pass
             if not play_choice:
-                    for play in available_plays.values():
-                        if play.is_punt():
-                            play_choice=play
-                            
+                play_choice=available_plays['PUNT']
+                
 #scoreDifference == -2 ||
 #          scoreDifference == -5 ||
 #          scoreDifference == -10 ||
@@ -101,7 +97,7 @@ class Coach():
         if not play_choice:
             play_choice = choice(available_plays.values())
             
-        print play_choice.name
+        print play_choice.name, score_difference(), period(True), time_remaining().total_seconds(), (score_difference()/(time_remaining().total_seconds()/30))
         return play_choice
         
         
