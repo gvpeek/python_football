@@ -50,7 +50,7 @@ class Game():
                                                                    self.current_state.get_down_distance,
                                                                    self.get_score_difference,
                                                                    self.get_period,
-                                                                   self.get_clock,
+                                                                   self.current_clock.get_time_remaining,
                                                                    self.field.get_distance_to_endzone)
                 self.run_play(play)
                 
@@ -101,8 +101,11 @@ class Game():
         else:
             return self.possession.defense
         
-    def get_period(self):
-        return self.period
+    def get_period(self, return_game_length=False):
+        if return_game_length:
+            return self.period, self.number_of_periods
+        else:
+            return self.period
     
     def get_state(self):
         return self.current_state
@@ -372,6 +375,7 @@ class StatKeeper():
 class Clock(object):
     "Basic Clock"
     def __init__(self, quarter_length=15):
+        self.quarter_length = quarter_length
         self.time_remaining = timedelta(seconds=(quarter_length*60))
 
     def get_time_remaining(self):

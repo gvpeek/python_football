@@ -21,10 +21,9 @@ class Playbook(list):
                          1,
                          'Run Inside',
                          (D,C),
-                         0,
-                         (35.0,90.0),
-                         {'qb':1,'rb':4,'wr':0,'ol':5},
-                         {'dl':6,'lb':3,'cb':0,'s':1}))
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':1,'rb':4,'wr':0,'ol':5},
+                         defense_weights={'dl':6,'lb':3,'cb':0,'s':1}))
         self.append(Rush(-.7,
                          -1,
                          -5.0,
@@ -32,10 +31,9 @@ class Playbook(list):
                          1,
                          'Run Outside',
                          (D,C),
-                         0,
-                         (35.0,90.0),
-                         {'qb':1,'rb':5,'wr':1,'ol':3},
-                         {'dl':3,'lb':5,'cb':1,'s':1}))
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':1,'rb':5,'wr':1,'ol':3},
+                         defense_weights={'dl':3,'lb':5,'cb':1,'s':1}))
         self.append(Rush(-.7,
                          -1,
                          -5.0,
@@ -43,10 +41,9 @@ class Playbook(list):
                          1,
                          'Pitch Outside',
                          (D,C),
-                         0,
-                         (35.0,90.0),
-                         {'qb':2,'rb':6,'wr':1,'ol':1},
-                         {'dl':3,'lb':5,'cb':1,'s':1}))
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':2,'rb':6,'wr':1,'ol':1},
+                         defense_weights={'dl':3,'lb':5,'cb':1,'s':1}))
         self.append(Pass(-.7,
                          -1,
                          -5.0,
@@ -55,10 +52,9 @@ class Playbook(list):
                          1,
                          'Pass Short',
                          (D,C),
-                         0,
-                         (35.0,90.0),
-                         {'qb':4,'rb':3,'wr':2,'ol':1},
-                         {'dl':1,'lb':5,'cb':3,'s':1}))
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':4,'rb':3,'wr':2,'ol':1},
+                         defense_weights={'dl':1,'lb':5,'cb':3,'s':1}))
         self.append(Pass(-.5,
                          -.8309,
                          -8.0,
@@ -67,10 +63,10 @@ class Playbook(list):
                          2.5,
                          'Pass Medium',
                          (D,C),
-                         5,
-                         (35.0,90.0),
-                         {'qb':4,'rb':0,'wr':4,'ol':2},
-                         {'dl':2,'lb':2,'cb':4,'s':2}))
+                         valid_yardline=5,
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':4,'rb':0,'wr':4,'ol':2},
+                         defense_weights={'dl':2,'lb':2,'cb':4,'s':2}))
         self.append(Pass(-.4,
                          -.5,
                          -12.0,
@@ -79,46 +75,42 @@ class Playbook(list):
                          4,
                          'Pass Long',
                          (D,C),
-                         10,
-                         (35.0,90.0),
-                         {'qb':4,'rb':0,'wr':3,'ol':3},
-                         {'dl':3,'lb':1,'cb':3,'s':3}))
+                         valid_yardline=10,
+                         rating_bounds=(35.0,90.0),
+                         offense_weights={'qb':4,'rb':0,'wr':3,'ol':3},
+                         defense_weights={'dl':3,'lb':1,'cb':3,'s':3}))
         self.append(Kickoff(20,
                             55,
                             False,
                             'Kickoff',
                             (K,F),
-                            0,
-                            (60.0,100.0),
-                            {'sp':1},
-                            {}))
+                            rating_bounds=(60.0,100.0),
+                            offense_weights={'sp':1},
+                            id='K'))
         self.append(Kickoff(10,
                             10,
                             True,
                             'Onside Kickoff',
                             (K,F),
-                            0,
-                            (60.0,100.0),
-                            {'sp':1},
-                            {}))
+                            rating_bounds=(60.0,100.0),
+                            offense_weights={'sp':1},
+                            id='OK'))
         self.append(Punt('Punt',
                          (D,F),
-                         0,
-                         (60.0,100.0),
-                         {'sp':1},
-                         {}))
+                         rating_bounds=(60.0,100.0),
+                         offense_weights={'sp':1},
+                         id='PUNT'))
         self.append(FieldGoal('Field Goal',
-                         (D),
-                         0,
-                         (60.0,90.0),
-                         {'sp':1},
-                         {}))
+                              (D),
+                              rating_bounds=(60.0,90.0),
+                              offense_weights={'sp':1},
+                              id='FG'))
         self.append(FieldGoal('Extra Point',
-                         (C),
-                         0,
-                         (60.0,90.0),
-                         {'sp':1},
-                         {}))
+                              (C),
+                              0,
+                              rating_bounds=(60.0,90.0),
+                              offense_weights={'sp':1},
+                              id='XP'))
         self.append(Rush(0,
                          0,
                          -2,
@@ -126,10 +118,8 @@ class Playbook(list):
                          0,
                          'Run Clock',
                          (D,C),
-                         0,
-                         (0.0,0.0),
-                         {},
-                         {}))
+                         rating_bounds=(0.0,0.0),
+                         id='RC'))
         
 play_id = 0
 global play_id
@@ -138,10 +128,11 @@ class Play():
     def __init__(self,
                  name,
                  valid_states,
-                 valid_yardline = 0,
-                 rating_bounds = (0.0,100.0),
+                 valid_yardline=0,
+                 rating_bounds=(0.0,100.0),
                  offense_weights={},
-                 defense_weights={}):
+                 defense_weights={},
+                 id=None):
         '''
         valid_states = (D,K,F,C)
         valid for entire field (default) - valid_yardline = 0
@@ -150,7 +141,10 @@ class Play():
         offense_weights = {'qb':4,'rb':1,'wr':3,'ol':2}
         defense_weights = {'dl':3,'lb':2,'cb':3,'s':2}
         '''
-        self.id = self.next_play_id()
+        if id:
+            self.id = id
+        else:
+            self.id = self.next_play_id()
         self.name=name
         self.valid_states = valid_states
         self.rating_bounds = rating_bounds
@@ -245,8 +239,8 @@ class Rush(Play):
                  play_multiplier,
                  turnover_adjust,
                  turnover_multiplier,
-                 *args):
-        Play.__init__(self,*args)
+                 *args,**kwargs):
+        Play.__init__(self,*args,**kwargs)
 
         self.gain_adjust = gain_adjust
         self.loss_adjust = loss_adjust
@@ -279,8 +273,8 @@ class Pass(Play):
                  turnover_adjust,
                  turnover_multiplier,
                  completion_adjust,
-                 *args):
-        Play.__init__(self,*args)
+                 *args,**kwargs):
+        Play.__init__(self,*args,**kwargs)
 
         self.gain_adjust = gain_adjust
         self.loss_adjust = loss_adjust
@@ -311,8 +305,8 @@ class Kickoff(Play):
                  random_cap, 
                  adjustment,
                  recoverable,
-                 *args):
-        Play.__init__(self, *args)
+                 *args,**kwargs):
+        Play.__init__(self, *args,**kwargs)
         
         self.random_cap = random_cap
         self.adjustment = adjustment
@@ -341,8 +335,8 @@ class Kickoff(Play):
     
 class Punt(Play):
     def __init__(self,
-                 *args):
-        Play.__init__(self, *args)
+                 *args,**kwargs):
+        Play.__init__(self, *args,**kwargs)
     
     def determine_play_yardage(self,rating):
         punt_rnd = randint(1,100)
@@ -377,8 +371,8 @@ class Punt(Play):
     
 class FieldGoal(Play):
     def __init__(self,
-                 *args):
-        Play.__init__(self, *args)
+                 *args,**kwargs):
+        Play.__init__(self, *args,**kwargs)
         
         ''' 
         returns max_field_goal_distance, False, 0.0
