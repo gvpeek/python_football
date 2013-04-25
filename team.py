@@ -11,7 +11,7 @@ from coach import Coach
 
 class Team():
     "Team"
-    def __init__(self, city, nickname):
+    def __init__(self, city, nickname,human=False):
 #        self.id = get_next_team_id()
         self.city = city
         self.nickname = nickname

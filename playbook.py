@@ -215,7 +215,7 @@ class Play():
         else:
             pos = 's'
             adjustment=-.6
-        print '****', pos, def_skills[pos], adjustment
+#        print '****', pos, def_skills[pos], adjustment
         return floor(((def_skills[pos]*100)*pow(return_rnd,adjustment)) / 100)
         
     def determine_play_success(self,rating):

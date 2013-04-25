@@ -8,7 +8,8 @@ from math import ceil
 from random import choice
 from datetime import timedelta
 from collections import deque, namedtuple, defaultdict
-from pprint import pprint
+from time import sleep
+#from pprint import pprint
 
 from playbook import Kickoff, Punt, FieldGoal
 from state_machine import initialize_state
@@ -45,14 +46,19 @@ class Game():
 
     def start_game(self):
         while not self.end_of_game:
+            print self.get_home_team().statbook.stats['score'], self.get_away_team().statbook.stats['score']
             if not self.possession.offense.team.human_control:
+#                sleep(2)
                 play = self.possession.offense.team.coach.call_play(self.get_available_plays(),
-                                                                   self.current_state.get_down_distance,
-                                                                   self.get_score_difference,
-                                                                   self.get_period,
-                                                                   self.current_clock.get_time_remaining,
-                                                                   self.field.get_distance_to_endzone)
+                                                                    self.get_state,
+                                                                    self.current_state.get_down_distance,
+                                                                    self.get_score_difference,
+                                                                    self.get_period,
+                                                                    self.current_clock.get_time_remaining,
+                                                                    self.field.get_distance_to_endzone)
                 self.run_play(play)
+            else:
+                return self.get_available_plays()
                 
     def _possession_setup(self):
         PossTeam = namedtuple('PossTeam', ['team','direction','endzone','home_team','plays_run','statbook'])
@@ -80,7 +86,7 @@ class Game():
             self.change_possession()
         
     def change_possession(self):
-        print 'chg possession'
+#        print 'chg possession'
         self.possession = self._Possession(self.possession[1],self.possession[0])
         
     def get_offense(self):
@@ -131,6 +137,7 @@ class Game():
         play.run_play()
         self.determine_events(play)
         self.plays.append(play)
+        self.statkeeper.update_stats(play)
         if self.current_state.timed_play():
             self.current_clock.run_clock()
         self.current_state = self.current_state.check_state(play.turnover,
@@ -147,7 +154,7 @@ class Game():
                 self.current_clock = self.timekeeping.pop()
             else:
                 self.end_of_regulation = True
-                print 'outof timekeeping'
+#                print 'outof timekeeping'
                 if not self.get_score_difference(): 
                     if not self.overtime:
                         self.overtime = True
@@ -157,7 +164,7 @@ class Game():
                                                               self.change_possession,
                                                               self.get_offense)
                 if self.overtime:
-                    print 'in overtime'
+#                    print 'in overtime'
                     self.period += 1
 #                    self.scoreboard.period = self.period
                     self.current_clock = Clock()
@@ -176,7 +183,7 @@ class Game():
     def determine_events(self,play):
         if play.play_call.is_field_goal():
             play.events['kick_attempt'] = True
-            print 'ayl', (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)), 'k', play.offense_yardage
+#            print 'ayl', (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)), 'k', play.offense_yardage
             if (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)) <= play.offense_yardage:
                 play.events['kick_successful'] = True
                 if self.current_state.is_conversion():
@@ -242,14 +249,20 @@ class Field():
             
         return self.absolute_yardline
 
-    def in_endzone(self):
+    def in_endzone(self,return_overage=False):
         in_endzone = 0
+        overage = 0
         if self.absolute_yardline >= self.away_endzone:
             in_endzone = -1
+            overage = self.away_endzone - self.absolute_yardline
         elif self.absolute_yardline <= self.home_endzone:
             in_endzone = 1
-            
-        return in_endzone
+            overage = self.home_endzone - self.absolute_yardline
+        
+        if return_overage:
+            return in_endzone, overage
+        else:
+            return in_endzone
 
     def _set_ball_position(self,yardline):
         self.absolute_yardline = abs(self.get_offense().endzone - yardline)
@@ -356,7 +369,46 @@ class StatKeeper():
         self.safety_pts = safety_pts       
         self.conversion_play_pts = conversion_play_pts
         self.conversion_kick_pts = conversion_kick_pts
-    
+
+    def update_stats(self,play):
+        endzone, overage = play.field.in_endzone(True)
+        if play.play_call.is_kickoff():
+            play.offense.statbook.stats['kickoffs'] += 1
+            play.offense.statbook.stats['kickoff_yards'] += play.offense_yardage + overage
+            if play.events['touchback']:
+                play.offense.statbook.stats['kickoff_touchbacks'] += 1
+            if play.return_yardage:
+                play.defense.statbook.stats['kick_returns'] += 1
+                play.defense.statbook.stats['kick_return_yards'] += play.return_yardage + overage
+        if play.play_call.is_punt():
+            play.offense.statbook.stats['punts'] += 1
+            play.offense.statbook.stats['punt_yards'] += play.offense_yardage + overage
+            if play.return_yardage:
+                play.defense.statbook.stats['punt_returns'] += 1
+                play.defense.statbook.stats['punt_return_yards'] += play.return_yardage + overage
+            
+#                      'total_yards' : 0,
+#                      'pass_att' : 0,
+#                      'pass_comp' : 0,
+#                      'completion_pct' : 0.0,
+#                      'pass_yards' : 0,
+#                      'pass_td' : 0,
+#                      'intercepted' : 0,
+#                      'sacked' : 0,
+#                      'rush_att' : 0,
+#                      'rush_yards' : 0,
+#                      'rush_td' : 0,
+#                      'fumbles' : 0,
+#                      'fg_att' : 0,
+#                      'fg' : 0,
+#                      'xp_att' : 0,
+#                      'xp' : 0,
+#                      'conv_att' : 0,
+#                      'conv' : 0,
+
+
+                      
+   
     def touchdown(self,statbook):
         statbook.stats['score'] += self.touchdown_pts
         
@@ -378,8 +430,11 @@ class Clock(object):
         self.quarter_length = quarter_length
         self.time_remaining = timedelta(seconds=(quarter_length*60))
 
-    def get_time_remaining(self):
-        return self.time_remaining
+    def get_time_remaining(self,return_qtr_length=False):
+        if return_qtr_length:
+            return self.time_remaining, timedelta(seconds=(self.quarter_length*60))
+        else:
+            return self.time_remaining
 
     def run_clock(self):
         self.time_remaining -= timedelta(seconds=30)
