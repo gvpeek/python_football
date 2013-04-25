@@ -43,11 +43,13 @@ white = (255,255,255)
 black = (0,0,0)
 reset_coords = (-1000,-1000)
 
-team1 = Team("Austin","Easy")
+team1 = Team("Austin","Easy",True)
 team2 = Team("Chicago","Grown Men")
 game = Game(team1,team2)
 
 play_buttons=[]
+
+game.start_game()
 
 while True:
     
