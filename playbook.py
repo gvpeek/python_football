@@ -291,12 +291,21 @@ class Pass(Play):
         returns off_yardage, turnover
         '''
         turnover = False
-
+        incomplete=False
+        
         play_rating = self.determine_play_rating(off_skills, def_skills, rating_penalty)
-        play_success = self.determine_play_success(play_rating-(self.completion_adjust*(play_rating/10)))
+        completion_pct = (self.completion_adjust*(play_rating/10.0))
+        play_success = self.determine_play_success(play_rating-completion_pct)
         if not play_success:
             turnover = self.determine_turnover(play_rating,self.turnover_adjust, self.turnover_multiplier)
-        off_yardage = self.determine_play_yardage(play_rating, play_success, turnover, self.gain_adjust, self.loss_adjust, self.play_multiplier)
+            if not turnover:
+                sack_pct = ((100 - completion_pct) / 3.0);
+                if randint(1,100) > sack_pct:
+                    off_yardage = 0
+                    incomplete = True
+        
+        if not incomplete:
+            off_yardage = self.determine_play_yardage(play_rating, play_success, turnover, self.gain_adjust, self.loss_adjust, self.play_multiplier)
         
         return off_yardage, turnover
     

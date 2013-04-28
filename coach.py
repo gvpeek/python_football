@@ -86,7 +86,7 @@ class Coach():
                 if not play_choice:
                     play_choice=available_plays['PUNT']
         elif state().is_conversion():
-            if score_difference in [-2,-5,-10,-16,-17,-18] and urgency_threshold > time_score_ratio:
+            if score_difference in [-2,-5,-10,-16,-17,-18] and (urgency_threshold > time_score_ratio or not total_time_remaining):
                 play_choice=self.choose_rush_pass_play(available_plays, target_yards)
             else:
                 play_choice=available_plays['XP']
@@ -101,10 +101,10 @@ class Coach():
         if not play_choice:
             play_choice = choice(available_plays.values())
             
-        try:
-            print play_choice.name, score_difference(), period(True), time_remaining().total_seconds(), time_score_ratio, down_distance(), distance_to_endzone()
-        except:
-            pass
+#        try:
+#            print play_choice.name, score_difference(), period(True), time_remaining().total_seconds(), time_score_ratio, down_distance(), distance_to_endzone()
+#        except:
+#            pass
         
         return play_choice
     

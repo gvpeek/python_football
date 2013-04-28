@@ -34,5 +34,6 @@ class StatBook():
                       'kickoff_yards' : 0.0,
                       'kickoff_touchbacks' : 0.0,
                       'kick_returns' : 0.0,
-                      'kick_return_yards': 0.0
+                      'kick_return_yards': 0.0,
+                      'safeties': 0.0
                       }
