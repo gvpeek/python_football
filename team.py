@@ -15,7 +15,7 @@ class Team():
 #        self.id = get_next_team_id()
         self.city = city
         self.nickname = nickname
-        self.human_control = False
+        self.human_control = human
         self.skills = {'qb': float(randint(60,90)),
                        'rb': float(randint(60,90)),
                        'wr': float(randint(60,90)),
