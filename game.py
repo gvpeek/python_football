@@ -313,7 +313,7 @@ class Field():
         self._set_ball_position(self.conversion_yardline)
         
     def failed_field_goal_set(self):
-        self._set_ball_position(self.absolute_yardline + self.get_offense().direction * 7)
+        self._set_ball_position(self.absolute_yardline + (self.get_offense().direction * 7))
         if self.in_endzone():
             self._set_ball_position(1)
         
