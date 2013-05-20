@@ -48,35 +48,62 @@ class League():
         self.standings = [{self.teams[t].city + ' ' + self.teams[t].nickname : self.teams[t].league_stats} for t in self.teams]
         print self.standings
         
-    def update_standings(self,home,away):
-        if home.statbook.stats['score'] == away.statbook.stats['score']:
-            home.team.league_stats['ties'] += 1
-            away.team.league_stats['ties'] += 1
-        if home.statbook.stats['score'] > away.statbook.stats['score']:
-            home.team.league_stats['wins'] += 1
-            home.team.league_stats['win_opp'].append(away.team.id)
-            away.team.league_stats['losses'] += 1
-            away.team.league_stats['loss_opp'].append(home.team.id)
+    def _determine_pct(self,wins,losses,ties):
+        return (wins + ties) / (float(wins + losses + ties))
+    
+    def update_standings(self,
+                         home_game_stats,
+                         away_game_stats,
+                         home_team_id,
+                         away_team_id,
+                         home_league_stats,
+                         away_league_stats):
+        if home_game_stats['score'] == away_game_stats['score']:
+            home_league_stats['overall']['ties'] += 1
+            away_league_stats['overall']['ties'] += 1
+            home_league_stats['home']['ties'] += 1
+            away_league_stats['away']['ties'] += 1
+        if home_game_stats['score'] > away_game_stats['score']:
+            home_league_stats['overall']['wins'] += 1
+            home_league_stats['home']['wins'] += 1
+            home_league_stats['win_opp'].append(away_team_id)
+            away_league_stats['overall']['losses'] += 1
+            away_league_stats['away']['losses'] += 1
+            away_league_stats['loss_opp'].append(home_team_id)
         else:
-            home.team.league_stats['losses'] += 1
-            home.team.league_stats['loss_opp'].append(away.team.id)
-            away.team.league_stats['wins'] += 1
-            away.team.league_stats['win_opp'].append(home.team.id)
+            home_league_stats['overall']['losses'] += 1
+            home_league_stats['home']['losses'] += 1
+            home_league_stats['loss_opp'].append(away_team_id)
+            away_league_stats['overall']['wins'] += 1
+            away_league_stats['away']['wins'] += 1
+            away_league_stats['win_opp'].append(home_team_id)
         
-        home.team.league_stats['points'] += home.statbook.stats['score']
-        home.team.league_stats['opp'] += away.statbook.stats['score']
-        away.team.league_stats['points'] += away.statbook.stats['score']
-        away.team.league_stats['opp'] += home.statbook.stats['score']
+        home_league_stats['overall']['points'] += home_game_stats['score']
+        home_league_stats['overall']['opp'] += away_game_stats['score']
+        home_league_stats['home']['points'] += home_game_stats['score']
+        home_league_stats['home']['opp'] += away_game_stats['score']
+        away_league_stats['overall']['points'] += away_game_stats['score']
+        away_league_stats['overall']['opp'] += home_game_stats['score']
+        away_league_stats['away']['points'] += away_game_stats['score']
+        away_league_stats['away']['opp'] += home_game_stats['score']
         
-        home.team.league_stats['pct'] =  (home.team.league_stats['wins'] + home.team.league_stats['ties']) / float(home.team.league_stats['wins'] + home.team.league_stats['losses'] + home.team.league_stats['ties'])
-        away.team.league_stats['pct'] =  (away.team.league_stats['wins'] + away.team.league_stats['ties']) / float(away.team.league_stats['wins'] + away.team.league_stats['losses'] + away.team.league_stats['ties'])
+        home_league_stats['overall']['pct'] =  self._determine_pct(home_league_stats['overall']['wins'], home_league_stats['overall']['losses'], home_league_stats['overall']['ties'])
+        home_league_stats['home']['pct'] =  self._determine_pct(home_league_stats['home']['wins'], home_league_stats['home']['losses'], home_league_stats['home']['ties'])
+        away_league_stats['overall']['pct'] =  self._determine_pct(away_league_stats['overall']['wins'], away_league_stats['overall']['losses'], away_league_stats['overall']['ties'])
+        away_league_stats['away']['pct'] =  self._determine_pct(away_league_stats['away']['wins'], away_league_stats['away']['losses'], away_league_stats['away']['ties'])
+        
         
         self.sort_standings()
             
     def play_season(self):
         for game in self.schedule:
             game.start_game()
-            self.update_standings(game.get_home_team(),game.get_away_team())
+            self.update_standings(game.get_home_team().statbook.stats,
+                                  game.get_away_team().statbook.stats,
+                                  game.get_home_team().team.id,
+                                  game.get_away_team().team.id,
+                                  game.get_home_team().team.league_stats,
+                                  game.get_away_team().team.league_stats)
 #            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
 #            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
 #            if game.overtime:
@@ -87,7 +114,7 @@ class League():
                 self.print_standings()
 
     def sort_standings(self):
-        self.standings.sort(reverse=True, key=lambda t: t.values()[0]['pct'])
+        self.standings.sort(reverse=True, key=lambda t: t.values()[0]['overall']['pct'])
 
     def print_standings(self):
         for s in self.standings:
@@ -130,5 +157,5 @@ class Simple_Schedule(Schedule):
 
 ##### testing
 
-l=League(17)
+l=League(8)
 l.play_season()
