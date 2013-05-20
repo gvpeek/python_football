@@ -42,15 +42,21 @@ class Team():
         self.primary_color = (randint(0,255),randint(0,255),randint(0,255))
         self.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
         
-        self.league_stats = OrderedDict([('wins', 0),
-                            ('losses' , 0),
-                            ('ties' , 0),
-                            ('pct' , 0.0),
-                            ('points' , 0),
-                            ('opp' , 0),
-                            ('win_opp' , []),
-                            ('loss_opp' , [])
-                            ])
+        self.league_stats = {
+                            'overall' : self._new_record_stats(),
+                            'home' : self._new_record_stats(),
+                            'away' : self._new_record_stats(),
+                            'win_opp' : [],
+                            'loss_opp' : []
+                            }
+        
+    def _new_record_stats(self):
+        return {'wins': 0,
+                'losses' : 0,
+                'ties' : 0,
+                'pct' : 0.0,
+                'points' : 0,
+                'opp' : 0}
         
     def get_next_team_id(self):
         global team_id
