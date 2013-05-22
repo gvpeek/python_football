@@ -10,10 +10,14 @@ import abc
 from math import ceil
 from random import choice, shuffle
 from collections import namedtuple, deque
+from sys import stdout
 
 from team import Team
 from game import Game
 
+'''
+Initialize Cities and Nicknames
+'''
 cities=[]
 city_list=[]
 City = namedtuple('City',['name','state','pro','semipro','amateur','region','division'])
@@ -38,6 +42,7 @@ with open(r'csv_source_files\nicknames.csv', 'r+b') as nicknames_file:
 print city_list
 print nickname_list
 
+
 class League():
     def __init__(self,number_of_teams):
         self.teams = {team.id: team for team in [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]}
@@ -45,7 +50,7 @@ class League():
         
         self.schedule = Home_Away_Random_Schedule().generate(self.teams)
         
-        self.standings = [{self.teams[t].city + ' ' + self.teams[t].nickname : self.teams[t].league_stats} for t in self.teams]
+        self.standings = [t for t in self.teams.values()]
         print self.standings
         
     def _determine_pct(self,wins,losses,ties):
@@ -104,22 +109,76 @@ class League():
                                   game.get_away_team().team.id,
                                   game.get_home_team().team.league_stats,
                                   game.get_away_team().team.league_stats)
-#            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
-#            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
-#            if game.overtime:
-#                print 'OT'
-#            print
+            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
+            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
+            if game.overtime:
+                print 'OT'
+            print
             
             if (self.schedule.index(game) + 1) % len(self.teams) == 0:
                 self.print_standings()
 
     def sort_standings(self):
-        self.standings.sort(reverse=True, key=lambda t: t.values()[0]['overall']['pct'])
+        self.standings.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
+
+    def get_max_width(self, table, index):
+        """
+        Get the maximum width of the given column index
+        from http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
+        """
+        return max([len(row[index]) for row in table])
 
     def print_standings(self):
-        for s in self.standings:
-            print s
-        print
+        table=[[' ',
+               'W',
+               'L',
+               'T',
+               'Pct.',
+               'HW',
+               'HL',
+               'HT',
+               'HPct.',
+               'AW',
+               'AL',
+               'AT',
+               'APct.'
+               ]]
+        table.extend([[s.city + ' ' + s.nickname,
+               str(s.league_stats['overall']['wins']),
+               str(s.league_stats['overall']['losses']),
+               str(s.league_stats['overall']['ties']),
+               str(s.league_stats['overall']['pct']),
+               str(s.league_stats['home']['wins']),
+               str(s.league_stats['home']['losses']),
+               str(s.league_stats['home']['ties']),
+               str(s.league_stats['home']['pct']),
+               str(s.league_stats['away']['wins']),
+               str(s.league_stats['away']['losses']),
+               str(s.league_stats['away']['ties']),
+               str(s.league_stats['away']['pct'])] for s in self.standings])
+#            print '{} {} \t {}-{}-{} {:.3f}'.format(s.city,
+#                                       s.nickname,
+#                                       s.league_stats['overall']['wins'],
+#                                       s.league_stats['overall']['losses'],
+#                                       s.league_stats['overall']['ties'],
+#                                       s.league_stats['overall']['pct'])
+        '''
+        below from http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
+        '''
+        col_paddings = []
+        
+        for i in range(len(table[0])):
+            col_paddings.append(self.get_max_width(table, i))
+
+        for row in table:
+            # left col
+            print >> stdout, row[0].ljust(col_paddings[0] + 1),
+            # rest of the cols
+            for i in range(1, len(row)):
+                col = row[i].rjust(col_paddings[i] + 2)
+                print >> stdout, col,
+            print >> stdout
+        print 
 
 
 class Schedule():
@@ -157,5 +216,5 @@ class Simple_Schedule(Schedule):
 
 ##### testing
 
-l=League(8)
+l=League(20)
 l.play_season()
