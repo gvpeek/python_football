@@ -216,5 +216,5 @@ class Simple_Schedule(Schedule):
 
 ##### testing
 
-l=League(20)
+l=League(15)
 l.play_season()
