@@ -8,7 +8,7 @@ from game import Game
 from team import Team
 from display import Display
 
-team1 = Team("Austin","Easy",True)
+team1 = Team("Austin","Easy")
 team2 = Team("Chicago","Grown Men")
 game = Game(team1,team2,display=Display())
 
