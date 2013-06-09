@@ -10,6 +10,7 @@ from random import randint, choice
 import names
 
 position_types = ['QB']*3+['RB']*5+['WR']*5+['TE']*3+['OG']*4+['OT']*4+['C']*3+['DT']*4+['DE']*4+['LB']*6+['S']*4+['CB']*6+['K']+['P']
+position_types = ['QB']+['RB']+['WR']+['OL']+['DL']+['LB']+['S']+['CB']+['K']+['P']+['SP']
 
 player_id = 0
 global player_id
@@ -81,7 +82,7 @@ class PlayerManagement():
     
 ##### testing
 
-pm=PlayerManagement(new_annual_players=100)
+pm=PlayerManagement(new_annual_players=75)
 #for player in pm.players:
 #    print player.first_name, \
 #          player.last_name, \
@@ -93,9 +94,9 @@ for zz in xrange(30):
 #    print "\n", "New Year..."
 pm.players.sort(reverse=True, key=lambda t: t.ratings['rating'])
 for player in pm.players:
-    print player.first_name, \
-          player.last_name, \
-          player.age, \
-          player.position, \
-          player.ratings['rating'], \
-          player.retired
+    if not player.retired:
+        print player.first_name, \
+              player.last_name, \
+              player.age, \
+              player.position, \
+              player.ratings['rating']

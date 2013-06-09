@@ -85,7 +85,7 @@ class Playbook(list):
                             'Kickoff',
                             (K,F),
                             rating_bounds=(60.0,100.0),
-                            offense_weights={'sp':1},
+                            offense_weights={'k':1},
                             id='K'))
         self.append(Kickoff(10,
                             10,
@@ -93,23 +93,23 @@ class Playbook(list):
                             'Onside Kickoff',
                             (K,F),
                             rating_bounds=(60.0,100.0),
-                            offense_weights={'sp':1},
+                            offense_weights={'k':1},
                             id='OK'))
         self.append(Punt('Punt',
                          (D,F),
                          rating_bounds=(60.0,100.0),
-                         offense_weights={'sp':1},
+                         offense_weights={'p':1},
                          id='PUNT'))
         self.append(FieldGoal('Field Goal',
                               (D),
                               rating_bounds=(60.0,90.0),
-                              offense_weights={'sp':1},
+                              offense_weights={'k':1},
                               id='FG'))
         self.append(FieldGoal('Extra Point',
                               (C),
                               0,
                               rating_bounds=(60.0,90.0),
-                              offense_weights={'sp':1},
+                              offense_weights={'k':1},
                               id='XP'))
         self.append(Rush(0,
                          0,

@@ -6,6 +6,7 @@ Created on Aug 19, 2012
 
 import sys
 import pprint
+
 import pygame
 from pygame.locals import *
 
@@ -51,84 +52,74 @@ class Display():
                   'rush_button' : (128,0,0),
                   'pass_button' : (0,0,128),
                   'special_button' : (128,0,128)}
-
-    def update(self,*args):
-        print args[0]
-        end_of_game, run_play, available_plays, field, scoreboard = args[0]
+        
+    def check_user_input(self,run_play):
         while True:
-            
-            print 'beg', available_plays
             self.fps.tick(5)
-            print '2', available_plays
             
             for event in pygame.event.get():
-                print event
-                print '3', available_plays
                 if event.type == QUIT:
                     sys.exit()
                 
                 elif event.type == MOUSEBUTTONDOWN:
                     mousex, mousey = event.pos
-                    mouse_pos = self.myfont.render(str(mousex) + ',' + str(mousey), True, self.colors['white'])
                     
                     for button in self.play_buttons:
                         if button.rect.collidepoint((mousex, mousey)):
                             run_play(button.play)
                             break
-            print '4', id(available_plays)
-            self.screen.fill(self.colors['blue'])
-            try:
-                self.screen.blit(mouse_pos,(1100,10))
-            except:
-                pass
-
-            display =[self.myfont.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
-                      self.myfont.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
-                      self.myfont.render("Time: " + scoreboard.scoreboard['clock'], True, self.colors['white']),
-                      self.myfont.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
-                      self.myfont.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
-                      ]
         
-        ## stats display
-            display_offset = 0
-            horizontal_offset = 0
-            
-            self.screen.blit(self.myfont.render(scoreboard.scoreboard['home_city'] + ' ' + scoreboard.scoreboard['home_nickname'] + ' -- ' + str(scoreboard.scoreboard['home_score']), True, self.colors['white']),(25,5))
-            self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(180,5))
-            if scoreboard.scoreboard['possession'] == 'Home':
-                pygame.draw.circle(self.screen,self.colors['white'],(10,12),5)
-            elif scoreboard.scoreboard['possession'] == 'Away':
-                pygame.draw.circle(self.screen,self.colors['white'],(165,12),5)
-                    
-            for item in display:
-                self.screen.blit(item, (5,35 + display_offset))
-                display_offset += 20
+
+    def update(self,*args):
+        human_control, end_of_game, run_play, available_plays, field, scoreboard = args[0]
+
+        self.screen.fill(self.colors['blue'])
+
+        display =[self.myfont.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
+                  self.myfont.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
+                  self.myfont.render("Time: " + scoreboard.scoreboard['clock'], True, self.colors['white']),
+                  self.myfont.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
+                  self.myfont.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
+                  ]
+    
+    ## stats display
+        display_offset = 0
+        horizontal_offset = 0
+        
+        self.screen.blit(self.myfont.render(scoreboard.scoreboard['home_city'] + ' ' + scoreboard.scoreboard['home_nickname'] + ' -- ' + str(scoreboard.scoreboard['home_score']), True, self.colors['white']),(25,5))
+        self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(180,5))
+        if scoreboard.scoreboard['possession'] == 'Home':
+            pygame.draw.circle(self.screen,self.colors['white'],(10,12),5)
+        elif scoreboard.scoreboard['possession'] == 'Away':
+            pygame.draw.circle(self.screen,self.colors['white'],(165,12),5)
                 
-            print 'mid', available_plays
-            self.play_buttons = [PlayButton(self.reset_coords,
-                                            play,
-                                            self.myfont,
-                                            self.colors) for play in available_plays.values()]
-        ## play button display
-            for button in self.play_buttons:
-#                button.update_coords(self.reset_coords)
-                button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
-                button.display_button(self.screen)
-                horizontal_offset += 130
-          
-        ## field display
-            pygame.draw.rect(self.screen,self.colors['field'],(5,(100 + display_offset),1200,500))
-            pygame.draw.rect(self.screen,field.endzone_prim_color,(5,(100 + display_offset),100,500))
-            pygame.draw.rect(self.screen,field.endzone_prim_color,(1105,(100 + display_offset),100,500))
-            for line in range(12):
-                pygame.draw.line(self.screen,self.colors['white'],((5 + (line * 100)),(100 + display_offset)),((5 + (line * 100)),(100 + display_offset + 500)))
-            pygame.draw.ellipse(self.screen,self.colors['football'],(((10 * field.absolute_yardline) + 90), (display_offset + 300),30,15))
-        
-        
-            pygame.display.update()
-
-            print 'end', available_plays
-            if not available_plays or end_of_game:
-                print 'break'
-                break
+        for item in display:
+            self.screen.blit(item, (5,35 + display_offset))
+            display_offset += 20
             
+        self.play_buttons = [PlayButton(self.reset_coords,
+                                        play,
+                                        self.myfont,
+                                        self.colors) for play in available_plays.values()]
+    ## play button display
+        for button in self.play_buttons:
+            button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
+            button.display_button(self.screen)
+            horizontal_offset += 130
+      
+    ## field display
+        pygame.draw.rect(self.screen,self.colors['field'],(5,(100 + display_offset),1200,500))
+        pygame.draw.rect(self.screen,field.endzone_prim_color,(5,(100 + display_offset),100,500))
+        pygame.draw.rect(self.screen,field.endzone_prim_color,(1105,(100 + display_offset),100,500))
+        for line in range(12):
+            pygame.draw.line(self.screen,self.colors['white'],((5 + (line * 100)),(100 + display_offset)),((5 + (line * 100)),(100 + display_offset + 500)))
+        pygame.draw.ellipse(self.screen,self.colors['football'],(((10 * field.absolute_yardline) + 90), (display_offset + 300),30,15))
+    
+    
+        pygame.display.update()
+
+        print scoreboard.scoreboard['period'],scoreboard.scoreboard['clock']
+        print end_of_game, human_control
+        
+        if human_control and not end_of_game:
+            self.check_user_input(run_play)       

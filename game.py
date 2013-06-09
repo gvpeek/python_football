@@ -71,12 +71,12 @@ class Game():
             self.run_play(play)
 
     def get_display_items(self):
-        print self.possession.offense.team.human_control, self.end_of_game
+#        print self.possession.offense.team.human_control, self.end_of_game
         if self.possession.offense.team.human_control and not self.end_of_game:
             print 'human'
-            return self.end_of_game, self.run_play, self.get_available_plays(), self.field, self.scoreboard
+            return self.possession.offense.team.human_control, self.end_of_game, self.run_play, self.get_available_plays(), self.field, self.scoreboard
         else:
-            return self.end_of_game, False,{}, self.field, self.scoreboard
+            return self.possession.offense.team.human_control, self.end_of_game, False,{}, self.field, self.scoreboard
                 
                 
     def _possession_setup(self):
@@ -178,7 +178,6 @@ class Game():
                 self.current_clock = self.timekeeping.pop()
             else:
                 self.end_of_regulation = True
-#                print 'outof timekeeping'
                 if not self.get_score_difference(): 
                     if not self.overtime:
                         self.overtime = True
@@ -313,7 +312,7 @@ class Field():
         self._set_ball_position(self.conversion_yardline)
         
     def failed_field_goal_set(self):
-        self._set_ball_position(self.absolute_yardline + (self.get_offense().direction * 7))
+        self._set_ball_position(self.length - (self.absolute_yardline + (self.get_offense().direction * 7)))
         if self.in_endzone():
             self._set_ball_position(1)
         

@@ -31,6 +31,8 @@ class Team():
                        'lb': float(randint(60,90)),
                        'cb': float(randint(60,90)),
                        's': float(randint(60,90)),
+                       'p': float(randint(60,90)),
+                       'k': float(randint(60,90)),
                        'sp': float(randint(60,90))}
         
         self.home_field_advantage = float(randint(1,3))
