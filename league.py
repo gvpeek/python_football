@@ -15,6 +15,8 @@ from sys import stdout
 from team import Team
 from game import Game
 
+from display import Display
+
 '''
 Initialize Cities and Nicknames
 '''
@@ -46,6 +48,9 @@ print nickname_list
 class League():
     def __init__(self,number_of_teams):
         self.teams = {team.id: team for team in [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]}
+##### human test
+        human=Team(choice(city_list),choice(nickname_list),True)
+        self.teams[human.id] = human
         print self.teams
         
         self.schedule = Home_Away_Random_Schedule().generate(self.teams)
@@ -68,7 +73,7 @@ class League():
             away_league_stats['overall']['ties'] += 1
             home_league_stats['home']['ties'] += 1
             away_league_stats['away']['ties'] += 1
-        if home_game_stats['score'] > away_game_stats['score']:
+        elif home_game_stats['score'] > away_game_stats['score']:
             home_league_stats['overall']['wins'] += 1
             home_league_stats['home']['wins'] += 1
             home_league_stats['win_opp'].append(away_team_id)
@@ -190,7 +195,16 @@ class Schedule():
 
 class Home_Away_Random_Schedule(Schedule):
     def generate(self,teams):
-        schedule = [Game(t1,t2) for t1 in teams.values() for t2 in teams.values() if t1.id != t2.id]
+#        schedule = [Game(t1,t2) for t1 in teams.values() for t2 in teams.values() if t1.id != t2.id]
+        schedule=[]
+        for t1 in teams.values():
+            for t2 in teams.values():
+                if t1.id != t2.id:
+                    if t1.human_control or t2.human_control:
+                        schedule.append(Game(t1,t2,display=Display))
+                    else:
+                        schedule.append(Game(t1,t2))
+                        
         shuffle(schedule)
         
         return schedule
@@ -216,5 +230,5 @@ class Simple_Schedule(Schedule):
 
 ##### testing
 
-l=League(15)
+l=League(3)
 l.play_season()

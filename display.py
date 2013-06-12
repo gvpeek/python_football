@@ -54,20 +54,26 @@ class Display():
                   'special_button' : (128,0,128)}
         
     def check_user_input(self,run_play):
-        while True:
-            self.fps.tick(5)
-            
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    sys.exit()
+#        print 'user input...'
+        try:
+            while True:
+                self.fps.tick(5)
                 
-                elif event.type == MOUSEBUTTONDOWN:
-                    mousex, mousey = event.pos
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+    #                    sys.exit()
+                        pygame.quit()
+                        break
                     
-                    for button in self.play_buttons:
-                        if button.rect.collidepoint((mousex, mousey)):
-                            run_play(button.play)
-                            break
+                    elif event.type == MOUSEBUTTONDOWN:
+                        mousex, mousey = event.pos
+                        
+                        for button in self.play_buttons:
+                            if button.rect.collidepoint((mousex, mousey)):
+                                run_play(button.play)
+                                break
+        except:
+            pygame.quit()
         
 
     def update(self,*args):
@@ -87,11 +93,11 @@ class Display():
         horizontal_offset = 0
         
         self.screen.blit(self.myfont.render(scoreboard.scoreboard['home_city'] + ' ' + scoreboard.scoreboard['home_nickname'] + ' -- ' + str(scoreboard.scoreboard['home_score']), True, self.colors['white']),(25,5))
-        self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(180,5))
+        self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(360,5))
         if scoreboard.scoreboard['possession'] == 'Home':
             pygame.draw.circle(self.screen,self.colors['white'],(10,12),5)
         elif scoreboard.scoreboard['possession'] == 'Away':
-            pygame.draw.circle(self.screen,self.colors['white'],(165,12),5)
+            pygame.draw.circle(self.screen,self.colors['white'],(340,12),5)
                 
         for item in display:
             self.screen.blit(item, (5,35 + display_offset))
@@ -118,8 +124,7 @@ class Display():
     
         pygame.display.update()
 
-        print scoreboard.scoreboard['period'],scoreboard.scoreboard['clock']
-        print end_of_game, human_control
-        
-        if human_control and not end_of_game:
+#        if end_of_game:
+#            return
+        if human_control:
             self.check_user_input(run_play)       

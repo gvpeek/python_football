@@ -15,10 +15,13 @@ from playbook import Kickoff, Punt, FieldGoal
 from state_machine import initialize_state
 from stats import StatBook
 
+game_id = 0
+global game_id
+
 class Game():
     "Game"
     def __init__(self, home_team, away_team, display=None, league_game=False, division_game=False, conference_game=False, playoff_game=False, number_of_periods=4):
-#        self.game_id = get_next_game_id()
+        self.id = self.get_next_game_id()
         self.home = home_team
         self.away = away_team
 #        self.league_game = league_game
@@ -49,16 +52,28 @@ class Game():
         self.end_of_regulation = False
         self.overtime = False
         self.end_of_game = False
+#        if display:
         self.display = display
+#        else:
+#            self.display = None
         self.computer_pause = 0
         
+    def get_next_game_id(self):
+        global game_id
+        game_id += 1
+        return game_id 
+        
     def start_game(self,pause=0):
+        print self.id, self.get_home_team().team.city, self.get_away_team().team.city
         self.computer_pause = pause
         if self.display:
+            self.display = self.display()
             self.display.update(self.get_display_items())
+        print 'start game -determine turn'
         self._determine_turn(pause)
         
     def _determine_turn(self,pause):
+        print 'eog', self.end_of_game, self.current_state
         if not self.possession.offense.team.human_control:
             sleep(pause)
             play = self.possession.offense.team.coach.call_play(self.get_available_plays(),
@@ -73,7 +88,6 @@ class Game():
     def get_display_items(self):
 #        print self.possession.offense.team.human_control, self.end_of_game
         if self.possession.offense.team.human_control and not self.end_of_game:
-            print 'human'
             return self.possession.offense.team.human_control, self.end_of_game, self.run_play, self.get_available_plays(), self.field, self.scoreboard
         else:
             return self.possession.offense.team.human_control, self.end_of_game, False,{}, self.field, self.scoreboard
@@ -164,9 +178,13 @@ class Game():
         self.check_time_remaining()
         self.scoreboard.refresh(play,self.get_home_team().statbook,self.get_away_team().statbook)
         if self.display:
+#            print 'game-display update...'
             self.display.update(self.get_display_items())
         if not self.end_of_game:
+            print 'calling determine turn'
             self._determine_turn(self.computer_pause)
+#        else:
+#            self.display=None
         
         
     def check_time_remaining(self):
@@ -200,6 +218,7 @@ class Game():
             self.end_of_half = False
 #
         if (self.end_of_regulation and not self.overtime and self.current_state.timed_play()) or (self.overtime and self.get_score_difference()):                    
+            print 'end of game and current state none'
             self.end_of_game = True
             self.current_state = None
     
@@ -478,7 +497,7 @@ class StatKeeper():
         
 class Clock(object):
     "Basic Clock"
-    def __init__(self, quarter_length=15):
+    def __init__(self, quarter_length=5):
         self.quarter_length = quarter_length
         self.time_remaining = timedelta(seconds=(quarter_length*60))
 
