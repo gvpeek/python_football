@@ -59,7 +59,7 @@ class League():
         print self.standings
         
     def _determine_pct(self,wins,losses,ties):
-        return (wins + ties) / (float(wins + losses + ties))
+        return (wins + (ties / 2.0)) / (float(wins + losses + ties))
     
     def update_standings(self,
                          home_game_stats,

@@ -64,16 +64,22 @@ class Game():
         return game_id 
         
     def start_game(self,pause=0):
+        print 'begin start game'
         print self.id, self.get_home_team().team.city, self.get_away_team().team.city
         self.computer_pause = pause
         if self.display:
             self.display = self.display()
             self.display.update(self.get_display_items())
         print 'start game -determine turn'
-        self._determine_turn(pause)
+        print self.get_offense().team.human_control
+        ## initial play could have been human input so this wouldn't have been hit yet, so 
+        ## we need conditional check
+        if not self.end_of_game: 
+            self._determine_turn(pause)
+        print 'end start game'
         
     def _determine_turn(self,pause):
-        print 'eog', self.end_of_game, self.current_state
+#        print 'eog', self.end_of_game, self.current_state
         if not self.possession.offense.team.human_control:
             sleep(pause)
             play = self.possession.offense.team.coach.call_play(self.get_available_plays(),
