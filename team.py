@@ -3,8 +3,7 @@ Created on Mar 30, 2013
 
 @author: George
 '''
-from random import randint
-from collections import OrderedDict
+from random import randint, shuffle
 
 from playbook import Playbook
 from stats import StatBook
