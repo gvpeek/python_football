@@ -49,11 +49,12 @@ class League():
         self.teams =  [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]
         self.team_dict = {team.id: team for team in self.teams}
 ##### human test
-#        self.teams[0].human_control = True
+        self.teams[0].human_control = True
         
         self.divisions=self.create_divisions(self.teams,len(division_names))
         
-        self.schedule = Simple_Schedule().generate(self.divisions)
+#        self.schedule = Simple_Schedule().generate(self.divisions)
+        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
         
         self.standings = dict(zip(division_names,self.divisions))
         #[[t for t in div] for div in self.divisions]
@@ -214,16 +215,28 @@ class Schedule():
 
 class Home_Away_Random_Schedule(Schedule):
     def generate(self,teams):
-#        schedule = [Game(t1,t2) for t1 in teams.values() for t2 in teams.values() if t1.id != t2.id]
-        schedule=[]
-        for t1 in teams:
-            for t2 in teams:
-                if t1.id != t2.id:
-                    if t1.human_control or t2.human_control:
-                        schedule.append(Game(t1,t2,display=Display))
-                    else:
-                        schedule.append(Game(t1,t2))
-                        
+        games = [Game(t1,t2) for t1 in teams for t2 in teams if t1.id != t2.id]
+#        schedule=[]
+#        for t1 in teams:
+#            for t2 in teams:
+#                if t1.id != t2.id:
+        for game in games:
+            if game.home.human_control or game.away.human_control:
+                game.display=Display
+#            else:
+#                schedule.append(Game(t1,t2))
+        schedule =[]        
+        nbr_weeks = len(games) / len(teams)
+        r = len(games) % len(teams)
+        split_start=0
+        split_end=0
+        for x in xrange(nbr_weeks):
+            split_end += nbr_weeks
+            if r:
+                split_end += 1
+                r -= 1
+            schedule.append(games[split_start:split_end])
+            split_start=split_end
         shuffle(schedule)
         
         return schedule
@@ -238,7 +251,7 @@ class Simple_Schedule(Schedule):
             # numbered divisions require an extra week due to each team having a bye
             balanced = 1 - (len(division) % 2)
             nbr_weeks = len(division) - balanced
-            max_weeks = 2 * nbr_weeks + 1
+            max_weeks = 2 * nbr_weeks
             try:
                 schedule[max_weeks]
             except:
@@ -253,10 +266,10 @@ class Simple_Schedule(Schedule):
             for week in range(nbr_weeks):
                 if anchor_team:
                     schedule[week].append(Game(anchor_team, rotation2[-1])) 
-                    schedule[week+nbr_weeks+1].append(Game(rotation2[-1], anchor_team))
+                    schedule[week+nbr_weeks].append(Game(rotation2[-1], anchor_team))
                 for t1, t2 in zip(rotation1,rotation2):
                     schedule[week].append(Game(t1,t2))
-                    schedule[week+nbr_weeks+1].append(Game(t2,t1))
+                    schedule[week+nbr_weeks].append(Game(t2,t1))
                 
                 rotation1.append(rotation2.pop())
                 rotation2.appendleft(rotation1.popleft())
@@ -266,5 +279,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(42,['East','Central','West','Northwest','Southeast'])
+l=League(4)#,['East','Central','West','Northwest','Southeast'])
 l.play_season()
