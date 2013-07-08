@@ -64,22 +64,16 @@ class Game():
         return game_id 
         
     def start_game(self,pause=0):
-        print 'begin start game'
-        print self.id, self.get_home_team().team.city, self.get_away_team().team.city
         self.computer_pause = pause
         if self.display:
             self.display = self.display()
             self.display.update(self.get_display_items())
-        print 'start game -determine turn'
-        print self.get_offense().team.human_control
         ## initial play could have been human input so this wouldn't have been hit yet, so 
         ## we need conditional check
         if not self.end_of_game: 
             self._determine_turn(pause)
-        print 'end start game'
         
     def _determine_turn(self,pause):
-#        print 'eog', self.end_of_game, self.current_state
         if not self.possession.offense.team.human_control:
             sleep(pause)
             play = self.possession.offense.team.coach.call_play(self.get_available_plays(),
@@ -92,7 +86,6 @@ class Game():
             self.run_play(play)
 
     def get_display_items(self):
-#        print self.possession.offense.team.human_control, self.end_of_game
         if self.possession.offense.team.human_control and not self.end_of_game:
             return self.possession.offense.team.human_control, self.end_of_game, self.run_play, self.get_available_plays(), self.field, self.scoreboard
         else:
@@ -184,13 +177,9 @@ class Game():
         self.check_time_remaining()
         self.scoreboard.refresh(play,self.get_home_team().statbook,self.get_away_team().statbook)
         if self.display:
-#            print 'game-display update...'
             self.display.update(self.get_display_items())
         if not self.end_of_game:
-            print 'calling determine turn'
             self._determine_turn(self.computer_pause)
-#        else:
-#            self.display=None
         
         
     def check_time_remaining(self):
@@ -224,7 +213,6 @@ class Game():
             self.end_of_half = False
 #
         if (self.end_of_regulation and not self.overtime and self.current_state.timed_play()) or (self.overtime and self.get_score_difference()):                    
-            print 'end of game and current state none'
             self.end_of_game = True
             self.current_state = None
     
@@ -503,7 +491,7 @@ class StatKeeper():
         
 class Clock(object):
     "Basic Clock"
-    def __init__(self, quarter_length=5):
+    def __init__(self, quarter_length=15):
         self.quarter_length = quarter_length
         self.time_remaining = timedelta(seconds=(quarter_length*60))
 
