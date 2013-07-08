@@ -21,10 +21,17 @@ class PlayButton():
         self.text = myfont.render(play.name, True, colors['white'])
         
         if play.is_rush():
-            self.color = colors['rush_button']
+            if play.name == 'Run Clock':
+                self.group = 0
+                self.color = colors['special_button']
+            else:
+                self.group = 1
+                self.color = colors['rush_button']
         elif play.is_pass():
+            self.group = 2
             self.color = colors['pass_button']
         else:
+            self.group = 0
             self.color = colors['special_button']
             
     def display_button(self,screen):
@@ -39,7 +46,7 @@ class Display():
     def __init__(self):
         pygame.init()
         
-        self.screen = pygame.display.set_mode((1300,900))
+        self.screen = pygame.display.set_mode((700,600))
         self.myfont = pygame.font.Font(None,20)
         self.fps = pygame.time.Clock()
         self.reset_coords = (-1000,-1000)
@@ -90,7 +97,9 @@ class Display():
     
     ## stats display
         display_offset = 0
-        horizontal_offset = 0
+        button_offset = {0 : 0,
+                         1 : 0,
+                         2 : 0}
         
         self.screen.blit(self.myfont.render(scoreboard.scoreboard['home_city'] + ' ' + scoreboard.scoreboard['home_nickname'] + ' -- ' + str(scoreboard.scoreboard['home_score']), True, self.colors['white']),(25,5))
         self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(360,5))
@@ -109,17 +118,48 @@ class Display():
                                         self.colors) for play in available_plays.values()]
     ## play button display
         for button in self.play_buttons:
-            button.update_coords(((5 + horizontal_offset),(50 + display_offset)))
+            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height)) + display_offset))))
             button.display_button(self.screen)
-            horizontal_offset += 130
-      
+            button_offset[button.group] += 130
+
+        if self.play_buttons:
+            display_offset += (self.play_buttons[0].rect.height * len(button_offset.keys()) * 1.2) 
     ## field display
-        pygame.draw.rect(self.screen,self.colors['field'],(5,(100 + display_offset),1200,500))
-        pygame.draw.rect(self.screen,field.endzone_prim_color,(5,(100 + display_offset),100,500))
-        pygame.draw.rect(self.screen,field.endzone_prim_color,(1105,(100 + display_offset),100,500))
-        for line in range(12):
-            pygame.draw.line(self.screen,self.colors['white'],((5 + (line * 100)),(100 + display_offset)),((5 + (line * 100)),(100 + display_offset + 500)))
-        pygame.draw.ellipse(self.screen,self.colors['football'],(((10 * field.absolute_yardline) + 90), (display_offset + 300),30,15))
+        field_seg = (.5 * field.length)
+        pygame.draw.rect(self.screen, # full field
+                         self.colors['field'],
+                         (
+                          5,
+                          (100 + display_offset),
+                          (12*field_seg),
+                          ((12*field_seg)/2.4)
+                         ))
+        pygame.draw.rect(self.screen, # home endzone
+                         field.endzone_prim_color,
+                         (
+                          5,
+                          (100 + display_offset),
+                          (field_seg),
+                          ((12*field_seg)/2.4)
+                         ))
+        pygame.draw.rect(self.screen, #away endzone
+                         field.endzone_prim_color,
+                         (
+                          ((11*field_seg)+5),
+                          (100 + display_offset),
+                          (field_seg),
+                          ((12*field_seg)/2.4)
+                         ))
+        for line in range(int((field.length / 10.0)) + 2): # field lines
+            pygame.draw.line(self.screen,
+                             self.colors['white'],
+                             (
+                              (5 + (line * (field.length / 2.0))),(100 + display_offset)),
+                              ((5 + (line * (field.length / 2.0))),(100 + display_offset + (6*field.length)/2.4))
+                             )
+        pygame.draw.ellipse(self.screen, # ball
+                            self.colors['football'],
+                            (((5 * field.absolute_yardline) + (field_seg)), (display_offset + 300),30,15))
     
     
         pygame.display.update()
