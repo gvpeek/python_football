@@ -41,22 +41,39 @@ with open(r'csv_source_files\nicknames.csv', 'r+b') as nicknames_file:
         nicknames.append(Nickname(*n[0:3]))
         nickname_list.append(n[0])
         
-print city_list
-print nickname_list
-
 
 class League():
-    def __init__(self,number_of_teams):
-        self.teams = {team.id: team for team in [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]}
+    def __init__(self,
+                 number_of_teams,
+                 division_names=['PFL']):
+        self.teams =  [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]
+        self.team_dict = {team.id: team for team in self.teams}
 ##### human test
-        human=Team(choice(city_list),choice(nickname_list),True)
-        self.teams[human.id] = human
-        print self.teams
+#        self.teams[0].human_control = True
         
-        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
+        self.divisions=self.create_divisions(self.teams,len(division_names))
         
-        self.standings = [t for t in self.teams.values()]
-        print self.standings
+        self.schedule = Simple_Schedule().generate(self.divisions)
+        
+        self.standings = dict(zip(division_names,self.divisions))
+        #[[t for t in div] for div in self.divisions]
+
+    def create_divisions(self,teams,nbr_div):
+        divisions=[]
+        t=len(teams)
+        n=t/nbr_div
+        r=t%nbr_div
+        print n, r
+        split_start=0
+        split_end=0
+        for x in xrange(nbr_div):
+            split_end += n
+            if r:
+                split_end += 1
+                r -= 1
+            divisions.append(teams[split_start:split_end])
+            split_start=split_end
+        return divisions
         
     def _determine_pct(self,wins,losses,ties):
         return (wins + (ties / 2.0)) / (float(wins + losses + ties))
@@ -106,25 +123,26 @@ class League():
         self.sort_standings()
             
     def play_season(self):
-        for game in self.schedule:
-            game.start_game()
-            self.update_standings(game.get_home_team().statbook.stats,
-                                  game.get_away_team().statbook.stats,
-                                  game.get_home_team().team.id,
-                                  game.get_away_team().team.id,
-                                  game.get_home_team().team.league_stats,
-                                  game.get_away_team().team.league_stats)
-            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
-            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
-            if game.overtime:
-                print 'OT'
-            print
+        for week in self.schedule:
+                for game in week:
+                    game.start_game()
+                    self.update_standings(game.get_home_team().statbook.stats,
+                                          game.get_away_team().statbook.stats,
+                                          game.get_home_team().team.id,
+                                          game.get_away_team().team.id,
+                                          game.get_home_team().team.league_stats,
+                                          game.get_away_team().team.league_stats)
+                    print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
+                    print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
+                    if game.overtime:
+                        print 'OT'
+                    print
             
-            if (self.schedule.index(game) + 1) % len(self.teams) == 0:
                 self.print_standings()
 
     def sort_standings(self):
-        self.standings.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
+        for div in self.standings.values():
+            div.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
 
     def get_max_width(self, table, index):
         """
@@ -134,56 +152,57 @@ class League():
         return max([len(row[index]) for row in table])
 
     def print_standings(self):
-        table=[[' ',
-               'W',
-               'L',
-               'T',
-               'Pct.',
-               'HW',
-               'HL',
-               'HT',
-               'HPct.',
-               'AW',
-               'AL',
-               'AT',
-               'APct.'
-               ]]
-        table.extend([[s.city + ' ' + s.nickname,
-               str(s.league_stats['overall']['wins']),
-               str(s.league_stats['overall']['losses']),
-               str(s.league_stats['overall']['ties']),
-               str(s.league_stats['overall']['pct']),
-               str(s.league_stats['home']['wins']),
-               str(s.league_stats['home']['losses']),
-               str(s.league_stats['home']['ties']),
-               str(s.league_stats['home']['pct']),
-               str(s.league_stats['away']['wins']),
-               str(s.league_stats['away']['losses']),
-               str(s.league_stats['away']['ties']),
-               str(s.league_stats['away']['pct'])] for s in self.standings])
-#            print '{} {} \t {}-{}-{} {:.3f}'.format(s.city,
-#                                       s.nickname,
-#                                       s.league_stats['overall']['wins'],
-#                                       s.league_stats['overall']['losses'],
-#                                       s.league_stats['overall']['ties'],
-#                                       s.league_stats['overall']['pct'])
-        '''
-        below from http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
-        '''
-        col_paddings = []
-        
-        for i in range(len(table[0])):
-            col_paddings.append(self.get_max_width(table, i))
-
-        for row in table:
-            # left col
-            print >> stdout, row[0].ljust(col_paddings[0] + 1),
-            # rest of the cols
-            for i in range(1, len(row)):
-                col = row[i].rjust(col_paddings[i] + 2)
-                print >> stdout, col,
-            print >> stdout
-        print 
+        for div in self.standings:
+            table=[[div,
+                   'W',
+                   'L',
+                   'T',
+                   'Pct.',
+                   'HW',
+                   'HL',
+                   'HT',
+                   'HPct.',
+                   'AW',
+                   'AL',
+                   'AT',
+                   'APct.'
+                   ]]
+            table.extend([[s.city + ' ' + s.nickname,
+                   str(s.league_stats['overall']['wins']),
+                   str(s.league_stats['overall']['losses']),
+                   str(s.league_stats['overall']['ties']),
+                   str(s.league_stats['overall']['pct']),
+                   str(s.league_stats['home']['wins']),
+                   str(s.league_stats['home']['losses']),
+                   str(s.league_stats['home']['ties']),
+                   str(s.league_stats['home']['pct']),
+                   str(s.league_stats['away']['wins']),
+                   str(s.league_stats['away']['losses']),
+                   str(s.league_stats['away']['ties']),
+                   str(s.league_stats['away']['pct'])] for s in self.standings[div]])
+    #            print '{} {} \t {}-{}-{} {:.3f}'.format(s.city,
+    #                                       s.nickname,
+    #                                       s.league_stats['overall']['wins'],
+    #                                       s.league_stats['overall']['losses'],
+    #                                       s.league_stats['overall']['ties'],
+    #                                       s.league_stats['overall']['pct'])
+            '''
+            below from http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
+            '''
+            col_paddings = []
+            
+            for i in range(len(table[0])):
+                col_paddings.append(self.get_max_width(table, i))
+    
+            for row in table:
+                # left col
+                print >> stdout, row[0].ljust(col_paddings[0] + 1),
+                # rest of the cols
+                for i in range(1, len(row)):
+                    col = row[i].rjust(col_paddings[i] + 2)
+                    print >> stdout, col,
+                print >> stdout
+            print 
 
 
 class Schedule():
@@ -197,8 +216,8 @@ class Home_Away_Random_Schedule(Schedule):
     def generate(self,teams):
 #        schedule = [Game(t1,t2) for t1 in teams.values() for t2 in teams.values() if t1.id != t2.id]
         schedule=[]
-        for t1 in teams.values():
-            for t2 in teams.values():
+        for t1 in teams:
+            for t2 in teams:
                 if t1.id != t2.id:
                     if t1.human_control or t2.human_control:
                         schedule.append(Game(t1,t2,display=Display))
@@ -210,25 +229,42 @@ class Home_Away_Random_Schedule(Schedule):
         return schedule
         
 class Simple_Schedule(Schedule):
-    def generate(self,teams):
-        anchor_team = None
-        schedule = {}
-        week = 0
-        ## gpw is games per week
-        gpw = int(ceil(len(teams) / 2.0))
-        rotation1 = deque(teams[:gpw])
-        rotation2 = deque(teams[-gpw:])
-        if len(teams) % 2 == 0:
-            anchor_team = rotation1.popleft()
-        for i in range(len(teams) - 1):
-            week += 1
-            schedule[week] = [(anchor_team, rotation2[-1])] + zip(rotation1,rotation2)
-            rotation1.append(rotation2.pop())
-            rotation2.appendleft(rotation1.popleft())
-            # print anchor_team, rotation1, rotation2
+    def generate(self,league):
+        schedule = []
+        for division in league:
+            anchor_team = None
+            # 'balanced' will contain 1 if even number of teams,, 0 if odd
+            # used later to calculate number of weeks needed, since odd
+            # numbered divisions require an extra week due to each team having a bye
+            balanced = 1 - (len(division) % 2)
+            nbr_weeks = len(division) - balanced
+            max_weeks = 2 * nbr_weeks + 1
+            try:
+                schedule[max_weeks]
+            except:
+                for x in xrange(max_weeks - len(schedule)):
+                    schedule.append([])
+            ## gpw is games per week
+            gpw = len(division) / 2
+            rotation1 = deque(division[:gpw])
+            rotation2 = deque(division[gpw:])
+            if balanced:
+                anchor_team = rotation1.popleft()
+            for week in range(nbr_weeks):
+                if anchor_team:
+                    schedule[week].append(Game(anchor_team, rotation2[-1])) 
+                    schedule[week+nbr_weeks+1].append(Game(rotation2[-1], anchor_team))
+                for t1, t2 in zip(rotation1,rotation2):
+                    schedule[week].append(Game(t1,t2))
+                    schedule[week+nbr_weeks+1].append(Game(t2,t1))
+                
+                rotation1.append(rotation2.pop())
+                rotation2.appendleft(rotation1.popleft())
+        
+        shuffle(schedule)
         return schedule
-
+    
 ##### testing
 
-l=League(3)
+l=League(42,['East','Central','West','Northwest','Southeast'])
 l.play_season()
