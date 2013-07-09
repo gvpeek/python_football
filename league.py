@@ -53,8 +53,8 @@ class League():
         
         self.divisions=self.create_divisions(self.teams,len(division_names))
         
-#        self.schedule = Simple_Schedule().generate(self.divisions)
-        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
+        self.schedule = Simple_Schedule().generate(self.divisions)
+#        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
         
         self.standings = dict(zip(division_names,self.divisions))
         #[[t for t in div] for div in self.divisions]
@@ -270,14 +270,19 @@ class Simple_Schedule(Schedule):
                 for t1, t2 in zip(rotation1,rotation2):
                     schedule[week].append(Game(t1,t2))
                     schedule[week+nbr_weeks].append(Game(t2,t1))
-                
+
                 rotation1.append(rotation2.pop())
                 rotation2.appendleft(rotation1.popleft())
+        
+        for week in schedule:
+            for game in week:
+                if game.home.human_control or game.away.human_control:
+                    game.display=Display        
         
         shuffle(schedule)
         return schedule
     
 ##### testing
 
-l=League(4)#,['East','Central','West','Northwest','Southeast'])
+l=League(20,['East','Central','West','Northwest','Southeast'])
 l.play_season()
