@@ -18,21 +18,26 @@ class PlayButton():
     def __init__(self, coords, play,myfont,colors):
         self.play = play
         self.rect = pygame.Rect(coords,(100,20))
-        self.text = myfont.render(play.name, True, colors['white'])
-        
+                
         if play.is_rush():
             if play.name == 'Run Clock':
                 self.group = 0
                 self.color = colors['special_button']
+                text_color=colors['black']
             else:
                 self.group = 1
                 self.color = colors['rush_button']
+                text_color=colors['white']
         elif play.is_pass():
+            text_color=colors['white']
             self.group = 2
             self.color = colors['pass_button']
         else:
+            text_color=colors['black']
             self.group = 0
             self.color = colors['special_button']
+        
+        self.text = myfont.render(play.name, True, text_color)
             
     def display_button(self,screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -47,18 +52,18 @@ class Display():
         pygame.init()
         
         self.screen = pygame.display.set_mode((700,600))
-        self.myfont = pygame.font.Font(None,20)
+        self.myfont = pygame.font.SysFont('franklingothicbook',12)
         self.fps = pygame.time.Clock()
         self.reset_coords = (-1000,-1000)
         self.play_buttons=[]
-        self.colors = {'blue' : (0,0,255),
-                  'white' : (255,255,255),
+        self.colors = {'white' : (255,255,255),
                   'black' : (0,0,0),
-                  'field' : (0,255,0),
+                  'background' : (51,153,204),
+                  'field' : (153,204,51),
                   'football' : (139,69,19),
-                  'rush_button' : (128,0,0),
-                  'pass_button' : (0,0,128),
-                  'special_button' : (128,0,128)}
+                  'rush_button' : (255,102,51),
+                  'pass_button' : (51,102,153),
+                  'special_button' : (255,204,0)}
         
     def check_user_input(self,run_play):
 #        print 'user input...'
@@ -86,7 +91,7 @@ class Display():
     def update(self,*args):
         human_control, end_of_game, run_play, available_plays, field, scoreboard = args[0]
 
-        self.screen.fill(self.colors['blue'])
+        self.screen.fill(self.colors['background'])
 
         display =[self.myfont.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
                   self.myfont.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
