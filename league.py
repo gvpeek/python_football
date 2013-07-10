@@ -45,11 +45,15 @@ with open(r'csv_source_files\nicknames.csv', 'r+b') as nicknames_file:
 class League():
     def __init__(self,
                  number_of_teams,
-                 division_names=['PFL']):
+                 division_names=['PFL'],
+                 nbr_playoff_teams=None):
+        self.nbr_playoff_teams = nbr_playoff_teams
+        self.playoff_field = []
+        
         self.teams =  [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]
         self.team_dict = {team.id: team for team in self.teams}
 ##### human test
-        self.teams[0].human_control = True
+#        self.teams[0].human_control = True
         
         self.divisions=self.create_divisions(self.teams,len(division_names))
         
@@ -64,7 +68,6 @@ class League():
         t=len(teams)
         n=t/nbr_div
         r=t%nbr_div
-        print n, r
         split_start=0
         split_end=0
         for x in xrange(nbr_div):
@@ -140,6 +143,42 @@ class League():
                     print
             
                 self.print_standings()
+        
+        if self.nbr_playoff_teams:   
+            self.play_playoffs()
+
+    def play_playoffs(self):
+        self.determine_playoff_field()
+        round = 1
+        
+        current_field = self.playoff_field
+        
+        self.generate_playoff_schedule(current_field)
+        
+        
+        
+                
+    def determine_playoff_field(self):
+        division_winners=[]
+        wild_card=[]
+        for div in self.standings.values():
+            division_winners.append(div[0])
+            wild_card.extend(div[1:])
+            
+        division_winners.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
+        wild_card.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
+
+        self.playoff_field = division_winners + wild_card
+        self.playoff_field = self.playoff_field[:self.nbr_playoff_teams]
+
+    def generate_playoff_schedule(self,current_field):
+        s=2
+        c=1
+        while s > 1:
+            c *= 2
+            s=len(current_field) / c
+        r = len(current_field) % c
+        print len(current_field), c, r
 
     def sort_standings(self):
         for div in self.standings.values():
@@ -284,5 +323,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(20,['East','Central','West','Northwest','Southeast'])
+l=League(32,['Group ' + x for x in 'ABCDEFGH'],13)
 l.play_season()
