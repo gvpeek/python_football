@@ -153,7 +153,7 @@ class League():
         
         current_field = self.playoff_field
         
-        self.generate_playoff_schedule(current_field)
+        current_field = self.generate_playoff_schedule(current_field)
         
         
         
@@ -172,6 +172,7 @@ class League():
         self.playoff_field = self.playoff_field[:self.nbr_playoff_teams]
 
     def generate_playoff_schedule(self,current_field):
+        round_contenders=[]
         s=2
         c=1
         while s > 1:
@@ -179,6 +180,14 @@ class League():
             s=len(current_field) / c
         r = len(current_field) % c
         print len(current_field), c, r
+        
+        if r:
+            cf_deque=deque(current_field)
+            cf_deque.rotate(-r)
+            for x in xrange(r*2):
+                round_contenders.append(cf_deque.popleft())
+        else:
+            round_contenders=current_field
 
     def sort_standings(self):
         for div in self.standings.values():
