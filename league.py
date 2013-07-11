@@ -61,7 +61,6 @@ class League():
 #        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
         
         self.standings = dict(zip(division_names,self.divisions))
-        #[[t for t in div] for div in self.divisions]
 
     def create_divisions(self,teams,nbr_div):
         divisions=[]
@@ -149,13 +148,16 @@ class League():
 
     def play_playoffs(self):
         self.determine_playoff_field()
-        round = 1
+        round = 0
         
         current_field = self.playoff_field
         
-        current_field = self.generate_playoff_schedule(current_field)
+        while len(current_field) > 1:
+            round += 1
+            print '\nRound', round
+            current_field = self.generate_playoff_schedule(current_field)
         
-        
+        print 'Champion\n', current_field[0].city, current_field[0].nickname
         
                 
     def determine_playoff_field(self):
@@ -172,22 +174,56 @@ class League():
         self.playoff_field = self.playoff_field[:self.nbr_playoff_teams]
 
     def generate_playoff_schedule(self,current_field):
-        round_contenders=[]
+#        print '\nAll'
+#        for team in current_field:
+#                print team.city, team.nickname
+        current_round_teams=[]
+        next_round_teams=[]
         s=2
         c=1
         while s > 1:
             c *= 2
             s=len(current_field) / c
         r = len(current_field) % c
-        print len(current_field), c, r
         
         if r:
             cf_deque=deque(current_field)
-            cf_deque.rotate(-r)
+            cf_deque.rotate(r*2)
             for x in xrange(r*2):
-                round_contenders.append(cf_deque.popleft())
+                current_round_teams.append(cf_deque.popleft())
+            next_round_teams.extend(cf_deque)
         else:
-            round_contenders=current_field
+            current_round_teams=current_field
+
+#        print '\nTop'
+#        try:
+#            for team in cf_deque:
+#                print team.city, team.nickname
+#        except:
+#            pass
+#        print '\nCurrent'
+#        for team in current_round_teams:
+#                print team.city, team.nickname
+
+        round_games=[]
+        for x in xrange(len(current_round_teams)/2):
+            round_games.append(Game(current_round_teams[x],current_round_teams[-x-1]))
+        
+        for game in round_games:
+            if game.home.human_control or game.away.human_control:
+                game.display=Display
+            game.start_game()
+            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
+            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
+            if game.overtime:
+                print 'OT'
+            print
+            
+            next_round_teams.append(game.get_winner())
+            
+        next_round_teams.sort(reverse=True, key=lambda t: t.league_stats['overall']['pct'])
+        return next_round_teams
+
 
     def sort_standings(self):
         for div in self.standings.values():
@@ -229,12 +265,6 @@ class League():
                    str(s.league_stats['away']['losses']),
                    str(s.league_stats['away']['ties']),
                    str(s.league_stats['away']['pct'])] for s in self.standings[div]])
-    #            print '{} {} \t {}-{}-{} {:.3f}'.format(s.city,
-    #                                       s.nickname,
-    #                                       s.league_stats['overall']['wins'],
-    #                                       s.league_stats['overall']['losses'],
-    #                                       s.league_stats['overall']['ties'],
-    #                                       s.league_stats['overall']['pct'])
             '''
             below from http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
             '''
@@ -264,15 +294,11 @@ class Schedule():
 class Home_Away_Random_Schedule(Schedule):
     def generate(self,teams):
         games = [Game(t1,t2) for t1 in teams for t2 in teams if t1.id != t2.id]
-#        schedule=[]
-#        for t1 in teams:
-#            for t2 in teams:
-#                if t1.id != t2.id:
+
         for game in games:
             if game.home.human_control or game.away.human_control:
                 game.display=Display
-#            else:
-#                schedule.append(Game(t1,t2))
+
         schedule =[]        
         nbr_weeks = len(games) / len(teams)
         r = len(games) % len(teams)
@@ -332,5 +358,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(32,['Group ' + x for x in 'ABCDEFGH'],13)
+l=League(32,['Group ' + x for x in 'ABCDEFGH'],12)
 l.play_season()
