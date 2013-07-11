@@ -160,6 +160,18 @@ class Game():
     
     def get_score_difference(self):
         return self.possession.offense.statbook.stats['score'] - self.possession.defense.statbook.stats['score']
+
+    def get_winner(self):
+        if self.end_of_game:
+                if self.get_home_team().statbook.stats['score'] > self.get_away_team().statbook.stats['score']:
+                    return self.get_home_team().team
+                elif self.get_home_team().statbook.stats['score'] < self.get_away_team().statbook.stats['score']:
+                    return self.get_away_team().team
+                else:
+                    return None
+        else:
+            return 'This game has not been completed.'
+                
             
     def run_play(self,play_call):
         play = Play(self.possession.offense,
