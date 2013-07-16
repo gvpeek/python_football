@@ -20,7 +20,17 @@ global game_id
 
 class Game():
     "Game"
-    def __init__(self, home_team, away_team, display=None, league_game=False, division_game=False, conference_game=False, playoff_game=False, number_of_periods=4):
+    def __init__(self, 
+                 home_team, 
+                 away_team, 
+                 display=None, 
+                 number_of_periods=4,
+                 use_overtime=False,
+                 number_of_overtime_periods=1, 
+                 league_game=False, 
+                 division_game=False, 
+                 conference_game=False, 
+                 playoff_game=False):
         self.id = self.get_next_game_id()
         self.home = home_team
         self.away = away_team
@@ -29,6 +39,8 @@ class Game():
 #        self.conference_game = conference_game 
 #        self.playoff_game = playoff_game  
         self.number_of_periods = number_of_periods
+        self.use_overtime = use_overtime
+        self.number_of_overtime_periods = number_of_overtime_periods
         self.period = 1
         self.field = Field(self.get_offense,home_team.primary_color,home_team.secondary_color)
         self.plays = []
@@ -50,7 +62,7 @@ class Game():
                                      self.get_offense)
         self.end_of_half = False
         self.end_of_regulation = False
-        self.overtime = False
+        self.in_overtime = False
         self.end_of_game = False
 #        if display:
         self.display = display
@@ -203,19 +215,22 @@ class Game():
                 self.current_clock = self.timekeeping.pop()
             else:
                 self.end_of_regulation = True
-                if not self.get_score_difference(): 
-                    if not self.overtime:
-                        self.overtime = True
+                if not self.get_score_difference() and self.use_overtime: 
+                    if not self.in_overtime:
+                        self.in_overtime = True
                         self._coin_flip()
                         self.set_overtime()
                         self.current_state = initialize_state(self.field,
                                                               self.change_possession,
                                                               self.get_offense)
-                if self.overtime:
-#                    print 'in overtime'
-                    self.period += 1
-#                    self.scoreboard.period = self.period
-                    self.current_clock = Clock()
+                if self.in_overtime:
+#                    print 'in in_overtime'
+                    if not self.number_of_overtime_periods or (self.period < (self.number_of_periods + self.number_of_overtime_periods)):
+                        self.period += 1
+                        self.current_clock = Clock()
+                    else:
+                        self.end_of_game = True
+                        self.current_state = None
                         
         if self.end_of_half and self.current_state.timed_play():
             self.set_second_half()
@@ -224,7 +239,7 @@ class Game():
                                                    self.get_offense)
             self.end_of_half = False
 #
-        if (self.end_of_regulation and not self.overtime and self.current_state.timed_play()) or (self.overtime and self.get_score_difference()):                    
+        if (self.end_of_regulation and not self.in_overtime and self.current_state.timed_play()) or (self.in_overtime and self.get_score_difference()):                    
             self.end_of_game = True
             self.current_state = None
     
