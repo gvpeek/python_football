@@ -49,6 +49,10 @@ class League():
                  nbr_playoff_teams=None):
         self.nbr_playoff_teams = nbr_playoff_teams
         self.playoff_field = []
+
+        if number_of_teams < len(division_names):
+            'Print number of teams cannot be less than number of divisions.'
+            raise Exception
         
         self.teams =  [Team(choice(city_list),choice(nickname_list)) for t in range(number_of_teams)]
         self.team_dict = {team.id: team for team in self.teams}
@@ -57,7 +61,7 @@ class League():
         
         self.divisions=self.create_divisions(self.teams,len(division_names))
         
-        self.schedule = Simple_Schedule().generate(self.divisions)
+        self.schedule = Simple_Schedule().generate(self.divisions,True,1)
 #        self.schedule = Home_Away_Random_Schedule().generate(self.teams)
         
         self.standings = dict(zip(division_names,self.divisions))
@@ -137,8 +141,8 @@ class League():
                                           game.get_away_team().team.league_stats)
                     print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
                     print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
-                    if game.overtime:
-                        print 'OT'
+                    if game.in_overtime:
+                        print (game.period-game.number_of_periods), 'OT'
                     print
             
                 self.print_standings()
@@ -174,9 +178,6 @@ class League():
         self.playoff_field = self.playoff_field[:self.nbr_playoff_teams]
 
     def generate_playoff_schedule(self,current_field):
-#        print '\nAll'
-#        for team in current_field:
-#                print team.city, team.nickname
         current_round_teams=[]
         next_round_teams=[]
         s=2
@@ -195,19 +196,9 @@ class League():
         else:
             current_round_teams=current_field
 
-#        print '\nTop'
-#        try:
-#            for team in cf_deque:
-#                print team.city, team.nickname
-#        except:
-#            pass
-#        print '\nCurrent'
-#        for team in current_round_teams:
-#                print team.city, team.nickname
-
         round_games=[]
         for x in xrange(len(current_round_teams)/2):
-            round_games.append(Game(current_round_teams[x],current_round_teams[-x-1]))
+            round_games.append(Game(current_round_teams[x],current_round_teams[-x-1],use_overtime=True,number_of_overtime_periods=0))
         
         for game in round_games:
             if game.home.human_control or game.away.human_control:
@@ -215,8 +206,8 @@ class League():
             game.start_game()
             print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
             print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
-            if game.overtime:
-                print 'OT'
+            if game.in_overtime:
+                print (game.period-game.number_of_periods), 'OT'
             print
             
             next_round_teams.append(game.get_winner())
@@ -316,7 +307,11 @@ class Home_Away_Random_Schedule(Schedule):
         return schedule
         
 class Simple_Schedule(Schedule):
-    def generate(self,league):
+    def generate(self,
+                 league,
+                 overtime,
+                 overtime_length):
+        # @TODO add variables to easily set overtime
         schedule = []
         for division in league:
             anchor_team = None
@@ -339,11 +334,19 @@ class Simple_Schedule(Schedule):
                 anchor_team = rotation1.popleft()
             for week in range(nbr_weeks):
                 if anchor_team:
-                    schedule[week].append(Game(anchor_team, rotation2[-1])) 
-                    schedule[week+nbr_weeks].append(Game(rotation2[-1], anchor_team))
+                    schedule[week].append(Game(anchor_team, rotation2[-1],
+                                          use_overtime=overtime,
+                                          number_of_overtime_periods=overtime_length)) 
+                    schedule[week+nbr_weeks].append(Game(rotation2[-1], anchor_team,
+                                                    use_overtime=overtime,
+                                                    number_of_overtime_periods=overtime_length))
                 for t1, t2 in zip(rotation1,rotation2):
-                    schedule[week].append(Game(t1,t2))
-                    schedule[week+nbr_weeks].append(Game(t2,t1))
+                    schedule[week].append(Game(t1,t2,
+                                          use_overtime=overtime,
+                                          number_of_overtime_periods=overtime_length))
+                    schedule[week+nbr_weeks].append(Game(t2,t1,
+                                                    use_overtime=overtime,
+                                                    number_of_overtime_periods=overtime_length))
 
                 rotation1.append(rotation2.pop())
                 rotation2.appendleft(rotation1.popleft())
@@ -358,5 +361,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(32,['Group ' + x for x in 'ABCDEFGH'],12)
+l=League(64,['Group ' + x for x in 'ABCDEFGH'],12)
 l.play_season()
