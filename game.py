@@ -42,7 +42,11 @@ class Game():
         self.use_overtime = use_overtime
         self.number_of_overtime_periods = number_of_overtime_periods
         self.period = 1
-        self.field = Field(self.get_offense,home_team.primary_color,home_team.secondary_color)
+        self.field = Field(self.get_offense,
+                           home_team.primary_color,
+                           home_team.secondary_color,
+                           away_team.primary_color,
+                           away_team.secondary_color)
         self.plays = []
         self.coin_flip_winner = self._coin_flip()
         self._Possession = namedtuple('Possession', ['offense','defense'])
@@ -78,7 +82,7 @@ class Game():
     def start_game(self,pause=0):
         self.computer_pause = pause
         if self.display:
-            self.display = self.display()
+            self.display = self.display(self.field,self.scoreboard)
             self.display.update(self.get_display_items())
         ## initial play could have been human input so this wouldn't have been hit yet, so 
         ## we need conditional check
@@ -283,8 +287,10 @@ class Field():
     "Playing Field"
     def __init__(self, 
                  get_offense,
-                 endzone_prim_color=None,
-                 endzone_second_color=None,
+                 home_ez_prim_color,    
+                 home_ez_second_color,                 
+                 away_ez_prim_color,    
+                 away_ez_second_color,
                  length=100.0,
                  kickoff_yardline=30.0,
                  free_kick_yardline=20.0,
@@ -300,8 +306,10 @@ class Field():
         self.converted_yardline = self.kickoff_yardline
         self.home_endzone = 0.0
         self.away_endzone = self.length
-        self.endzone_prim_color = endzone_prim_color
-        self.endzone_second_color = endzone_second_color
+        self.endzone_color = {'home_primary' : home_ez_prim_color,
+                              'home_secondary' : home_ez_second_color,
+                              'away_primary' : away_ez_prim_color,
+                              'away_secondary' : away_ez_second_color}
         
         
     def get_distance_to_endzone(self):
