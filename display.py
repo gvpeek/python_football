@@ -5,17 +5,13 @@ Created on Aug 19, 2012
 '''
 
 import sys
-import pprint
+import os
 
 import pygame
 from pygame.locals import *
 
-from game import Game
-from team import Team
-#from playbook import Rush, Pass
-
 class PlayButton():
-    def __init__(self, coords, play,myfont,colors):
+    def __init__(self, coords, play,base_font,colors):
         self.play = play
         self.rect = pygame.Rect(coords,(100,20))
                 
@@ -37,7 +33,7 @@ class PlayButton():
             self.group = 0
             self.color = colors['special_button']
         
-        self.text = myfont.render(play.name, True, text_color)
+        self.text = base_font.render(play.name, True, text_color)
             
     def display_button(self,screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -48,22 +44,100 @@ class PlayButton():
 
 
 class Display():
-    def __init__(self):
+    def __init__(self,field,scoreboard):
         pygame.init()
         
         self.screen = pygame.display.set_mode((700,600))
-        self.myfont = pygame.font.SysFont('franklingothicbook',12)
+        self.base_font = pygame.font.SysFont('franklingothicbook',12)
+        self.sb_sm_font = pygame.font.SysFont('franklingothicbold',12)
+        self.sb_lg_font = pygame.font.SysFont('franklingothicbold',24)
+        self.sb_xl_font = pygame.font.SysFont('franklingothicbold',48)
+        self.ez_font = pygame.font.SysFont('franklingothicbold',36)
         self.fps = pygame.time.Clock()
         self.reset_coords = (-1000,-1000)
         self.play_buttons=[]
         self.colors = {'white' : (255,255,255),
                   'black' : (0,0,0),
                   'background' : (51,153,204),
+                  'scoreboard' : (88,89,91),
+                  'scoreboard_text' : (255,255,255),
                   'field' : (153,204,51),
                   'football' : (139,69,19),
                   'rush_button' : (255,102,51),
                   'pass_button' : (51,102,153),
                   'special_button' : (255,204,0)}
+
+        self.build_static_elements(field,scoreboard)
+        
+    def build_static_elements(self,field,scoreboard):
+        self.scoreboard_rect = pygame.Rect(5,5,300,200)
+        self.home_text = self.sb_lg_font.render("HOME",
+                                            True,
+                                            self.colors['scoreboard_text'])
+        self.away_text = self.sb_lg_font.render("AWAY",
+                                            True,
+                                            self.colors['scoreboard_text'])
+        
+        self.home_city = self.sb_lg_font.render(scoreboard.scoreboard['home_city'],
+                                            True,
+                                            self.colors['scoreboard_text'])
+        self.home_nick = self.sb_lg_font.render(scoreboard.scoreboard['home_nickname'],
+                                            True,
+                                            self.colors['scoreboard_text'])
+        self.away_city = self.sb_lg_font.render(scoreboard.scoreboard['away_city'],
+                                            True,
+                                            self.colors['scoreboard_text'])
+        self.away_nick = self.sb_lg_font.render(scoreboard.scoreboard['away_nickname'],
+                                            True,
+                                            self.colors['scoreboard_text'])
+                
+        self.logo = pygame.image.load(os.path.join('images','fieldlogo.png'))
+        logo_width, logo_height = self.logo.get_size()
+        scaler=.14
+        self.logo = pygame.transform.scale(self.logo,(int(logo_width * scaler),int(logo_height * scaler)))
+
+        self.football = pygame.image.load(os.path.join('images','football.png'))
+        football_width, football_height = self.football.get_size()
+        scaler=.33
+        self.football = pygame.transform.scale(self.football,(int(football_width * scaler),int(football_height * scaler)))
+        
+        # build field elements
+        self.field_seg = (.5 * field.length)
+        field_top=300
+        self.field_rect=pygame.Rect(5,
+                               field_top,
+                               (12*self.field_seg),
+                               ((12*self.field_seg)/2.4))
+        self.home_ez_rect=pygame.Rect(5,
+                                 field_top,
+                                  (self.field_seg),
+                                  ((12*self.field_seg)/2.4))
+        self.away_ez_rect=pygame.Rect(((11*self.field_seg)+5),
+                                 field_top,
+                                 (self.field_seg),
+                                 ((12*self.field_seg)/2.4))
+
+        self.field_lines=[]
+        for x in range(1, int((field.length / 10.0)) + 2): # field lines
+            self.field_lines.append([((5 + (x * (field.length / 2.0))),(field_top)),
+                                    ((5 + (x * (field.length / 2.0))),(field_top + (6*field.length)/2.4))])
+        
+        self.home_ez_text=self.ez_font.render(scoreboard.scoreboard['home_city'].upper(),
+                                                         True,
+                                                         field.endzone_color['home_secondary'])
+        self.home_ez_text=pygame.transform.rotate(self.home_ez_text,90)
+        self.home_ez_textpos=self.home_ez_text.get_rect()
+        self.home_ez_textpos.centerx, self.home_ez_textpos.centery=self.home_ez_rect.centerx, self.home_ez_rect.centery
+
+        self.away_ez_text=self.ez_font.render(scoreboard.scoreboard['away_city'].upper(),
+                                                         True,
+                                                         field.endzone_color['away_secondary'])
+        self.away_ez_text=pygame.transform.rotate(self.away_ez_text,-90)
+        self.away_ez_textpos=self.away_ez_text.get_rect()
+        self.away_ez_textpos.centerx, self.away_ez_textpos.centery=self.away_ez_rect.centerx, self.away_ez_rect.centery        
+
+        self.logo_pos = self.logo.get_rect()
+        self.logo_pos.centerx, self.logo_pos.centery = self.field_rect.centerx, self.field_rect.centery        
         
     def check_user_input(self,run_play):
 #        print 'user input...'
@@ -91,85 +165,101 @@ class Display():
     def update(self,*args):
         human_control, end_of_game, run_play, available_plays, field, scoreboard = args[0]
 
+        ## update dynamic elements
+        self.home_score = self.sb_xl_font.render(str(scoreboard.scoreboard['home_score']), 
+                                                True, 
+                                                self.colors['scoreboard_text'])
+        self.away_score = self.sb_xl_font.render(str(scoreboard.scoreboard['away_score']), 
+                                                True, 
+                                                self.colors['scoreboard_text'])        
         self.screen.fill(self.colors['background'])
+        
+ 
+        pygame.draw.rect(self.screen,
+                         self.colors['scoreboard'],
+                         self.scoreboard_rect)
+        self.screen.blit(self.home_text,
+                         (10,10))
+        self.screen.blit(self.away_text,
+                         (160,10))
 
-        display =[self.myfont.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
-                  self.myfont.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
-                  self.myfont.render("Time: " + scoreboard.scoreboard['clock'], True, self.colors['white']),
-                  self.myfont.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
-                  self.myfont.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
+        display =[self.base_font.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
+                  self.base_font.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
+                  self.base_font.render("Time: " + scoreboard.scoreboard['clock'], True, self.colors['white']),
+                  self.base_font.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
+                  self.base_font.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
                   ]
     
-    ## stats display
-        display_offset = 0
-        button_offset = {0 : 0,
-                         1 : 0,
-                         2 : 0}
-        
-        self.screen.blit(self.myfont.render(scoreboard.scoreboard['home_city'] + ' ' + scoreboard.scoreboard['home_nickname'] + ' -- ' + str(scoreboard.scoreboard['home_score']), True, self.colors['white']),(25,5))
-        self.screen.blit(self.myfont.render(scoreboard.scoreboard['away_city'] + ' ' + scoreboard.scoreboard['away_nickname'] + ' -- ' + str(scoreboard.scoreboard['away_score']), True, self.colors['white']),(360,5))
+    ## scoreboard display
+
+        self.screen.blit(self.home_city,(10,50))
+        self.screen.blit(self.home_nick,(10,70))
+        self.screen.blit(self.away_city,(160,50))
+        self.screen.blit(self.away_nick,(160,70))
+        self.screen.blit(self.home_score,(100,10))
+        self.screen.blit(self.away_score,(250,10))
         if scoreboard.scoreboard['possession'] == 'Home':
             pygame.draw.circle(self.screen,self.colors['white'],(10,12),5)
         elif scoreboard.scoreboard['possession'] == 'Away':
             pygame.draw.circle(self.screen,self.colors['white'],(340,12),5)
                 
-        for item in display:
-            self.screen.blit(item, (5,35 + display_offset))
-            display_offset += 20
             
-        self.play_buttons = [PlayButton(self.reset_coords,
-                                        play,
-                                        self.myfont,
-                                        self.colors) for play in available_plays.values()]
     ## play button display
-        for button in self.play_buttons:
-            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height)) + display_offset))))
-            button.display_button(self.screen)
-            button_offset[button.group] += 130
+        button_offset = {0 : 0,
+                         1 : 0,
+                         2 : 0}
 
-        if self.play_buttons:
-            display_offset += (self.play_buttons[0].rect.height * len(button_offset.keys()) * 1.2) 
+#        self.play_buttons = [PlayButton(self.reset_coords,
+#                                        play,
+#                                        self.base_font,
+#                                        self.colors) for play in available_plays.values()]
+#        for button in self.play_buttons:
+#            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height)) + display_offset))))
+#            button.display_button(self.screen)
+#            button_offset[button.group] += 130
+#
+#        if self.play_buttons:
+#            display_offset += (self.play_buttons[0].rect.height * len(button_offset.keys()) * 1.2) 
+            
     ## field display
-        field_seg = (.5 * field.length)
+        
+
+        # draw field elements
         pygame.draw.rect(self.screen, # full field
                          self.colors['field'],
-                         (
-                          5,
-                          (100 + display_offset),
-                          (12*field_seg),
-                          ((12*field_seg)/2.4)
-                         ))
+                         self.field_rect)        
         pygame.draw.rect(self.screen, # home endzone
-                         field.endzone_prim_color,
-                         (
-                          5,
-                          (100 + display_offset),
-                          (field_seg),
-                          ((12*field_seg)/2.4)
-                         ))
+                         field.endzone_color['home_primary'],
+                         self.home_ez_rect)
         pygame.draw.rect(self.screen, #away endzone
-                         field.endzone_prim_color,
-                         (
-                          ((11*field_seg)+5),
-                          (100 + display_offset),
-                          (field_seg),
-                          ((12*field_seg)/2.4)
-                         ))
-        for line in range(int((field.length / 10.0)) + 2): # field lines
+                         field.endzone_color['away_primary'],
+                         self.away_ez_rect)
+
+        self.screen.blit(self.home_ez_text,self.home_ez_textpos)
+        self.screen.blit(self.away_ez_text,self.away_ez_textpos)
+        
+        for line in self.field_lines: # field lines
             pygame.draw.line(self.screen,
                              self.colors['white'],
-                             (
-                              (5 + (line * (field.length / 2.0))),(100 + display_offset)),
-                              ((5 + (line * (field.length / 2.0))),(100 + display_offset + (6*field.length)/2.4))
-                             )
-        pygame.draw.ellipse(self.screen, # ball
-                            self.colors['football'],
-                            (((5 * field.absolute_yardline) + (field_seg)), (display_offset + 300),30,15))
-    
+                             line[0],
+                             line[1])
+        self.screen.blit(self.logo,self.logo_pos)
+        self.screen.blit(self.football,
+                         (((5 * field.absolute_yardline) + (self.field_seg)),(self.field_rect.top + 200)))
     
         pygame.display.update()
 
-#        if end_of_game:
-#            return
-        if human_control:
-            self.check_user_input(run_play)       
+        if human_control or end_of_game:
+            self.check_user_input(run_play)     
+            
+            
+            
+#### testing
+from game import Game
+from team import Team
+
+team1 = Team("Austin","Easy")
+team2 = Team("Chula Vista","Grown Men")
+game = Game(team1,team2,display=Display)
+
+game.start_game()  
