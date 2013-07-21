@@ -77,6 +77,8 @@ class Display():
         self.away_text = self.sb_lg_font.render("AWAY",
                                             True,
                                             self.colors['scoreboard_text'])
+        self.home_poss = [self.screen,self.colors['scoreboard_text'],(15,35),5,1]
+        self.away_poss = [self.screen,self.colors['scoreboard_text'],(165,35),5,1]
         
         self.home_city = self.sb_lg_font.render(scoreboard.scoreboard['home_city'],
                                             True,
@@ -90,6 +92,12 @@ class Display():
         self.away_nick = self.sb_lg_font.render(scoreboard.scoreboard['away_nickname'],
                                             True,
                                             self.colors['scoreboard_text'])
+        
+        self.time = self.sb_xl_font.render(scoreboard.scoreboard['clock'], 
+                                           True, 
+                                           self.colors['scoreboard_text'])
+        self.time_pos = self.time.get_rect()
+        self.time_pos.centerx, self.time_pos.centery = self.scoreboard_rect.centerx, 180
                 
         self.logo = pygame.image.load(os.path.join('images','fieldlogo.png'))
         logo_width, logo_height = self.logo.get_size()
@@ -172,6 +180,10 @@ class Display():
         self.away_score = self.sb_xl_font.render(str(scoreboard.scoreboard['away_score']), 
                                                 True, 
                                                 self.colors['scoreboard_text'])        
+        self.time = self.sb_xl_font.render(scoreboard.scoreboard['clock'], 
+                                           True, 
+                                           self.colors['scoreboard_text'])
+        
         self.screen.fill(self.colors['background'])
         
  
@@ -185,7 +197,6 @@ class Display():
 
         display =[self.base_font.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
                   self.base_font.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
-                  self.base_font.render("Time: " + scoreboard.scoreboard['clock'], True, self.colors['white']),
                   self.base_font.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
                   self.base_font.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
                   ]
@@ -198,11 +209,18 @@ class Display():
         self.screen.blit(self.away_nick,(160,70))
         self.screen.blit(self.home_score,(100,10))
         self.screen.blit(self.away_score,(250,10))
+        
         if scoreboard.scoreboard['possession'] == 'Home':
-            pygame.draw.circle(self.screen,self.colors['white'],(10,12),5)
-        elif scoreboard.scoreboard['possession'] == 'Away':
-            pygame.draw.circle(self.screen,self.colors['white'],(340,12),5)
-                
+            self.home_poss[4] = 0
+            self.away_poss[4] = 1
+        if scoreboard.scoreboard['possession'] == 'Away':
+            self.home_poss[4] = 1
+            self.away_poss[4] = 0
+                    
+        pygame.draw.circle(*self.home_poss)
+        pygame.draw.circle(*self.away_poss)        
+        
+        self.screen.blit(self.time,self.time_pos)
             
     ## play button display
         button_offset = {0 : 0,
