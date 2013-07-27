@@ -420,7 +420,7 @@ class Scoreboard():
                            'away_city' : away.city,
                            'away_nickname' : away.nickname,
                            'away_score' : '0',
-                           'yardline' : str(self._field.converted_yardline),
+                           'yardline' : str(int(self._field.converted_yardline)),
                            'period' : str(self.get_period()),
                            'clock' : str(self.get_clock().get_time_remaining())[2:7],
                            'possession' : self.determine_possession()
@@ -437,7 +437,7 @@ class Scoreboard():
     def refresh(self,play,home_stats,away_stats):
         self.scoreboard['home_score'] = str(int((home_stats.stats['score'])))
         self.scoreboard['away_score'] = str(int((away_stats.stats['score'])))
-        self.scoreboard['yardline'] = str(self._field.converted_yardline)
+        self.scoreboard['yardline'] = str(int(self._field.converted_yardline))
         self.scoreboard['period'] = str(self.get_period())
         self.scoreboard['clock'] = str(self.get_clock().get_time_remaining())[2:7]
         self.scoreboard['possession'] = self.determine_possession()

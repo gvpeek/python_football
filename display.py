@@ -49,7 +49,7 @@ class Display():
         
         self.screen = pygame.display.set_mode((700,600))
         self.base_font = pygame.font.SysFont('franklingothicbook',12)
-        self.sb_sm_font = pygame.font.SysFont('franklingothicbold',12)
+        self.sb_sm_font = pygame.font.SysFont('franklingothicbold',18)
         self.sb_lg_font = pygame.font.SysFont('franklingothicbold',24)
         self.sb_xl_font = pygame.font.SysFont('franklingothicbold',48)
         self.ez_font = pygame.font.SysFont('franklingothicbold',36)
@@ -93,6 +93,21 @@ class Display():
                                             True,
                                             self.colors['scoreboard_text'])
         
+        
+        self.qtr_text = self.sb_sm_font.render("QTR",
+                                               True,
+                                               self.colors['scoreboard_text'])
+        self.qtr_indic = [[self.screen,self.colors['scoreboard_text'],((50+(x*15)),115),5,1] for x in xrange(4)]
+        self.down_text = self.sb_sm_font.render("DOWN",
+                                               True,
+                                               self.colors['scoreboard_text'])
+        self.down_indic = [[self.screen,self.colors['scoreboard_text'],((220+(x*15)),115),5,1] for x in xrange(4)]
+        self.ydln_text = self.sb_sm_font.render("YARDLINE",
+                                               True,
+                                               self.colors['scoreboard_text'])
+        self.ytg_text = self.sb_sm_font.render("YDS TO GO",
+                                               True,
+                                               self.colors['scoreboard_text'])
         self.time = self.sb_xl_font.render(scoreboard.scoreboard['clock'], 
                                            True, 
                                            self.colors['scoreboard_text'])
@@ -180,6 +195,12 @@ class Display():
         self.away_score = self.sb_xl_font.render(str(scoreboard.scoreboard['away_score']), 
                                                 True, 
                                                 self.colors['scoreboard_text'])        
+        self.ydln = self.sb_sm_font.render(scoreboard.scoreboard['yardline'], 
+                                                True, 
+                                                self.colors['scoreboard_text'])
+        self.ytg = self.sb_sm_font.render(scoreboard.scoreboard['yards_to_go'], 
+                                                True, 
+                                                self.colors['scoreboard_text'])
         self.time = self.sb_xl_font.render(scoreboard.scoreboard['clock'], 
                                            True, 
                                            self.colors['scoreboard_text'])
@@ -195,11 +216,6 @@ class Display():
         self.screen.blit(self.away_text,
                          (160,10))
 
-        display =[self.base_font.render("Yardline: " + scoreboard.scoreboard['yardline'], True, self.colors['white']),
-                  self.base_font.render("Qtr: " + scoreboard.scoreboard['period'], True, self.colors['white']),
-                  self.base_font.render("Down: " + scoreboard.scoreboard['down'], True, self.colors['white']),
-                  self.base_font.render("Yards To Go: " + scoreboard.scoreboard['yards_to_go'], True, self.colors['white'])
-                  ]
     
     ## scoreboard display
 
@@ -219,26 +235,49 @@ class Display():
                     
         pygame.draw.circle(*self.home_poss)
         pygame.draw.circle(*self.away_poss)        
-        
+
+        qtr = int(scoreboard.scoreboard['period']) % 4
+        self.screen.blit(self.qtr_text,(10,110))
+        for item in self.qtr_indic:
+            if qtr == 0 and self.qtr_indic.index(item) == 3:
+                item[4] = 0
+            elif (qtr - 1) == self.qtr_indic.index(item):
+                item[4] = 0
+            else:
+                item[4] = 1
+            pygame.draw.circle(*item)
+ 
+        if scoreboard.scoreboard['down']:
+            down = int(scoreboard.scoreboard['down'])
+        else:
+            down = 0
+        self.screen.blit(self.down_text,(160,110))
+        for item in self.down_indic:
+            if (down - 1) == self.down_indic.index(item):
+                item[4] = 0
+            else:
+                item[4] = 1
+            pygame.draw.circle(*item)
+        self.screen.blit(self.ydln_text,(10,140))
+        self.screen.blit(self.ydln,(100,140))
+        self.screen.blit(self.ytg_text,(160,140))
+        self.screen.blit(self.ytg,(250,140))
         self.screen.blit(self.time,self.time_pos)
             
     ## play button display
-        button_offset = {0 : 0,
-                         1 : 0,
-                         2 : 0}
+        button_offset = {0 : 350,
+                         1 : 350,
+                         2 : 350}
 
-#        self.play_buttons = [PlayButton(self.reset_coords,
-#                                        play,
-#                                        self.base_font,
-#                                        self.colors) for play in available_plays.values()]
-#        for button in self.play_buttons:
-#            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height)) + display_offset))))
-#            button.display_button(self.screen)
-#            button_offset[button.group] += 130
-#
-#        if self.play_buttons:
-#            display_offset += (self.play_buttons[0].rect.height * len(button_offset.keys()) * 1.2) 
-            
+        self.play_buttons = [PlayButton(self.reset_coords,
+                                        play,
+                                        self.base_font,
+                                        self.colors) for play in available_plays.values()]
+        for button in self.play_buttons:
+            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height))))))
+            button.display_button(self.screen)
+            button_offset[button.group] += 130
+
     ## field display
         
 
@@ -273,11 +312,11 @@ class Display():
             
             
 #### testing
-from game import Game
-from team import Team
-
-team1 = Team("Austin","Easy")
-team2 = Team("Chula Vista","Grown Men")
-game = Game(team1,team2,display=Display)
-
-game.start_game()  
+#from game import Game
+#from team import Team
+#
+#team1 = Team("Austin","Easy")
+#team2 = Team("Chula Vista","Grown Men",True)
+#game = Game(team1,team2,display=Display)
+#
+#game.start_game(.2)  
