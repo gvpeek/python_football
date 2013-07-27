@@ -132,7 +132,10 @@ class League():
     def play_season(self):
         for week in self.schedule:
                 for game in week:
-                    game.start_game()
+                    if game.home.human_control or game.away.human_control:
+                        game.start_game(.2)
+                    else:
+                        game.start_game()
                     self.update_standings(game.get_home_team().statbook.stats,
                                           game.get_away_team().statbook.stats,
                                           game.get_home_team().team.id,
@@ -203,7 +206,9 @@ class League():
         for game in round_games:
             if game.home.human_control or game.away.human_control:
                 game.display=Display
-            game.start_game()
+                game.start_game(.2)
+            else:
+                game.start_game()
             print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
             print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
             if game.in_overtime:
@@ -361,5 +366,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(64,['Group ' + x for x in 'ABCDEFGH'],12)
+l=League(9,['Group ' + x for x in 'ABC'],4)
 l.play_season()

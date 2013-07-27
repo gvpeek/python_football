@@ -176,7 +176,7 @@ class DownSet(State):
             if self.target_yardline <= 0 or self.target_yardline >= self.field.length:
                 distance = 'Goal'
             else:
-                distance = str(self.yards_to_convert)
+                distance = str(int(self.yards_to_convert))
         else:
             down=self.down
             if self.target_yardline <= 0 or self.target_yardline >= self.field.length:
