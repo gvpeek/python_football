@@ -28,6 +28,8 @@ class StatBook():
                       'conv' : 0.0,
                       'punts' : 0.0,
                       'punt_yards' : 0.0,
+                      'punt_touchbacks' : 0.0,
+                      'punt_blocks' : 0.0,
                       'punt_returns' : 0.0,
                       'punt_return_yards': 0.0,
                       'kickoffs' : 0.0,

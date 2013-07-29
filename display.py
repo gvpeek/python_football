@@ -7,13 +7,17 @@ Created on Aug 19, 2012
 import sys
 import os
 
+from pprint import pprint
+
 import pygame
 from pygame.locals import *
 
 class PlayButton():
     def __init__(self, coords, play,base_font,colors):
         self.play = play
-        self.rect = pygame.Rect(coords,(100,20))
+        self.width = 80
+        self.height = 30
+        self.rect = pygame.Rect(coords,(self.width,self.height))
                 
         if play.is_rush():
             if play.name == 'Run Clock':
@@ -33,14 +37,16 @@ class PlayButton():
             self.group = 0
             self.color = colors['special_button']
         
-        self.text = base_font.render(play.name, True, text_color)
+        self.text = base_font.render(play.short_name.upper(), True, text_color)
+        self.text_pos = self.text.get_rect()
             
     def display_button(self,screen):
         pygame.draw.rect(screen, self.color, self.rect)
-        screen.blit(self.text, self.rect)
+        screen.blit(self.text, self.text_pos)
         
     def update_coords(self, new_coords):
-        self.rect = pygame.Rect(new_coords,(100,20))
+        self.rect = pygame.Rect(new_coords,(self.width,self.height))
+        self.text_pos.centerx, self.text_pos.centery = self.rect.centerx, self.rect.centery
 
 
 class Display():
@@ -188,6 +194,7 @@ class Display():
     def update(self,*args):
         human_control, end_of_game, run_play, available_plays, field, scoreboard = args[0]
 
+#        print scoreboard.scoreboard['description']
         ## update dynamic elements
         self.home_score = self.sb_xl_font.render(str(scoreboard.scoreboard['home_score']), 
                                                 True, 
@@ -265,18 +272,19 @@ class Display():
         self.screen.blit(self.time,self.time_pos)
             
     ## play button display
-        button_offset = {0 : 350,
-                         1 : 350,
-                         2 : 350}
+        button_column = 320
+        button_offset = {0 : button_column,
+                         1 : button_column,
+                         2 : button_column}
 
         self.play_buttons = [PlayButton(self.reset_coords,
                                         play,
                                         self.base_font,
                                         self.colors) for play in available_plays.values()]
         for button in self.play_buttons:
-            button.update_coords(((5 + button_offset[button.group]),(50 + ((button.group *  (1.2 * button.rect.height))))))
+            button.update_coords(((5 + button_offset[button.group]),(102 + ((button.group *  (1.2 * button.rect.height))))))
             button.display_button(self.screen)
-            button_offset[button.group] += 130
+            button_offset[button.group] += 100
 
     ## field display
         
@@ -307,6 +315,8 @@ class Display():
         pygame.display.update()
 
         if human_control or end_of_game:
+            if end_of_game:
+                pprint 
             self.check_user_input(run_play)     
             
             
@@ -316,7 +326,7 @@ class Display():
 #from team import Team
 #
 #team1 = Team("Austin","Easy")
-#team2 = Team("Chula Vista","Grown Men",True)
+#team2 = Team("Chula Vista","Grown Men")
 #game = Game(team1,team2,display=Display)
 #
 #game.start_game(.2)  

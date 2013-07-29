@@ -20,6 +20,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Inside',
+                         'Inside',
                          (D,C),
                          rating_bounds=(35.0,90.0),
                          offense_weights={'qb':1,'rb':4,'wr':0,'ol':5},
@@ -30,6 +31,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Run Outside',
+                         'Outside',
                          (D,C),
                          rating_bounds=(35.0,90.0),
                          offense_weights={'qb':1,'rb':5,'wr':1,'ol':3},
@@ -40,6 +42,7 @@ class Playbook(list):
                          3.5,
                          1,
                          'Pitch Outside',
+                         'Pitch',
                          (D,C),
                          rating_bounds=(35.0,90.0),
                          offense_weights={'qb':2,'rb':6,'wr':1,'ol':1},
@@ -51,6 +54,7 @@ class Playbook(list):
                          1,
                          1,
                          'Pass Short',
+                         'Short',
                          (D,C),
                          rating_bounds=(35.0,90.0),
                          offense_weights={'qb':4,'rb':3,'wr':2,'ol':1},
@@ -62,6 +66,7 @@ class Playbook(list):
                          1,
                          2.5,
                          'Pass Medium',
+                         'Medium',
                          (D,C),
                          valid_yardline=5,
                          rating_bounds=(35.0,90.0),
@@ -74,6 +79,7 @@ class Playbook(list):
                          2,
                          4,
                          'Pass Long',
+                         'Long',
                          (D,C),
                          valid_yardline=10,
                          rating_bounds=(35.0,90.0),
@@ -83,6 +89,7 @@ class Playbook(list):
                             55,
                             False,
                             'Kickoff',
+                            'Kickoff',
                             (K,F),
                             rating_bounds=(60.0,100.0),
                             offense_weights={'k':1},
@@ -91,21 +98,25 @@ class Playbook(list):
                             10,
                             True,
                             'Onside Kickoff',
+                            'Onside',
                             (K,F),
                             rating_bounds=(60.0,100.0),
                             offense_weights={'k':1},
                             id='OK'))
         self.append(Punt('Punt',
+                         'Punt',
                          (D,F),
                          rating_bounds=(60.0,100.0),
                          offense_weights={'p':1},
                          id='PUNT'))
         self.append(FieldGoal('Field Goal',
+                              'Field Goal',
                               (D),
                               rating_bounds=(60.0,90.0),
                               offense_weights={'k':1},
                               id='FG'))
         self.append(FieldGoal('Extra Point',
+                              'Extra Point',
                               (C),
                               0,
                               rating_bounds=(60.0,90.0),
@@ -117,6 +128,7 @@ class Playbook(list):
                          1,
                          0,
                          'Run Clock',
+                         'Kneel',
                          (D,C),
                          rating_bounds=(0.0,0.0),
                          id='RC'))
@@ -127,6 +139,7 @@ global play_id
 class Play():
     def __init__(self,
                  name,
+                 short_name,
                  valid_states,
                  valid_yardline=0,
                  rating_bounds=(0.0,100.0),
@@ -145,7 +158,8 @@ class Play():
             self.id = id
         else:
             self.id = self.next_play_id()
-        self.name=name
+        self.name = name
+        self.short_name = short_name
         self.valid_states = valid_states
         self.rating_bounds = rating_bounds
         self.valid_yardline = valid_yardline
