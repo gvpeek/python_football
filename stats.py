@@ -8,6 +8,7 @@ Created on Apr 14, 2013
 class StatBook():
     def __init__(self):
         self.stats = {'score' : 0.0,
+                      'score_by_period' : [],
                       'total_yards' : 0.0,
                       'pass_att' : 0.0,
                       'pass_comp' : 0.0,
