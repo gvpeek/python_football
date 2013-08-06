@@ -142,8 +142,8 @@ class League():
                                           game.get_away_team().team.id,
                                           game.get_home_team().team.league_stats,
                                           game.get_away_team().team.league_stats)
-                    print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
-                    print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
+                    print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
+                    print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
                     if game.in_overtime:
                         print (game.period-game.number_of_periods), 'OT'
                     print
@@ -209,8 +209,8 @@ class League():
                 game.start_game(.2)
             else:
                 game.start_game()
-            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score']
-            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score']
+            print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
+            print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
             if game.in_overtime:
                 print (game.period-game.number_of_periods), 'OT'
             print
@@ -366,5 +366,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(9,['Group ' + x for x in 'ABC'],4)
+l=League(39,['Group ' + x for x in 'ABC'],14)
 l.play_season()

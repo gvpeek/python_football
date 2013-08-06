@@ -56,7 +56,7 @@ class Game():
                                    self.get_offense)
         self.timekeeping = deque([Clock() for x in range(number_of_periods)])
         self.current_clock = self.timekeeping.pop()
-        self.statkeeper = StatKeeper()
+        self.statkeeper = StatKeeper(self.possession,self.number_of_periods)
         self.scoreboard = Scoreboard(self.field,
                                      self.home,
                                      self.away,
@@ -232,6 +232,9 @@ class Game():
                     if not self.number_of_overtime_periods or (self.period < (self.number_of_periods + self.number_of_overtime_periods)):
                         self.period += 1
                         self.current_clock = Clock()
+                        ## TODO: I don't like doing this here, try to thin kof a better place
+                        self.possession[0].statbook.stats['score_by_period'].append(0)
+                        self.possession[1].statbook.stats['score_by_period'].append(0)
                     else:
                         self.end_of_game = True
                         self.current_state = None
@@ -254,9 +257,9 @@ class Game():
             if (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)) <= play.offense_yardage:
                 play.events['kick_successful'] = True
                 if self.current_state.is_conversion():
-                    self.statkeeper.conversion_kick(self.possession.offense.statbook)
+                    self.statkeeper.conversion_kick(self.possession.offense.statbook,self.period)
                 elif self.current_state.is_drive():
-                    self.statkeeper.field_goal(self.possession.offense.statbook)
+                    self.statkeeper.field_goal(self.possession.offense.statbook,self.period)
             else:
                 play.turnover = True
         else:
@@ -269,19 +272,19 @@ class Game():
                 if not in_endzone == self.possession.offense.direction:
                     if self.current_state.is_conversion():
                         play.events['conversion'] = True
-                        self.statkeeper.conversion_play(self.possession.offense.statbook)
+                        self.statkeeper.conversion_play(self.possession.offense.statbook,self.period)
                     elif play.turnover:
                         play.events['touchback'] = True
                     else:
                         play.events['offense_touchdown'] = True
-                        self.statkeeper.touchdown(self.possession.offense.statbook)
+                        self.statkeeper.touchdown(self.possession.offense.statbook,self.period)
                 else:
                     if play.turnover:
                         play.events['defense_touchdown'] = True
-                        self.statkeeper.touchdown(self.possession.defense.statbook)
+                        self.statkeeper.touchdown(self.possession.defense.statbook,self.period)
                     else:
                         play.events['safety'] = True
-                        self.statkeeper.safety(self.possession.defense.statbook)
+                        self.statkeeper.safety(self.possession.defense.statbook,self.period)
                     
 
 class Field():
@@ -453,7 +456,9 @@ class Scoreboard():
             pass
 
 class StatKeeper():
-    def __init__(self, touchdown_pts=6, field_goal_pts=3, safety_pts=2, conversion_play_pts=2, conversion_kick_pts=1):        
+    def __init__(self, teams, periods, touchdown_pts=6, field_goal_pts=3, safety_pts=2, conversion_play_pts=2, conversion_kick_pts=1):        
+        teams[0].statbook.stats['score_by_period']=[0 for x in xrange(periods)]
+        teams[1].statbook.stats['score_by_period']=[0 for x in xrange(periods)]
         self.touchdown_pts = touchdown_pts
         self.field_goal_pts = field_goal_pts   
         self.safety_pts = safety_pts       
@@ -559,26 +564,34 @@ class StatKeeper():
                 elif play.play_call.is_rush():
                     play.offense.statbook.stats['fumbles'] += 1
                     play.description = 'Fumble! Recovered by {}. Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage)))
-        print play.description
+#        print play.description
    
-    def touchdown(self,statbook):
+    def touchdown(self,statbook,period):
         statbook.stats['score'] += self.touchdown_pts
+        self.update_period_score(statbook, self.touchdown_pts, period)
         
-    def field_goal(self,statbook):
+    def field_goal(self,statbook,period):
         statbook.stats['score'] += self.field_goal_pts
         statbook.stats['fg'] += 1
+        self.update_period_score(statbook, self.field_goal_pts, period)
 
-    def safety(self,statbook):
+    def safety(self,statbook,period):
         statbook.stats['score'] += self.safety_pts
         statbook.stats['safeties'] += 1
+        self.update_period_score(statbook, self.safety_pts, period)
 
-    def conversion_play(self,statbook):
+    def conversion_play(self,statbook,period):
         statbook.stats['score'] += self.conversion_play_pts
         statbook.stats['conv'] += 1
+        self.update_period_score(statbook, self.conversion_play_pts, period)
 
-    def conversion_kick(self,statbook):
+    def conversion_kick(self,statbook,period):
         statbook.stats['score'] += self.conversion_kick_pts
         statbook.stats['xp'] += 1
+        self.update_period_score(statbook, self.conversion_kick_pts, period)
+        
+    def update_period_score(self,statbook,score,period):
+            statbook.stats['score_by_period'][period-1] += score
         
         
 class Clock(object):
