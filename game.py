@@ -68,6 +68,7 @@ class Game():
         self.end_of_regulation = False
         self.in_overtime = False
         self.end_of_game = False
+        self.final_processing = False
 #        if display:
         self.display = display
 #        else:
@@ -208,7 +209,21 @@ class Game():
             self.display.update(self.get_display_items())
         if not self.end_of_game:
             self._determine_turn(self.computer_pause)
-        
+        else:
+            if not self.final_processing:
+                self.compile_stats(self.home.stats.stats, self.get_home_team().statbook.stats)
+                self.compile_stats(self.away.stats.stats, self.get_away_team().statbook.stats)
+                                    
+    def compile_stats(self, team_stats, game_stats):
+        for key in team_stats.keys():
+            if type(team_stats[key]) is list:
+                while len(team_stats[key]) < len(game_stats[key]):
+                    team_stats[key].append(0)
+                team_stats[key] = [x+y for x,y in zip(team_stats[key],game_stats[key])]
+            else:
+                team_stats[key] += game_stats[key]
+                
+        team_stats['completion_pct'] = team_stats['pass_comp'] / team_stats['pass_att']
         
     def check_time_remaining(self):
         if not self.current_clock.get_time_remaining():
@@ -503,7 +518,7 @@ class StatKeeper():
             else:
                 play.offense.statbook.stats['fg_att'] += 1
                 if play.events['kick_successful']:
-                    play.description = '{} yard field goal is good!'.format(str(int(play.field.get_distance_to_endzone())))
+                    play.description = '{} yard field goal is good!'.format(str(int(play.field.get_distance_to_endzone() + 7)))
                 else:
                     play.description = 'Field goal from {} yards is no good.'.format(str(int(play.field.get_distance_to_endzone())))
         elif state().is_conversion():

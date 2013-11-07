@@ -152,6 +152,11 @@ class League():
         
         if self.nbr_playoff_teams:   
             self.play_playoffs()
+        
+        print
+        for team in self.teams:
+            print team.city, team.nickname, '\n', team.skills
+            print team.stats.stats, '\n'
 
     def play_playoffs(self):
         self.determine_playoff_field()
@@ -366,5 +371,5 @@ class Simple_Schedule(Schedule):
     
 ##### testing
 
-l=League(39,['Group ' + x for x in 'ABC'],14)
+l=League(29,['Group ' + x for x in 'ABCDEF'],12)
 l.play_season()
