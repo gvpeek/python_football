@@ -119,7 +119,9 @@ class Display():
                                            self.colors['scoreboard_text'])
         self.time_pos = self.time.get_rect()
         self.time_pos.centerx, self.time_pos.centery = self.scoreboard_rect.centerx, 180
-                
+
+        self.pbp_rect = pygame.Rect(310,5,300,75)
+      
         self.logo = pygame.image.load(os.path.join('images','fieldlogo.png'))
         logo_width, logo_height = self.logo.get_size()
         scaler=.14
@@ -189,12 +191,52 @@ class Display():
                                 break
         except:
             pygame.quit()
-        
+
+    # from http://www.pygame.org/wiki/TextWrap
+    # draw some text into an area of a surface
+    # automatically wraps words
+    # returns any text that didn't get blitted
+    def draw_text(self, surface, text, color, rect, font, aa=False, bkg=None):
+        rect = Rect(rect)
+        y = rect.top
+        lineSpacing = -2
+     
+        # get the height of the font
+        fontHeight = font.size("Tg")[1]
+     
+        while text:
+            i = 1
+     
+            # determine if the row of text will be outside our area
+            if y + fontHeight > rect.bottom:
+                break
+     
+            # determine maximum width of line
+            while font.size(text[:i])[0] < rect.width and i < len(text):
+                i += 1
+     
+            # if we've wrapped the text, then adjust the wrap to the last word      
+            if i < len(text): 
+                i = text.rfind(" ", 0, i) + 1
+     
+            # render the line and blit it to the surface
+            if bkg:
+                image = font.render(text[:i], 1, color, bkg)
+                image.set_colorkey(bkg)
+            else:
+                image = font.render(text[:i], aa, color)
+     
+            surface.blit(image, (rect.left, y))
+            y += fontHeight + lineSpacing
+     
+            # remove the text we just blitted
+            text = text[i:]
+     
+        return text        
 
     def update(self,*args):
         human_control, end_of_game, run_play, available_plays, field, scoreboard = args[0]
 
-#        print scoreboard.scoreboard['description']
         ## update dynamic elements
         self.home_score = self.sb_xl_font.render(str(scoreboard.scoreboard['home_score']), 
                                                 True, 
@@ -222,6 +264,10 @@ class Display():
                          (10,10))
         self.screen.blit(self.away_text,
                          (160,10))
+        
+        pygame.draw.rect(self.screen,
+                 self.colors['white'],
+                 self.pbp_rect)
 
     
     ## scoreboard display
@@ -270,6 +316,10 @@ class Display():
         self.screen.blit(self.ytg_text,(160,140))
         self.screen.blit(self.ytg,(250,140))
         self.screen.blit(self.time,self.time_pos)
+        
+        ## Play by play called differntly to enable wrapping 
+        self.draw_text(self.screen, scoreboard.scoreboard['description'], self.colors['black'], self.pbp_rect, self.sb_sm_font, True)
+        
             
     ## play button display
         button_column = 320
@@ -310,7 +360,7 @@ class Display():
                              line[1])
         self.screen.blit(self.logo,self.logo_pos)
         self.screen.blit(self.football,
-                         (((5 * field.absolute_yardline) + (self.field_seg)),(self.field_rect.top + 200)))
+                         (((5 * field.absolute_yardline) + ((self.field_seg) / 1.5)),(self.field_rect.top + 200)))
     
         pygame.display.update()
 
@@ -325,7 +375,7 @@ class Display():
 #from game import Game
 #from team import Team
 #
-#team1 = Team("Austin","Easy")
+#team1 = Team("Austin","Easy",True)
 #team2 = Team("Chula Vista","Grown Men")
 #game = Game(team1,team2,display=Display)
 #
