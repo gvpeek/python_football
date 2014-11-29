@@ -9,14 +9,10 @@ from random import choice
 from datetime import timedelta
 from collections import deque, namedtuple, defaultdict
 from time import sleep
-#from pprint import pprint
 
 from playbook import Kickoff, Punt, FieldGoal
 from state_machine import initialize_state
 from stats import StatBook
-
-game_id = 0
-global game_id
 
 class Game():
     "Game"
@@ -26,18 +22,9 @@ class Game():
                  display=None, 
                  number_of_periods=4,
                  use_overtime=False,
-                 number_of_overtime_periods=1, 
-                 league_game=False, 
-                 division_game=False, 
-                 conference_game=False, 
-                 playoff_game=False):
-        self.id = self.get_next_game_id()
+                 number_of_overtime_periods=1):
         self.home = home_team
-        self.away = away_team
-#        self.league_game = league_game
-#        self.division_game = division_game
-#        self.conference_game = conference_game 
-#        self.playoff_game = playoff_game  
+        self.away = away_team 
         self.number_of_periods = number_of_periods
         self.use_overtime = use_overtime
         self.number_of_overtime_periods = number_of_overtime_periods
@@ -69,16 +56,8 @@ class Game():
         self.in_overtime = False
         self.end_of_game = False
         self.final_processing = False
-#        if display:
         self.display = display
-#        else:
-#            self.display = None
         self.computer_pause = 0
-        
-    def get_next_game_id(self):
-        global game_id
-        game_id += 1
-        return game_id 
         
     def start_game(self,pause=0):
         self.computer_pause = pause
@@ -135,7 +114,6 @@ class Game():
             self.change_possession()
         
     def change_possession(self):
-#        print 'chg possession'
         self.possession = self._Possession(self.possession[1],self.possession[0])
         
     def get_offense(self):
@@ -243,7 +221,6 @@ class Game():
                                                               self.change_possession,
                                                               self.get_offense)
                 if self.in_overtime:
-#                    print 'in in_overtime'
                     if not self.number_of_overtime_periods or (self.period < (self.number_of_periods + self.number_of_overtime_periods)):
                         self.period += 1
                         self.current_clock = Clock()
@@ -260,7 +237,7 @@ class Game():
                                                    self.change_possession,
                                                    self.get_offense)
             self.end_of_half = False
-#
+
         if (self.end_of_regulation and not self.in_overtime and self.current_state.timed_play()) or (self.in_overtime and self.get_score_difference()):                    
             self.end_of_game = True
             self.current_state = None
@@ -268,7 +245,6 @@ class Game():
     def determine_events(self,play):
         if play.play_call.is_field_goal():
             play.events['kick_attempt'] = True
-#            print 'ayl', (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)), 'k', play.offense_yardage
             if (self.field.length - abs(self.field.absolute_yardline - self.possession.offense.endzone)) <= play.offense_yardage:
                 play.events['kick_successful'] = True
                 if self.current_state.is_conversion():
@@ -579,7 +555,6 @@ class StatKeeper():
                 elif play.play_call.is_rush():
                     play.offense.statbook.stats['fumbles'] += 1
                     play.description = 'Fumble! Recovered by {}. Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage)))
-#        print play.description
    
     def touchdown(self,statbook,period):
         statbook.stats['score'] += self.touchdown_pts
@@ -625,4 +600,3 @@ class Clock(object):
         self.time_remaining -= timedelta(seconds=30)
     
         return self.time_remaining
-#===============================================================================

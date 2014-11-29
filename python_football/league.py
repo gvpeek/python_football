@@ -370,7 +370,6 @@ class Simple_Schedule(Schedule):
         shuffle(schedule)
         return schedule
     
-##### testing
-
-l=League(29,['Group ' + x for x in 'ABCDEF'],12)
-l.play_season()
+if __name__ == '__main__':
+    l=League(29,['Group ' + x for x in 'ABCDEF'],12)
+    l.play_season()
