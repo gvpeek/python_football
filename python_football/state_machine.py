@@ -23,12 +23,6 @@ class State():
         self.downs_to_convert = downs_to_convert
         self.yards_to_convert = yards_to_convert
     
-#    def check_state(self):
-#        print 'check_state'
-#        return Kickoff(self.field,
-#                       self.change_possession,
-#                       self.get_offense)
-    
     def is_kickoff(self):
         return isinstance(self,(Kickoff,FreeKick))
     

@@ -10,7 +10,6 @@ from datetime import timedelta
 from collections import deque, namedtuple, defaultdict
 from time import sleep
 
-from playbook import Kickoff, Punt, FieldGoal
 from state_machine import initialize_state
 from stats import StatBook
 
