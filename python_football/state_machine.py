@@ -4,12 +4,6 @@ Created on Aug 19, 2012
 @author: George Peek
 '''
 
-import pprint
-
-
-#from game import Play
-from timekeeping import Clock
-
 def initialize_state(field,change_possession,get_offense,game_params=None):
     return Kickoff(field,change_possession,get_offense)
 

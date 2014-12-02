@@ -362,6 +362,9 @@ class Play():
     def __init__(self,offense,defense,field):
         self.offense = offense
         self.defense = defense
+        self.home_score = None
+        self.away_score = None
+        self.yardline = self.determine_display_yardline(field)
         self.field = field
         self.play_call = None
         self.offense_yardage = 0
@@ -401,6 +404,14 @@ class Play():
                 penalty += self.defense.team.home_field_advantage
     
         return penalty       
+
+    def determine_display_yardline(self, field):
+        if field.absolute_yardline < (field.length / 2):
+            return 'H ' + str(field.converted_yardline)
+        elif field.absolute_yardline == field.converted_yardline:
+            return field.converted_yardline
+        elif field.absolute_yardline > (field.length / 2):
+            return 'A ' + str(field.converted_yardline)
 
 class Scoreboard():
     def __init__(self,field,home,away,get_period,get_clock,get_state,get_offense):
@@ -554,6 +565,12 @@ class StatKeeper():
                 elif play.play_call.is_rush():
                     play.offense.statbook.stats['fumbles'] += 1
                     play.description = 'Fumble! Recovered by {}. Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage)))
+   
+        for team in [play.offense, play.defense]:
+            if team.home_team:
+                play.home_score = team.statbook.stats.get('score')
+            else:
+                play.away_score = team.statbook.stats.get('score')
    
     def touchdown(self,statbook,period):
         statbook.stats['score'] += self.touchdown_pts
