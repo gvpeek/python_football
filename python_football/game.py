@@ -176,7 +176,8 @@ class Game():
         self.determine_events(play)
         self.plays.append(play)
         self.statkeeper.update_stats(play,self.get_state)
-        if self.current_state.timed_play():
+        if self.current_state.timed_play() and not (self.plays[-1].events['offense_touchdown'] \
+                            or self.plays[-1].events['defense_touchdown']):
             self.current_clock.run_clock()
         self.current_state = self.current_state.check_state(play.turnover,
                                                             play.events)
@@ -327,15 +328,19 @@ class Field():
             overage = self.away_endzone - self.absolute_yardline
         elif self.absolute_yardline <= self.home_endzone:
             in_endzone = 1
-            overage = self.home_endzone - self.absolute_yardline
+            overage = self.home_endzone + self.absolute_yardline
         
         if return_overage:
             return in_endzone, overage
         else:
             return in_endzone
 
-    def _set_ball_position(self,yardline):
-        self.absolute_yardline = abs(self.get_offense().endzone - yardline)
+    def _set_ball_position(self,yardline,input_absolute=False):
+        if input_absolute:
+            self.absolute_yardline = yardline
+        else:
+            self.absolute_yardline = abs(self.get_offense().endzone - yardline)
+            
         if self.absolute_yardline > self.length / 2:
             self.converted_yardline = abs(self.length - self.absolute_yardline)
         else:
@@ -354,7 +359,8 @@ class Field():
         self._set_ball_position(self.conversion_yardline)
         
     def failed_field_goal_set(self):
-        self._set_ball_position(self.length - (self.absolute_yardline + (self.get_offense().direction * 7)))
+        self._set_ball_position(self.absolute_yardline + (self.get_offense().direction * 7), 
+                                input_absolute=True)
         if self.in_endzone():
             self._set_ball_position(1)
         
@@ -471,7 +477,7 @@ class StatKeeper():
         if play.play_call.is_kickoff():
             play.offense.statbook.stats['kickoffs'] += 1
             play.offense.statbook.stats['kickoff_yards'] += play.offense_yardage + overage
-            play.description = 'Kickoff of {} yards.'.format(str(int(play.offense_yardage)))
+            play.description = 'Kickoff of {} yards.'.format(str(int(play.offense_yardage + overage)))
             if play.events['touchback']:
                 play.offense.statbook.stats['kickoff_touchbacks'] += 1
                 play.description += ' Touchback!'
@@ -486,7 +492,7 @@ class StatKeeper():
                 play.defense.statbook.stats['punt_blocks'] += 1
                 play.description = 'Punt blocked!'
             else:
-                play.description = 'Punt of {} yards.'.format(str(int(play.offense_yardage)))
+                play.description = 'Punt of {} yards.'.format(str(int(play.offense_yardage + overage)))
             if play.events['touchback']:
                 play.offense.statbook.stats['punt_touchbacks'] += 1
                 play.description += ' Touchback!'
@@ -506,7 +512,7 @@ class StatKeeper():
                 if play.events['kick_successful']:
                     play.description = '{} yard field goal is good!'.format(str(int(play.field.get_distance_to_endzone() + 7)))
                 else:
-                    play.description = 'Field goal from {} yards is no good.'.format(str(int(play.field.get_distance_to_endzone())))
+                    play.description = 'Field goal from {} yards is no good.'.format(str(int(play.field.get_distance_to_endzone() + 7)))
         elif state().is_conversion():
             play.offense.statbook.stats['conv_att'] += 1
             if play.offense_yardage > 0:
@@ -561,10 +567,10 @@ class StatKeeper():
             else:
                 if play.play_call.is_pass():
                     play.offense.statbook.stats['intercepted'] += 1
-                    play.description = 'Pass intercepted by {}! Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage)))
+                    play.description = 'Pass intercepted by {}! Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage + overage)))
                 elif play.play_call.is_rush():
                     play.offense.statbook.stats['fumbles'] += 1
-                    play.description = 'Fumble! Recovered by {}. Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage)))
+                    play.description = 'Fumble! Recovered by {}. Returned {} yards.'.format(play.defense.team.city,str(int(play.return_yardage + overage)))
    
         for team in [play.offense, play.defense]:
             if team.home_team:
