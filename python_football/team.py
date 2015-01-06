@@ -9,8 +9,8 @@ from playbook import Playbook
 from stats import StatBook
 from coach import Coach
 
-team_id = 0
 global team_id
+team_id = 0
 
 class Team():
     "Team"
@@ -35,10 +35,10 @@ class Team():
                        'sp': float(randint(60,90))}
         
         self.home_field_advantage = float(randint(1,3))
-        self.playbook = Playbook()
+        self.plays = Playbook()
         self.stats = StatBook()
         self.coach = Coach()
-        self.coach.practice_plays(self.playbook,self.skills)
+        self.coach.practice_plays(self.plays,self.skills)
         
         self.primary_color = (randint(0,255),randint(0,255),randint(0,255))
         self.secondary_color = (randint(0,255),randint(0,255),randint(0,255))

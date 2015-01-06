@@ -133,8 +133,8 @@ class Playbook(list):
                          rating_bounds=(0.0,0.0),
                          id='RC'))
         
-play_id = 0
 global play_id
+play_id = 0
 
 class Play():
     def __init__(self,
