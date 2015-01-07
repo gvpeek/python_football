@@ -1,5 +1,6 @@
 from game import Game
 from team import Team
+from coach import Coach
 from stats import StatBook
 from playbook import Playbook
 
@@ -14,3 +15,6 @@ def new_statbook():
     
 def new_playbook():
     return Playbook()
+
+def new_coach(**kargs):
+    return Coach(**kwargs)

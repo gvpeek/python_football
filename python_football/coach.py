@@ -9,8 +9,8 @@ from random import randint, random, choice
 from collections import namedtuple
 
 class Coach():
-    def __init__(self):
-        self.skill = randint(60,90)
+    def __init__(self, skill=None):
+        self.skill = skill if skill else randint(60,90)
         self.play_probabilities = {}
         self.fg_dist_probabilities={}
 
