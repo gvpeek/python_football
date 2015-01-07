@@ -16,5 +16,5 @@ def new_statbook():
 def new_playbook():
     return Playbook()
 
-def new_coach(**kargs):
+def new_coach(**kwargs):
     return Coach(**kwargs)
